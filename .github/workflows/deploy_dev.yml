@@ -8,6 +8,10 @@ on:
     branches:
       - dev
 
+env:
+  REGISTRY: ${{ secrets.REGISTRY }}
+  IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
+
 jobs:
   deploy_dev:
     # needs: integration_tests
