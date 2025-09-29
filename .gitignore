@@ -37,5 +37,4 @@ build/
 *.mdj
 .env
 .env.*
-.github
 docker-compose-*.yml
