@@ -1,12 +1,13 @@
 name: DEPLOY_PROD
 on:
-  workflow_run:
-    workflows:
-      - "BUILDS"
-    types:
-      - "completed"
-    branches:
-      - main
+  workflow_dispatch:
+#  workflow_run:
+#    workflows:
+#      - "BUILDS"
+#    types:
+#      - "completed"
+#    branches:
+#      - main
 
 jobs:
   deploy_prod:
