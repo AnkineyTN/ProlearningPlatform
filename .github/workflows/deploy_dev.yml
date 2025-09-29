@@ -25,9 +25,9 @@ jobs:
 
       - name: Tag and Push Dev Image
         run: |
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev
+          docker pull ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker tag ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:dev
+          docker push ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:dev
 
       - name: Deploy to Dev Server
         uses: appleboy/ssh-action@v1.0.3
@@ -41,5 +41,5 @@ jobs:
             cd ${{ vars.PATH_TO_PROJECT }}
 
             docker compose down
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:dev
+            docker pull ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:dev
             docker compose --env-file .env.dev up -d

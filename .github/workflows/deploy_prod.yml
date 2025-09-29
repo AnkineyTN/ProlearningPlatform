@@ -26,9 +26,9 @@ jobs:
 
       - name: Tag and Push Latest Image
         run: |
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          docker pull ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker tag ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Deploy to Production Server
         uses: appleboy/ssh-action@v1.0.3
@@ -43,5 +43,5 @@ jobs:
             cd ${{ vars.PATH_TO_PROJECT }}
 
             docker compose down
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker pull ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:latest
             docker compose --env-file .env.prod up -d
