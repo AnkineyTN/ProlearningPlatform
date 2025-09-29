@@ -1,0 +1,60 @@
+version: "3"
+services:
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: redis
+  #   restart: always
+  #   ports:
+  #     - '6379:6379'
+  #   command: redis-server --save 20 1 --loglevel warning
+  #   volumes: 
+  #     - ./data/redis:/data
+  #   networks:
+  #     - prolearningplatform
+  #   healthcheck:
+  #     test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 5
+  # postgres:
+  #   container_name: postgres
+  #   image: postgres:17
+  #   environment:
+  #     POSTGRES_USER: ${DATABASE_USERNAME}
+  #     POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+  #     PGDATA: /data/postgres
+  #     POSTGRES_DB: ${DATABASE_NAME}
+  #   volumes:
+  #     - ./data/postgres:/data/postgres
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - prolearningplatform
+  #   restart: always
+  #   healthcheck:
+  #     test: [ "CMD-SHELL", "pg_isready -d postgres" ]
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 5
+  backend:
+    # depends_on:
+    #   redis:
+    #     condition: service_healthy
+    #   postgres:
+    #     condition: service_healthy
+    container_name: backend
+    image: devopshcmus/prolearningplatform:${PROFILE:-latest}
+    # build:
+    #   context: ./source/backend
+    #   dockerfile: Dockerfile
+    ports:
+      - "${SERVER_PORT}:8080"
+    restart: unless-stopped
+    volumes:
+      - ./target:/app/target:ro
+    networks:
+      - prolearningplatform
+
+networks:
+  prolearningplatform:
+    driver: bridge
