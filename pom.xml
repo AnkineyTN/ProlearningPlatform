@@ -5,8 +5,8 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.6</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<version>3.2.4</version>
+		<relativePath/>
 	</parent>
 	<groupId>com.cabybara</groupId>
 	<artifactId>prolearningplatform</artifactId>
@@ -183,6 +183,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.14.0</version>
 				<configuration>
 					<annotationProcessorPaths>
 						<path>
