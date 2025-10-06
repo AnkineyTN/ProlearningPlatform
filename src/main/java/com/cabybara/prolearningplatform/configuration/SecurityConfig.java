@@ -44,11 +44,15 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-resources/**").permitAll()
+                        .requestMatchers("/webjars/**").permitAll()
+                        .requestMatchers("/api-docs/**").permitAll()
                         .requestMatchers("/api/auth/register/**").permitAll()
                         .requestMatchers("/api/auth/login/**").permitAll()
                         .anyRequest().authenticated()
                 );
-
 
 
         http.sessionManagement(

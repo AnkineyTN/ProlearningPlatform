@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.service.impl;
 
 
-import com.cabybara.prolearningplatform.dto.RegisterUserDto;
+import com.cabybara.prolearningplatform.dto.RegisterRequestDto;
 import com.cabybara.prolearningplatform.dto.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.enums.UserEducation;
@@ -12,7 +12,6 @@ import com.cabybara.prolearningplatform.mapper.UserMapper;
 import com.cabybara.prolearningplatform.model.Authority;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.repository.UserRepository;
-import com.cabybara.prolearningplatform.service.JwtService;
 import com.cabybara.prolearningplatform.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -39,17 +38,17 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponseDto addUser(RegisterUserDto registerUserDto, Role role) throws Exception {
-        User existedUser = userRepository.findByEmail(registerUserDto.getEmail()).orElseGet(() -> null);
+    public UserResponseDto addUser(RegisterRequestDto registerRequestDto, Role role) throws Exception {
+        User existedUser = userRepository.findByEmail(registerRequestDto.getEmail()).orElseGet(() -> null);
         if (existedUser != null) {
             throw new AuthException("User has existed!");
         }
 
         User newUser = User.builder()
-                .firstName(registerUserDto.getFirstName())
-                .lastName(registerUserDto.getLastName())
-                .password(passwordEncoder.encode(registerUserDto.getPassword()))
-                .email(registerUserDto.getEmail())
+                .firstName(registerRequestDto.getFirstName())
+                .lastName(registerRequestDto.getLastName())
+                .password(passwordEncoder.encode(registerRequestDto.getPassword()))
+                .email(registerRequestDto.getEmail())
                 .roles(new HashSet<>())
                 .education(UserEducation.COLLEGE)
                 .hearAppFrom(UserHearAppFrom.CLASSMATE)

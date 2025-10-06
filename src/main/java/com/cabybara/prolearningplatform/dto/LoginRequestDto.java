@@ -10,7 +10,7 @@ import org.hibernate.validator.constraints.Length;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoginUserDto {
+public class LoginRequestDto {
     @NotNull
     @Length(min = 8, max = 20)
     private String password;

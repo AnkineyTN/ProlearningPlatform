@@ -10,7 +10,7 @@ import org.hibernate.validator.constraints.Length;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegisterUserDto {
+public class RegisterRequestDto {
     @NotNull
     private String firstName;
 

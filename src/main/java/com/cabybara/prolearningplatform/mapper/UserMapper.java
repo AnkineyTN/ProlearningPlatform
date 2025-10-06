@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.mapper;
 
+import com.cabybara.prolearningplatform.dto.LoginResponseDto;
 import com.cabybara.prolearningplatform.dto.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.model.Authority;

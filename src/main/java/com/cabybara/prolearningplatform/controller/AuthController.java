@@ -1,64 +1,65 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.LoginUserDto;
-import com.cabybara.prolearningplatform.dto.RegisterUserDto;
-import com.cabybara.prolearningplatform.dto.UserResponseDto;
+import com.cabybara.prolearningplatform.dto.*;
 import com.cabybara.prolearningplatform.enums.Role;
-import com.cabybara.prolearningplatform.model.User;
-import com.cabybara.prolearningplatform.service.JwtService;
-import com.cabybara.prolearningplatform.service.UserService;
+import com.cabybara.prolearningplatform.service.AuthService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
-    private final UserService userService;
-    private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
+    private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserResponseDto>> registerNormalUser(@Valid @RequestBody RegisterUserDto registerUserDto) throws Exception {
-        UserResponseDto userResponseDto = userService.addUser(registerUserDto, Role.valueOf(registerUserDto.getRole()));
-        ApiResponse<UserResponseDto> response = ResponseUtil.success("Registration successfully", userResponseDto, null);
+    public ResponseEntity<ApiResponse<RegisterResponseDto>> registerNormalUser(@Valid @RequestBody RegisterRequestDto registerRequestDto) throws Exception {
+        RegisterResponseDto registerResponseDto = authService.registerUser(registerRequestDto);
+        ApiResponse<RegisterResponseDto> response = ResponseUtil.success("Registration successfully", registerResponseDto, null);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
     }
 
     @PostMapping("/register/admin")
-    public ResponseEntity<ApiResponse<UserResponseDto>> registerAdminUser(@Valid @RequestBody RegisterUserDto registerUserDto) throws Exception {
-        UserResponseDto userResponseDto = userService.addUser(registerUserDto, Role.ROLE_ADMIN);
-        ApiResponse<UserResponseDto> response = ResponseUtil.success("Registration successfully", userResponseDto, null);
+    public ResponseEntity<ApiResponse<RegisterResponseDto>> registerAdminUser(@Valid @RequestBody RegisterRequestDto registerRequestDto) throws Exception {
+        RegisterResponseDto registerResponseDto = authService.registerAdmin(registerRequestDto);
+        ApiResponse<RegisterResponseDto> response = ResponseUtil.success("Registration successfully", registerResponseDto, null);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<User>> login(@Valid @RequestBody LoginUserDto loginUserDto) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginUserDto.getEmail(), loginUserDto.getPassword())
+    public ResponseEntity<ApiResponse<LoginResponseDto>> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
+        LoginResponseDto loginResponseDto = authService.authenticateAndGenerateToken(
+                loginRequestDto.getEmail(),
+                loginRequestDto.getPassword()
         );
 
-        User user = (User) authentication.getPrincipal();
-        String jwt = jwtService.generateToken(authentication);
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(ResponseUtil.success("Login successfully", user, jwt));
+                .body(ResponseUtil.success("Login successfully", loginResponseDto, null));
 
     }
 
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> logout(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            authService.logout(authHeader);
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(ResponseUtil.success("Logout successfully", null, null));
+        }
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ResponseUtil.error("Authorization code invalid", null));
+    }
 }

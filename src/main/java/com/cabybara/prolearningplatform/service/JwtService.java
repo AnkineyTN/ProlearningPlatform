@@ -26,4 +26,8 @@ public interface JwtService {
     String extractEmail(String token);
 
     Boolean validateToken(String token);
+
+    void backlistToken(String token);
+
+    Boolean isTokenBacklisted(String token);
 }

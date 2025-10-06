@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.service.impl;
 
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.service.JwtService;
+import com.cabybara.prolearningplatform.service.RedisService;
 import com.cabybara.prolearningplatform.service.UserService;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
@@ -22,6 +23,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
+    private final RedisService redisService;
     @Value("${spring.security.jwt.secret}")
     private String JWT_SECRET;
 
@@ -88,5 +90,18 @@ public class JwtServiceImpl implements JwtService {
         Date expiration = extractExpiration(token);
 
         return expiration.after(new Date());
+    }
+
+    @Override
+    public void backlistToken(String token) {
+        long now = System.currentTimeMillis();
+        long expirationTime = extractExpiration(token).getTime();
+        long ttl = (expirationTime - now) / 1000;
+        redisService.set(token, "backlisted", ttl);
+    }
+
+    @Override
+    public Boolean isTokenBacklisted(String token) {
+        return redisService.hasKey(token);
     }
 }
