@@ -4,6 +4,11 @@ server:
 spring:
   profiles:
     active: ${PROFILE:dev}
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
 
   application:
     name: Prolearning Platform
@@ -12,6 +17,7 @@ spring:
     url: ${POSTGRES_URL}
     username: ${POSTGRES_USERNAME}
     password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: none
@@ -26,6 +32,7 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
+      ttl-ms: ${REDIS_TTL-MS}
 
   security:
     jwt:
@@ -45,13 +52,15 @@ springdoc:
 
 logging:
   level:
-    root: DEBUG
+    root: INFO
     com.cabybara.prolearningplatform.service: DEBUG
     org.springframework.security: TRACE
 
 ---
 spring:
-  profiles: prod
+  config:
+    activate:
+      on-profile: prod
 
 logging:
   level:

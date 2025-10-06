@@ -16,6 +16,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 
 @Entity
@@ -28,14 +30,16 @@ import lombok.NoArgsConstructor;
 public class Authority {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonIgnore
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "username", referencedColumnName = "username")
+    @JoinColumn(name = "email", referencedColumnName = "email")
     @JsonIgnore
     private User user;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private Role authority;
 }
 

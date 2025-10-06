@@ -1,7 +1,13 @@
 package com.cabybara.prolearningplatform.model;
 
+import com.cabybara.prolearningplatform.enums.UserEducation;
+import com.cabybara.prolearningplatform.enums.UserHearAppFrom;
+import com.cabybara.prolearningplatform.enums.UserLanguage;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,30 +17,40 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity
-@Table(name = "users")
+@Table(name = "\"user\"")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(exclude = "roles")
-public class User implements UserDetails {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String username;
-
-    private String password;
-
-    private Boolean enabled;
-
+public class User extends AbstractEntity implements UserDetails {
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(name = "verification_code")
-    private String verificationCode;
+    @Column(name = "first_name", nullable = false, length = 100)
+    private String firstName;
 
-    @Column(name = "recovery_code")
-    private String recoveryCode;
+    @Column(name = "last_name", nullable = false, length = 100)
+    private String lastName;
+
+    @Column(nullable = false)
+    private String password;
+
+    @Column(columnDefinition = "user_language")
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("'vi'")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    private UserLanguage language;
+
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("'High School'")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    private UserEducation education;
+
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("'Google'")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    private UserHearAppFrom hearAppFrom;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<Authority> roles;
@@ -56,6 +72,26 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.username;
+        return this.email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 }

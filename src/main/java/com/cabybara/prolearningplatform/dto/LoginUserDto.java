@@ -10,13 +10,7 @@ import org.hibernate.validator.constraints.Length;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegisterUserDto {
-    @NotNull
-    private String firstName;
-
-    @NotNull
-    private String lastName;
-
+public class LoginUserDto {
     @NotNull
     @Length(min = 8, max = 20)
     private String password;
@@ -24,8 +18,4 @@ public class RegisterUserDto {
     @NotNull
     @Email
     private String email;
-
-    @NotNull
-    private String role;
 }
-

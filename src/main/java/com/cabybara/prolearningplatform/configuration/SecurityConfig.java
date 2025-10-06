@@ -1,13 +1,18 @@
 package com.cabybara.prolearningplatform.configuration;
 
+import com.cabybara.prolearningplatform.exception.JwtAuthEntryPoint;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,8 +26,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 
+@Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     @Value("${spring.security.jwt.secret}")
@@ -31,20 +38,28 @@ public class SecurityConfig {
     @Value("${spring.security.jwt.access-ttl-ms}")
     private Long JWT_EXPIRATION;
 
+    private final JwtAuthEntryPoint unauthorizedHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/auth/register/**").permitAll()
-                        .requestMatchers("/auth/login/**").permitAll()
+                        .requestMatchers("/api/auth/register/**").permitAll()
+                        .requestMatchers("/api/auth/login/**").permitAll()
                         .anyRequest().authenticated()
                 );
+
 
 
         http.sessionManagement(
                 session ->
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS)
+        );
+
+        http.exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler));
+        http.headers(headers -> headers
+                .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
         );
 
         http.csrf(csrf -> csrf.disable());
@@ -63,7 +78,7 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider(
-            UserDetailsService userDetailsService,
+            @Qualifier("userServiceImpl") UserDetailsService userDetailsService,
             PasswordEncoder passwordEncoder
     ) {
         DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider(passwordEncoder);

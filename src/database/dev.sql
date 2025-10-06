@@ -1,37 +1,56 @@
-CREATE TABLE user (
-                      id SERIAL PRIMARY KEY,
-                      email VARCHAR(255) UNIQUE NOT NULL,
-                      first_name VARCHAR(100) NOT NULL,
-                      last_name VARCHAR(100) NOT NULL,
-                      password VARCHAR(255) NOT NULL,
-                      language VARCHAR(50) DEFAULT 'vi'
-                          CHECK (language IN ('vi', 'en')),
+CREATE TYPE user_language AS ENUM ('VI', 'EN');
 
-    education VARCHAR(100)
-        CHECK (education IN (
-            'High School',
-            'College',
-            'Grad School',
-            'Med School',
-            'Other'
-        )),
+CREATE TYPE authority AS ENUM ('ROLE_ADMIN', 'ROLE_USER', 'ROLE_TEACHER');
 
-    role VARCHAR(50) NOT NULL
-        CHECK (role IN ('Admin', 'Teacher', 'Student')),
+CREATE TYPE user_education AS ENUM (
+    'HIGH_SCHOOL',
+    'COLLEGE',
+    'GRAD_SCHOOL',
+    'MED_SCHOOL',
+    'OTHER'
+    );
 
-    hear_app_from VARCHAR(255)
-        CHECK (hear_app_from IN (
-            'YouTube',
-            'TikTok',
-            'ChatGPT',
-            'Facebook',
-            'Google',
-            'Instagram',
-            'Classmate',
-            'Reddit',
-            'Other'
-        )),
+CREATE TYPE user_hear_app_from AS ENUM (
+    'YOUTUBE',
+    'TIKTOK',
+    'CHATGPT',
+    'FACEBOOK',
+    'GOOGLE',
+    'INSTAGRAM',
+    'CLASSMATE',
+    'REDDIT',
+    'OTHER'
+    );
 
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "user" (
+                        id SERIAL PRIMARY KEY,
+                        email VARCHAR(255) UNIQUE NOT NULL,
+                        first_name VARCHAR(100) NOT NULL,
+                        last_name VARCHAR(100) NOT NULL,
+                        password VARCHAR(255) NOT NULL,
+                        recovery_code character varying(255) NULL,
+                        language user_language default 'VI',
+
+                        education user_education default 'HIGH_SCHOOL',
+
+                        hear_app_from user_hear_app_from default 'GOOGLE',
+
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE
+    public.authorities (
+                           id bigserial primary key NOT NULL,
+                           email character varying(128) NOT NULL,
+                           authority authority NOT NULL DEFAULT 'ROLE_USER'
+);
+
+
+
+
+
+
+
+
+
