@@ -48,18 +48,4 @@ public class AuthController {
                 .body(ResponseUtil.success("Login successfully", loginResponseDto, null));
 
     }
-
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<String>> logout(@RequestHeader("Authorization") String authHeader) {
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            authService.logout(authHeader);
-            return ResponseEntity
-                    .status(HttpStatus.OK)
-                    .body(ResponseUtil.success("Logout successfully", null, null));
-        }
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ResponseUtil.error("Authorization code invalid", null));
-    }
 }

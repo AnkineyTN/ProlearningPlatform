@@ -12,6 +12,4 @@ public interface AuthService {
     RegisterResponseDto registerUser(RegisterRequestDto registerRequestDto) throws Exception;
 
     RegisterResponseDto registerAdmin(RegisterRequestDto registerRequestDto) throws Exception;
-
-    void logout(String authHeader);
 }

@@ -1,11 +1,14 @@
 package com.cabybara.prolearningplatform.configuration;
 
 import com.cabybara.prolearningplatform.exception.JwtAuthEntryPoint;
+import com.cabybara.prolearningplatform.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -14,17 +17,22 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 
 @Configuration
 @EnableWebSecurity
@@ -70,7 +78,9 @@ public class SecurityConfig {
 
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
                 .decoder(jwtDecoder())
-                .jwtAuthenticationConverter(jwtAuthenticationConverter())));
+                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                .authenticationEntryPoint(unauthorizedHandler)
+        );
 
         return http.build();
     }
@@ -101,6 +111,26 @@ public class SecurityConfig {
         return NimbusJwtDecoder.withSecretKey(
                 new SecretKeySpec(JWT_SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256")
         ).build();
+    }
+
+    class CustomJwtAuthenticationConverter extends JwtAuthenticationConverter {
+        private final JwtService jwtService;
+        private final Converter<Jwt, Collection<GrantedAuthority>> authoritiesConverter;
+
+        public CustomJwtAuthenticationConverter(JwtService jwtService, Converter<Jwt, Collection<GrantedAuthority>> authoritiesConverter) {
+            this.jwtService = jwtService;
+            this.authoritiesConverter = authoritiesConverter;
+            super.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+        }
+
+        protected AbstractAuthenticationToken extractAuthentication(Jwt jwt) {
+            if (jwtService.isTokenBlacklisted(jwt.getTokenValue())) {
+                throw new JwtException("Token is blacklisted");
+            }
+
+            Collection<GrantedAuthority> authorities = authoritiesConverter.convert(jwt);
+            return new JwtAuthenticationToken(jwt, authorities);
+        }
     }
 
     @Bean

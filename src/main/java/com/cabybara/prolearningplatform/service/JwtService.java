@@ -27,7 +27,7 @@ public interface JwtService {
 
     Boolean validateToken(String token);
 
-    void backlistToken(String token);
+    void blacklistToken(String token);
 
-    Boolean isTokenBacklisted(String token);
+    Boolean isTokenBlacklisted(String token);
 }

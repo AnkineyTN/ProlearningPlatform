@@ -59,7 +59,6 @@ public class JwtServiceImpl implements JwtService {
     }
 
 
-
     private Key getSignKey() {
         return Keys.hmacShaKeyFor(JWT_SECRET.getBytes(StandardCharsets.UTF_8));
     }
@@ -93,7 +92,7 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public void backlistToken(String token) {
+    public void blacklistToken(String token) {
         long now = System.currentTimeMillis();
         long expirationTime = extractExpiration(token).getTime();
         long ttl = (expirationTime - now) / 1000;
@@ -101,7 +100,7 @@ public class JwtServiceImpl implements JwtService {
     }
 
     @Override
-    public Boolean isTokenBacklisted(String token) {
+    public Boolean isTokenBlacklisted(String token) {
         return redisService.hasKey(token);
     }
 }

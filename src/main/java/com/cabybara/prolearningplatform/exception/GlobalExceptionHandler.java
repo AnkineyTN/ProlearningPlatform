@@ -15,7 +15,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Object>> handleAuthException(AuthException ex) {
         ApiResponse<Object> response = ResponseUtil.error(ex.getMessage(), null);
         return ResponseEntity
-                .status(HttpStatus.CONFLICT)
+                .status(ex.getStatus())
                 .body(response);
     }
 }

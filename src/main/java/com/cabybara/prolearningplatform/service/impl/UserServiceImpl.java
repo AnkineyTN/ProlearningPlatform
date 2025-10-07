@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.service.impl;
 
 
+import com.cabybara.prolearningplatform.dto.ChangePasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.RegisterRequestDto;
 import com.cabybara.prolearningplatform.dto.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
@@ -14,6 +15,7 @@ import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,7 +29,7 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-//    private final EmailService emailService;
+    //    private final EmailService emailService;
 //    private final JwtService jwtService;
     private final UserMapper userMapper;
 
@@ -38,10 +40,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UserResponseDto loadUserByEmail(String email) {
+        Optional<User> user = userRepository.findByEmail(email);
+        return userMapper.toUserResponseDto(user.orElseThrow(() -> new UsernameNotFoundException("User with username: " + email + " not found!")));
+    }
+
+    @Override
     public UserResponseDto addUser(RegisterRequestDto registerRequestDto, Role role) throws Exception {
         User existedUser = userRepository.findByEmail(registerRequestDto.getEmail()).orElseGet(() -> null);
         if (existedUser != null) {
-            throw new AuthException("User has existed!");
+            throw new AuthException(HttpStatus.CONFLICT, "User has existed!");
         }
 
         User newUser = User.builder()
@@ -64,5 +72,31 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(newUser);
         return userMapper.toUserResponseDto(newUser);
+    }
+
+    @Override
+    public void updateUserPassword(String email, ChangePasswordRequestDto changePasswordRequestDto) {
+        User existedUser = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User with username: " + email + " not found!"));
+
+        String encodedNewPassword = passwordEncoder.encode(changePasswordRequestDto.getNewPassword());
+        String encodedOldPassword = passwordEncoder.encode(changePasswordRequestDto.getOldPassword());
+
+        if (existedUser.getPassword().equals(encodedOldPassword)) {
+            throw new AuthException(HttpStatus.CONFLICT, "Old password is not match");
+        }
+
+        if (encodedNewPassword.equals(encodedOldPassword)) {
+            throw new AuthException(HttpStatus.CONFLICT, "Password is equal to old password");
+        }
+
+        existedUser.setPassword(encodedNewPassword);
+        userRepository.save(existedUser);
+    }
+
+    @Override
+    public void deleteUser(String email) {
+        User existedUser = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User with username: " + email + " not found!"));
+
+        userRepository.delete(existedUser);
     }
 }

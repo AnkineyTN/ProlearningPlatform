@@ -69,10 +69,4 @@ public class AuthServiceImpl implements AuthService {
                 .lastName(userResponseDto.getLastName())
                 .build();
     }
-
-    @Override
-    public void logout(String authHeader) {
-        String token = authHeader.substring(7);
-        jwtService.backlistToken(token);
-    }
 }
