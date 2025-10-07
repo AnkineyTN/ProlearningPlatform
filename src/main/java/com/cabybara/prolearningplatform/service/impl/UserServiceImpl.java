@@ -14,6 +14,7 @@ import com.cabybara.prolearningplatform.model.Authority;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.UserService;
+import com.google.api.services.oauth2.model.Userinfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -98,5 +99,31 @@ public class UserServiceImpl implements UserService {
         User existedUser = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User with username: " + email + " not found!"));
 
         userRepository.delete(existedUser);
+    }
+
+    @Override
+    public User findOrCreateFromGoogle(Userinfo userInfo) {
+
+        return userRepository.findByEmail(userInfo.getEmail())
+                .orElseGet(() -> {
+                    User newUser = User.builder()
+                            .email(userInfo.getEmail())
+                            .firstName(userInfo.getFamilyName())
+                            .lastName(userInfo.getGivenName())
+                            .language(UserLanguage.VI)
+                            .hearAppFrom(UserHearAppFrom.CLASSMATE)
+                            .education(UserEducation.COLLEGE)
+                            .roles(new HashSet<>())
+                            .build();
+
+                    Authority defaultAuthority = Authority.builder()
+                            .user(newUser)
+                            .authority(Role.ROLE_USER)
+                            .build();
+
+                    newUser.getRoles().add(defaultAuthority);
+
+                    return userRepository.save(newUser);
+                });
     }
 }

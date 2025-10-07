@@ -47,14 +47,14 @@ spring:
       same-site: Strict
     oauth2:
       client:
+        frontend_dashboard_url: ${FRONTEND_DASHBOARD_URL}
+        frontend_login_google_failure_url: ${FRONTEND_LOGIN_FAILURE_URL}
         registration:
           google:
             client-id: ${OAUTH2_GOOGLE_CLIENT_ID}
             client-secret: ${OAUTH2_GOOGLE_CLIENT_SECRET}
             redirect-uri: ${GOOGLE_REDIRECT_URI}
-            scope:
-              - email
-              - profile
+            scope: "email,profile,openid"
 
 springdoc:
   swagger-ui:

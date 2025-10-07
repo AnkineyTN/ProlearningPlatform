@@ -5,6 +5,11 @@ import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.service.AuthService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.auth.oauth2.TokenResponse;
+import com.google.api.client.auth.oauth2.TokenResponseException;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,11 +17,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    private final GoogleAuthorizationCodeFlow googleFlow;
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<RegisterResponseDto>> registerNormalUser(@Valid @RequestBody RegisterRequestDto registerRequestDto) throws Exception {
@@ -47,5 +57,22 @@ public class AuthController {
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Login successfully", loginResponseDto, null));
 
+    }
+
+    @GetMapping("/google/login")
+    public ResponseEntity<ApiResponse<Object>> loginWithGoogle() throws IOException {
+        Object responseData = authService.loginWithGoogle();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Authorization Code", responseData, null));
+    }
+
+    @GetMapping("/google/callback")
+    public void callback(
+            @RequestParam("code") String code,
+            @RequestParam("state") String state,
+            @RequestParam(value = "error", required = false) String error,
+            HttpServletResponse response) throws Exception {
+        authService.googleAuthCallback(code, state, error, response);
     }
 }

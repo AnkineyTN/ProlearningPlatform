@@ -17,7 +17,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity
-@Table(name = "\"user\"")
+@Table(name = "users")
 @Data
 @Builder
 @NoArgsConstructor
@@ -27,13 +27,13 @@ public class User extends AbstractEntity implements UserDetails {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(name = "first_name", nullable = false, length = 100)
+    @Column(name = "first_name")
     private String firstName;
 
     @Column(name = "last_name", nullable = false, length = 100)
     private String lastName;
 
-    @Column(nullable = false)
+    @Column()
     private String password;
 
     @Column(columnDefinition = "user_language")
