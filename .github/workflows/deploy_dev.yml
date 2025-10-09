@@ -21,7 +21,7 @@ jobs:
     # needs: integration_tests
     runs-on: ubuntu-latest
     environment: Development
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+#    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Log in to Registry
