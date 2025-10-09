@@ -15,10 +15,4 @@ public interface AuthService {
     RegisterResponseDto registerUser(RegisterRequestDto registerRequestDto) throws Exception;
 
     RegisterResponseDto registerAdmin(RegisterRequestDto registerRequestDto) throws Exception;
-
-    void googleAuthCallback(String code, String userId, String error, HttpServletResponse response) throws Exception;
-
-    GoogleAuthUrlResponseDto loginWithGoogle() throws IOException;
-
-    LoginResponseDto loginWithGoogleMobile(String token) throws GeneralSecurityException, IOException;
 }
