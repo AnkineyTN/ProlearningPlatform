@@ -1,12 +1,16 @@
 name: DEPLOY_DEV
 on:
-  workflow_run:
-    workflows:
-      - "BUILDS"
-    types:
-      - "completed"
+  push:
     branches:
       - dev
+  workflow_dispatch:
+#  workflow_run:
+#    workflows:
+#      - "BUILDS"
+#    types:
+#      - "completed"
+#    branches:
+#      - dev
 
 env:
   REGISTRY: ${{ secrets.REGISTRY }}
