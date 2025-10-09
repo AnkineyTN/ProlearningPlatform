@@ -49,7 +49,6 @@ public class GlobalExceptionHandler {
         return errorResponse;
     }
 
-
     @ExceptionHandler(
             AuthException.class
     )
