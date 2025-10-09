@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.*;
 import com.cabybara.prolearningplatform.service.AuthService;
+import com.cabybara.prolearningplatform.service.GoogleAuthService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -25,6 +26,7 @@ import java.security.GeneralSecurityException;
 @Validated
 public class AuthController {
     private final AuthService authService;
+    private final GoogleAuthService googleAuthService;
 
     @Operation(
         summary = "Register normal user",
@@ -74,7 +76,7 @@ public class AuthController {
     )
     @GetMapping("/google/login")
     public ResponseEntity<ApiResponse<GoogleAuthUrlResponseDto>> loginWithGoogle() throws IOException {
-        GoogleAuthUrlResponseDto responseData = authService.loginWithGoogle();
+        GoogleAuthUrlResponseDto responseData = googleAuthService.loginWithGoogle();
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Authorization Code", responseData, null));
@@ -86,7 +88,7 @@ public class AuthController {
     )
     @PostMapping("/google/login/mb")
     public ResponseEntity<ApiResponse<LoginResponseDto>> loginWithGoogleMobile(@RequestBody String tokenId) throws GeneralSecurityException, IOException {
-        LoginResponseDto loginResponseDto = authService.loginWithGoogleMobile(tokenId);
+        LoginResponseDto loginResponseDto = googleAuthService.loginWithGoogleMobile(tokenId);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully", loginResponseDto, null));
@@ -99,6 +101,6 @@ public class AuthController {
             @RequestParam("state") String state,
             @RequestParam(value = "error", required = false) String error,
             HttpServletResponse response) throws Exception {
-        authService.googleAuthCallback(code, state, error, response);
+        googleAuthService.googleAuthCallback(code, state, error, response);
     }
 }
