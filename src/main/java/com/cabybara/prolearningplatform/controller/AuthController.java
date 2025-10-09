@@ -1,36 +1,37 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.*;
-import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.service.AuthService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
-import com.google.api.client.auth.oauth2.Credential;
-import com.google.api.client.auth.oauth2.TokenResponse;
-import com.google.api.client.auth.oauth2.TokenResponseException;
-import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
+@Tag(name = "Auth")
+@Validated
 public class AuthController {
     private final AuthService authService;
-    private final GoogleAuthorizationCodeFlow googleFlow;
 
+    @Operation(
+        summary = "Register normal user",
+        description = "Registers a new user with the provided registration details."
+    )
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<RegisterResponseDto>> registerNormalUser(@Valid @RequestBody RegisterRequestDto registerRequestDto) throws Exception {
+    public ResponseEntity<ApiResponse<RegisterResponseDto>> registerNormalUser(@RequestBody @Valid RegisterRequestDto registerRequestDto) throws Exception {
         RegisterResponseDto registerResponseDto = authService.registerUser(registerRequestDto);
         ApiResponse<RegisterResponseDto> response = ResponseUtil.success("Registration successfully", registerResponseDto, null);
         return ResponseEntity
@@ -38,8 +39,9 @@ public class AuthController {
                 .body(response);
     }
 
+    @Hidden
     @PostMapping("/register/admin")
-    public ResponseEntity<ApiResponse<RegisterResponseDto>> registerAdminUser(@Valid @RequestBody RegisterRequestDto registerRequestDto) throws Exception {
+    public ResponseEntity<ApiResponse<RegisterResponseDto>> registerAdminUser(@RequestBody @Valid RegisterRequestDto registerRequestDto) throws Exception {
         RegisterResponseDto registerResponseDto = authService.registerAdmin(registerRequestDto);
         ApiResponse<RegisterResponseDto> response = ResponseUtil.success("Registration successfully", registerResponseDto, null);
         return ResponseEntity
@@ -47,6 +49,10 @@ public class AuthController {
                 .body(response);
     }
 
+    @Operation(
+            summary = "Login user",
+            description = "User login with email and password"
+    )
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponseDto>> login(@Valid @RequestBody LoginRequestDto loginRequestDto) {
         LoginResponseDto loginResponseDto = authService.authenticateAndGenerateToken(
@@ -60,14 +66,24 @@ public class AuthController {
 
     }
 
+    @Operation(
+            summary = "Login with user for web application",
+            description = "Web application login with google process:\n" +
+                    "- Call this api to get an auththorization url (AUTH_URL)\n" +
+                    "- Redirect user to AUTH_URL"
+    )
     @GetMapping("/google/login")
-    public ResponseEntity<ApiResponse<Object>> loginWithGoogle() throws IOException {
-        Object responseData = authService.loginWithGoogle();
+    public ResponseEntity<ApiResponse<GoogleAuthUrlResponseDto>> loginWithGoogle() throws IOException {
+        GoogleAuthUrlResponseDto responseData = authService.loginWithGoogle();
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Authorization Code", responseData, null));
     }
 
+    @Operation(
+            summary = "Login with user for mobile application",
+            description = "Mobile application call this api to get access token"
+    )
     @PostMapping("/google/login/mb")
     public ResponseEntity<ApiResponse<LoginResponseDto>> loginWithGoogleMobile(@RequestBody String tokenId) throws GeneralSecurityException, IOException {
         LoginResponseDto loginResponseDto = authService.loginWithGoogleMobile(tokenId);
@@ -76,6 +92,7 @@ public class AuthController {
                 .body(ResponseUtil.success("Successfully", loginResponseDto, null));
     }
 
+    @Hidden
     @GetMapping("/google/callback")
     public void callback(
             @RequestParam("code") String code,

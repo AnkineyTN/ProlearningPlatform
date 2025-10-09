@@ -117,7 +117,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public Object loginWithGoogle() throws IOException {
+    public GoogleAuthUrlResponseDto loginWithGoogle() throws IOException {
         String randomState = UUID.randomUUID().toString();
         redisService.set(randomState, "tempStateGoogleAuth", 60);
 
@@ -126,9 +126,9 @@ public class AuthServiceImpl implements AuthService {
                 .setState(randomState)
                 .build();
 
-        Map<String, String> responseData = new HashMap<>();
-        responseData.put("AuthorizationUrl", authorizationUrl);
-        return responseData;
+        return GoogleAuthUrlResponseDto.builder()
+                .authorizationUrl(authorizationUrl)
+                .build();
     }
 
     @Override

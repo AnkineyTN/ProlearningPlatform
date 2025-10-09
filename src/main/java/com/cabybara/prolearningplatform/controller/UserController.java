@@ -5,22 +5,24 @@ import com.cabybara.prolearningplatform.dto.UserResponseDto;
 import com.cabybara.prolearningplatform.service.UserService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
+@RequiredArgsConstructor
+@Tag(name = "User")
+@Validated
 public class UserController {
     private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
@@ -31,6 +33,7 @@ public class UserController {
                 .body(ResponseUtil.success("Successfully", userResponseDto, null));
     }
 
+    @Hidden
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/me/password")
     public ResponseEntity<ApiResponse<String>> updateUserPassword(@AuthenticationPrincipal Jwt jwt, @RequestBody ChangePasswordRequestDto changePasswordRequestDto) {
