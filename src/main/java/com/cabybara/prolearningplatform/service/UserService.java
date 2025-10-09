@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.service;
 
 import com.cabybara.prolearningplatform.dto.ChangePasswordRequestDto;
+import com.cabybara.prolearningplatform.dto.GoogleUserInfoDto;
 import com.cabybara.prolearningplatform.dto.RegisterRequestDto;
 import com.cabybara.prolearningplatform.dto.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
@@ -21,4 +22,6 @@ public interface UserService extends UserDetailsService {
     void updateUserPassword(String email, ChangePasswordRequestDto changePasswordRequestDto);
 
     User findOrCreateFromGoogle(Userinfo userInfo);
+
+    User findOrCreateFromGoogle(GoogleUserInfoDto googleUserInfoDto);
 }

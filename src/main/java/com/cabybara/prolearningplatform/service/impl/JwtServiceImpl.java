@@ -1,5 +1,9 @@
 package com.cabybara.prolearningplatform.service.impl;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.cabybara.prolearningplatform.dto.GoogleUserInfoDto;
+import com.cabybara.prolearningplatform.model.Authority;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.service.JwtService;
 import com.cabybara.prolearningplatform.service.RedisService;
@@ -44,7 +48,7 @@ public class JwtServiceImpl implements JwtService {
         Map<String, Object> privateClaims = new HashMap<>();
         User user = (User) userService.loadUserByUsername(username);
 
-        privateClaims.put("roles", user.getRoles());
+        privateClaims.put("roles", user.getRoles().stream().map(Authority::getAuthority).toList());
         return createToken(privateClaims, username);
     }
 
@@ -102,5 +106,10 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public Boolean isTokenBlacklisted(String token) {
         return redisService.hasKey(token);
+    }
+
+    @Override
+    public DecodedJWT decodeGoogleIdToken(String tokenId) {
+        return JWT.decode(tokenId);
     }
 }

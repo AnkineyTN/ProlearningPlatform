@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.service.impl;
 
 
 import com.cabybara.prolearningplatform.dto.ChangePasswordRequestDto;
+import com.cabybara.prolearningplatform.dto.GoogleUserInfoDto;
 import com.cabybara.prolearningplatform.dto.RegisterRequestDto;
 import com.cabybara.prolearningplatform.dto.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
@@ -110,6 +111,32 @@ public class UserServiceImpl implements UserService {
                             .email(userInfo.getEmail())
                             .firstName(userInfo.getFamilyName())
                             .lastName(userInfo.getGivenName())
+                            .language(UserLanguage.VI)
+                            .hearAppFrom(UserHearAppFrom.CLASSMATE)
+                            .education(UserEducation.COLLEGE)
+                            .roles(new HashSet<>())
+                            .build();
+
+                    Authority defaultAuthority = Authority.builder()
+                            .user(newUser)
+                            .authority(Role.ROLE_USER)
+                            .build();
+
+                    newUser.getRoles().add(defaultAuthority);
+
+                    return userRepository.save(newUser);
+                });
+    }
+
+    @Override
+    public User findOrCreateFromGoogle(GoogleUserInfoDto googleUserInfoDto) {
+
+        return userRepository.findByEmail(googleUserInfoDto.getEmail())
+                .orElseGet(() -> {
+                    User newUser = User.builder()
+                            .email(googleUserInfoDto.getEmail())
+                            .firstName(googleUserInfoDto.getFamilyName())
+                            .lastName(googleUserInfoDto.getGivenName())
                             .language(UserLanguage.VI)
                             .hearAppFrom(UserHearAppFrom.CLASSMATE)
                             .education(UserEducation.COLLEGE)

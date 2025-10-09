@@ -6,6 +6,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.cabybara.prolearningplatform.dto.GoogleUserInfoDto;
 import com.cabybara.prolearningplatform.model.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -30,4 +32,6 @@ public interface JwtService {
     void blacklistToken(String token);
 
     Boolean isTokenBlacklisted(String token);
+
+    DecodedJWT decodeGoogleIdToken(String tokenId);
 }

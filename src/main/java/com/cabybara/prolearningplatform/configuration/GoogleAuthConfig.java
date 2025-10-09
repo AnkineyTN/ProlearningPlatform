@@ -2,7 +2,6 @@ package com.cabybara.prolearningplatform.configuration;
 
 import com.cabybara.prolearningplatform.repository.TokenDatabaseRepository;
 import com.cabybara.prolearningplatform.utils.DatabaseDataStoreFactory;
-import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -11,12 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import com.google.api.client.json.jackson2.JacksonFactory;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Configuration
@@ -55,7 +52,7 @@ public class GoogleAuthConfig {
 
         return new GoogleAuthorizationCodeFlow.Builder(
                 new NetHttpTransport(),
-                new com.google.api.client.json.jackson2.JacksonFactory(),
+                new JacksonFactory(),
                 CLIENT_ID,
                 CLIENT_SECRET,
                 scopes)

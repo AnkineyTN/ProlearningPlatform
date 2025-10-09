@@ -1,5 +1,7 @@
 package com.cabybara.prolearningplatform.mapper;
 
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.cabybara.prolearningplatform.dto.GoogleUserInfoDto;
 import com.cabybara.prolearningplatform.model.GoogleCredential;
 import com.google.api.client.auth.oauth2.StoredCredential;
 import org.mapstruct.Mapper;

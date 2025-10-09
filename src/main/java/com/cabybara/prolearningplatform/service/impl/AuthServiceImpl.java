@@ -1,11 +1,10 @@
 package com.cabybara.prolearningplatform.service.impl;
 
-import com.cabybara.prolearningplatform.dto.LoginResponseDto;
-import com.cabybara.prolearningplatform.dto.RegisterRequestDto;
-import com.cabybara.prolearningplatform.dto.RegisterResponseDto;
-import com.cabybara.prolearningplatform.dto.UserResponseDto;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.cabybara.prolearningplatform.dto.*;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.exception.GoogleAuthException;
+import com.cabybara.prolearningplatform.mapper.GoogleAuthItemMapper;
 import com.cabybara.prolearningplatform.mapper.UserMapper;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.service.AuthService;
@@ -17,21 +16,23 @@ import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.auth.oauth2.TokenResponse;
 import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
 import com.google.api.services.oauth2.Oauth2;
 import com.google.api.services.oauth2.model.Userinfo;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.actuate.web.mappings.MappingsEndpoint;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -45,7 +46,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserService userService;
     private final GoogleAuthorizationCodeFlow googleFlow;
     private final RedisService redisService;
-
+    private final GoogleAuthItemMapper googleAuthItemMapper;
     @Value("${spring.security.oauth2.client.frontend_dashboard_url}")
     private String FRONTEND_DASHBOARD_URL;
 
@@ -162,5 +163,27 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtService.generateToken(userInfo.getEmail());
 
         response.sendRedirect(FRONTEND_DASHBOARD_URL + "&accessToken=" + accessToken);
+    }
+
+    @Override
+    public LoginResponseDto loginWithGoogleMobile(String token) throws GeneralSecurityException, IOException {
+        DecodedJWT jwt = jwtService.decodeGoogleIdToken(token);
+        GoogleUserInfoDto googleUserInfoDto = GoogleUserInfoDto.builder()
+                .sub(jwt.getSubject())
+                .email(jwt.getClaim("email").asString())
+                .emailVerified(jwt.getClaim("email_verified").asBoolean())
+                .name(jwt.getClaim("name").asString())
+                .picture(jwt.getClaim("picture").asString())
+                .givenName(jwt.getClaim("given_name").asString())
+                .familyName(jwt.getClaim("family_name").asString())
+                .build();
+
+        User user = userService.findOrCreateFromGoogle(googleUserInfoDto);
+        UserResponseDto userResponseDto = userMapper.toUserResponseDto(user);
+        String accessToken = jwtService.generateToken(user.getEmail());
+        return LoginResponseDto.builder()
+                .userResponseDto(userResponseDto)
+                .accessToken(accessToken)
+                .build();
     }
 }
