@@ -3,10 +3,6 @@ package com.cabybara.prolearningplatform.service;
 import com.cabybara.prolearningplatform.dto.LoginResponseDto;
 import com.cabybara.prolearningplatform.dto.RegisterRequestDto;
 import com.cabybara.prolearningplatform.dto.RegisterResponseDto;
-import jakarta.servlet.http.HttpServletResponse;
-
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 
 public interface AuthService {
     LoginResponseDto authenticateAndGenerateToken(String email, String password);

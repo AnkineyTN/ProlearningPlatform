@@ -1,16 +1,13 @@
 name: DEPLOY_DEV
 on:
-  push:
+  workflow_run:
+    workflows:
+      - "BUILDS"
+    types:
+      - "completed"
     branches:
       - dev
   workflow_dispatch:
-#  workflow_run:
-#    workflows:
-#      - "BUILDS"
-#    types:
-#      - "completed"
-#    branches:
-#      - dev
 
 env:
   REGISTRY: ${{ secrets.REGISTRY }}
@@ -21,7 +18,11 @@ jobs:
     # needs: integration_tests
     runs-on: ubuntu-latest
     environment: Development
-#    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: >
+      ${{ 
+        github.event.workflow_run.conclusion == 'success' && 
+        github.event.workflow_run.event == 'push' 
+      }}
 
     steps:
       - name: Log in to Registry
