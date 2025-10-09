@@ -1,67 +1,29 @@
 name: DEPLOY_DEV
 on:
-  workflow_run:
-    workflows:
-      - "BUILD IMAGE"
-    types:
-      - "completed"
+  push:
+    branches:
+      - dev
   workflow_dispatch:
+#  workflow_run:
+#    workflows:
+#      - "BUILDS"
+#    types:
+#      - "completed"
+#    branches:
+#      - dev
 
 env:
   REGISTRY: ${{ secrets.REGISTRY }}
   IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
-
-permissions:
-  actions: read
-  contents: read
-  checks: read
-  pull-requests: read
 
 jobs:
   deploy_dev:
     # needs: integration_tests
     runs-on: ubuntu-latest
     environment: Development
-    if: |
-      ${{ 
-        github.event.workflow_run.conclusion == 'success' && 
-        github.event.workflow_run.event == 'push' &&
-        github.event.workflow_run.head_branch == 'dev'
-      }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
-      - name: Download SHA Artifact
-        uses: actions/github-script@v7
-        with:
-          script: |
-            var allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               run_id: context.payload.workflow_run.id,
-            });
-            
-            console.log('--- List of all artifacts found:');
-            console.log(allArtifacts.artifacts.map(a => a.name));
-            
-            var matchArtifact = allArtifacts.artifacts.filter((artifact) => {
-              return artifact.name == "image-sha-artifact"
-            })[0];
-            var download = await github.rest.actions.downloadArtifact({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               artifact_id: matchArtifact.id,
-               archive_format: 'zip',
-            });
-            var fs = require('fs');
-            fs.writeFileSync('${{ github.workspace }}/sha.zip', Buffer.from(download.data));
-      
-      - name: Unzip Artifact
-        run: unzip sha.zip
-        
-      - name: Read SHA
-        id: read_sha
-        run: echo "IMAGE_SHA=$(cat image_sha.txt)" >> $GITHUB_OUTPUT
-
       - name: Log in to Registry
         uses: docker/login-action@v3
         with:
@@ -71,11 +33,8 @@ jobs:
 
       - name: Tag and Push Dev Image
         run: |
-          IMAGE_SHA=${{ steps.read_sha.outputs.IMAGE_SHA }}
-          echo "Pulling image with SHA: $IMAGE_SHA"
-          # Pull image CHÍNH XÁC từ SHA đã được truyền qua artifact
-          docker pull ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:$IMAGE_SHA
-          docker tag ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:$IMAGE_SHA ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:dev
+          docker pull ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          docker tag ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }} ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:dev
           docker push ${{ secrets.REGISTRY_USERNAME }}/${{ env.IMAGE_NAME }}:dev
 
       - name: Deploy to Dev Server
