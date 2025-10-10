@@ -1,6 +1,17 @@
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+    application-display-name: ${spring.application.name}
+
 spring:
   profiles:
     active: ${PROFILE:dev}
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
 
   application:
     name: Prolearning Platform
@@ -9,6 +20,7 @@ spring:
     url: ${POSTGRES_URL}
     username: ${POSTGRES_USERNAME}
     password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: none
@@ -23,10 +35,46 @@ spring:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
+      ttl-ms: ${REDIS_TTL-MS}
+
+  security:
+    jwt:
+      secret: fee55fe254d24a95863994171c5e5404AKN0108cigquahfdja
+      access-ttl-ms: 900000
+      refresh-ttl-ms: 604800000
+    refresh-cookie:
+      name: refresh_token
+      secure: false
+      http-only: true
+      path: /auth
+      same-site: Strict
+    oauth2:
+      client:
+        frontend_dashboard_url: ${FRONTEND_DASHBOARD_URL}
+        frontend_login_google_failure_url: ${FRONTEND_LOGIN_FAILURE_URL}
+        registration:
+          google:
+            client-id: ${OAUTH2_GOOGLE_CLIENT_ID}
+            client-secret: ${OAUTH2_GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${GOOGLE_REDIRECT_URI}
+            scope: "email,profile,openid"
 
 springdoc:
   swagger-ui:
     path: api-docs
 
-server:
-  port: ${SERVER_PORT:8080}
+logging:
+  level:
+    root: INFO
+    com.cabybara.prolearningplatform.service: DEBUG
+    org.springframework.security: TRACE
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+logging:
+  level:
+    root: INFO
