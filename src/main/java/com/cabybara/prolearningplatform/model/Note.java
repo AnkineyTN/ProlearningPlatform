@@ -29,7 +29,7 @@ public class Note extends AbstractEntity {
     private JsonNode content;
 
     @Column(columnDefinition = "TEXT")
-    private String summary;
+    private String description;
 
     @Column(length = 50)
     private String privacy;
