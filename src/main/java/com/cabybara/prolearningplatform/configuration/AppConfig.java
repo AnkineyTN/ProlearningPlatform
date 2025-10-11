@@ -11,7 +11,9 @@ public class AppConfig implements WebMvcConfigurer {
         registry.addMapping("/**") // Allow all endpoints on server
                 .allowCredentials(true) // Allow to send cookie or authorization token
                 .allowedOrigins(
-                        "http://localhost:3000"
+                        "http://localhost:3000",
+                        "http://54.169.86.239:64310",
+                        "http://54.169.86.239:64311"
                 )
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE")
                 .allowedHeaders("*");
