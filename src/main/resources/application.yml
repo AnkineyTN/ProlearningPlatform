@@ -29,7 +29,7 @@ spring:
         format_sql: true
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-#    show-sql: true
+  #    show-sql: true
 
   data:
     redis:
@@ -58,6 +58,12 @@ spring:
             client-secret: ${OAUTH2_GOOGLE_CLIENT_SECRET}
             redirect-uri: ${GOOGLE_REDIRECT_URI}
             scope: "email,profile,openid"
+
+cloud:
+  cloudinary:
+    name: ${CLOUD_CLOUDINARY_NAME}
+    apiKey: ${CLOUD_CLOUDINARY_API_KEY}
+    apiSecret: ${CLOUD_CLOUDINARY_API_SECRET}
 
 springdoc:
   swagger-ui:

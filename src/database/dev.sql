@@ -62,19 +62,34 @@ CREATE TABLE set
 
 CREATE TABLE note
 (
-    id         SERIAL PRIMARY KEY,
-    note_url   VARCHAR(255),
-    title      VARCHAR(255),
-    content    JSONB,
-    summary    TEXT,
-    privacy    VARCHAR(50),
-    status     VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    id_set     INT,
+    id          SERIAL PRIMARY KEY,
+    note_url    VARCHAR(255),
+    title       VARCHAR(255),
+    content     TEXT,
+    description TEXT,
+    privacy     VARCHAR(50),
+    status      VARCHAR(50),
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id_set      INT,
     CONSTRAINT fk_note_set
         FOREIGN KEY (id_set)
             REFERENCES set (id)
+            ON DELETE CASCADE
+);
+
+CREATE TABLE note_docs
+(
+    id         SERIAL PRIMARY KEY,
+    file_name  TEXT NOT NULL,
+    file_url   TEXT NOT NULL,
+    type       TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id_note    INT  NOT NULL,
+    CONSTRAINT fk_note
+        FOREIGN KEY (id_note)
+            REFERENCES note (id)
             ON DELETE CASCADE
 );
 
