@@ -2,6 +2,10 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.SetUpdateRequestDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -23,15 +27,20 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/sets")
+@Tag(name = "Set APIs")
 @RequiredArgsConstructor
 public class SetController {
     private final SetService setService;
 
+    @Operation(
+            summary = "Get all sets of the current user",
+            description = "Retrieve a paginated list of all sets created by the authenticated user."
+    )
     @PreAuthorize("isAuthenticated()")
     @GetMapping("")
     public ResponseEntity<ApiResponse<Object>> getSet(
             @AuthenticationPrincipal Jwt jwt,
-            @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
+            @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
     ) {
 
         Page<SetResponseDto> allSetResponseDtos = setService.getAllSet((Long) jwt.getClaims().get("id"), pageable);
@@ -51,6 +60,10 @@ public class SetController {
                 ));
     }
 
+    @Operation(
+            summary = "Create a new set",
+            description = "Create a new set for the authenticated user using the provided data."
+    )
     @PreAuthorize("isAuthenticated()")
     @PostMapping("")
     public ResponseEntity<ApiResponse<SetResponseDto>> createSet(
@@ -65,10 +78,14 @@ public class SetController {
                 .body(ResponseUtil.success("Create set successfully", setResponseDto, null));
     }
 
+    @Operation(
+            summary = "Update an existing set",
+            description = "Update the information of a specific set owned by the authenticated user."
+    )
     @PreAuthorize("isAuthenticated()")
-    @PutMapping("/{setId}")
+    @PatchMapping("/{setId}")
     public ResponseEntity<ApiResponse<SetResponseDto>> updateSet(
-            @PathVariable Long setId,
+            @Parameter(description = "ID of the set to update", example = "5") @PathVariable Long setId,
             @RequestBody SetUpdateRequestDto setUpdateRequestDto,
             @AuthenticationPrincipal Jwt jwt
     ) {
@@ -84,10 +101,14 @@ public class SetController {
                 .body(ResponseUtil.success("Update set successfully", updatedSet, null));
     }
 
+    @Operation(
+            summary = "Delete a set",
+            description = "Delete a specific set owned by the authenticated user."
+    )
     @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{setId}")
     public ResponseEntity<ApiResponse<Object>> deleteSet(
-            @PathVariable(name = "setId") Long setId,
+            @Parameter(description = "ID of the set to delete", example = "5") @PathVariable(name = "setId") Long setId,
             @AuthenticationPrincipal Jwt jwt
     ) {
 
