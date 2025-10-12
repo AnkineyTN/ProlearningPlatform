@@ -1,9 +1,10 @@
 package com.cabybara.prolearningplatform.service;
 
+import com.cabybara.prolearningplatform.dto.response.CloudinaryResponseDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
 public interface CloudinaryService {
-    public String uploadMultipartFile(MultipartFile file, String fileName, String type, String subject) throws IOException;
+    public CloudinaryResponseDTO uploadMultipartFile(MultipartFile file, String fileName, String extension, String subject) throws IOException;
 }

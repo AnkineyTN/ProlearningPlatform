@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.service.impl;
 
+import com.cabybara.prolearningplatform.dto.response.CloudinaryResponseDTO;
 import com.cabybara.prolearningplatform.exception.UploadFileException;
 import com.cabybara.prolearningplatform.service.CloudinaryService;
 import com.cloudinary.Cloudinary;
@@ -18,14 +19,23 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     @Autowired
     private Cloudinary cloudinary;
 
+    private final String NOTE_DOCS_FOLDER = "ProLearning/note-documents";
+
     @Override
-    public String uploadMultipartFile(MultipartFile file, String fileName, String type, String subject) throws IOException {
+    public CloudinaryResponseDTO uploadMultipartFile(MultipartFile file, String fileName, String extension, String subject) throws IOException {
         log.info("Upload multipart files");
 
         // TODO: Handle for many type (note, flashcard, test,...)
         String folder = "";
-        if(type.equals("note")){
-            folder = "note-documents";
+
+        if (subject.equals("note")) {
+            folder = NOTE_DOCS_FOLDER;
+        }
+
+        // Handle upload correct file type
+        String type = "";
+        if (extension.equals("txt") || extension.equals("pdf") || extension.equals("docx") || extension.equals("pptx")) {
+            type = "raw";
         }
 
         Map<?, ?> result;
@@ -43,6 +53,13 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         } catch (RuntimeException e) {
             throw new UploadFileException(e.getMessage());
         }
-        return result.get("secure_url").toString();
+
+        String fileUrl = result.get("secure_url").toString();
+        String publicId = result.get("public_id").toString();
+
+        return CloudinaryResponseDTO.builder()
+                .fileUrl(fileUrl)
+                .publicId(publicId)
+                .build();
     }
 }

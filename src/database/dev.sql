@@ -1,7 +1,5 @@
 CREATE TYPE user_language AS ENUM ('VI', 'EN');
-
 CREATE TYPE authority AS ENUM ('ROLE_ADMIN', 'ROLE_USER', 'ROLE_TEACHER');
-
 CREATE TYPE user_education AS ENUM (
     'HIGH_SCHOOL',
     'COLLEGE',
@@ -9,7 +7,6 @@ CREATE TYPE user_education AS ENUM (
     'MED_SCHOOL',
     'OTHER'
     );
-
 CREATE TYPE user_hear_app_from AS ENUM (
     'YOUTUBE',
     'TIKTOK',
@@ -22,21 +19,22 @@ CREATE TYPE user_hear_app_from AS ENUM (
     'OTHER'
     );
 
-CREATE TABLE "user" (
-                        id SERIAL PRIMARY KEY,
-                        email VARCHAR(255) UNIQUE NOT NULL,
-                        first_name VARCHAR(100) NOT NULL,
-                        last_name VARCHAR(100) NOT NULL,
-                        password VARCHAR(255) NOT NULL,
-                        recovery_code character varying(255) NULL,
-                        language user_language default 'VI',
+CREATE TABLE user
+(
+    id            SERIAL PRIMARY KEY,
+    email         VARCHAR(255) UNIQUE NOT NULL,
+    first_name    VARCHAR(100)        NOT NULL,
+    last_name     VARCHAR(100)        NOT NULL,
+    password      VARCHAR(255)        NOT NULL,
+    recovery_code character varying(255) NULL,
+    language      user_language            default 'VI',
 
-                        education user_education default 'HIGH_SCHOOL',
+    education     user_education           default 'HIGH_SCHOOL',
 
-                        hear_app_from user_hear_app_from default 'GOOGLE',
+    hear_app_from user_hear_app_from       default 'GOOGLE',
 
-                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE authorities
@@ -58,7 +56,11 @@ CREATE TABLE set
 
     CONSTRAINT fk_user
         FOREIGN KEY (id_user)
+<<<<<<< HEAD
             REFERENCES "user" (id)
+=======
+            REFERENCES users (id)
+>>>>>>> feature/take-notes
             ON DELETE CASCADE
 );
 
@@ -85,7 +87,8 @@ CREATE TABLE note_docs
     id         SERIAL PRIMARY KEY,
     file_name  TEXT NOT NULL,
     file_url   TEXT NOT NULL,
-    type       TEXT NOT NULL,
+    extension  TEXT NOT NULL,
+    public_id VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     id_note    INT  NOT NULL,

@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.service.impl;
 
 import com.cabybara.prolearningplatform.dto.request.CreateNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.SaveNoteRequestDTO;
+import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.Note;
 import com.cabybara.prolearningplatform.model.Set;
@@ -11,6 +12,12 @@ import com.cabybara.prolearningplatform.service.NoteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
+import java.util.List;
 
 @Service
 @Slf4j
@@ -19,6 +26,7 @@ public class NoteServiceImpl implements NoteService {
     private final SetRepository setRepository;
     private final NoteRepository noteRepository;
 
+    // Create new note
     @Override
     public void createNote(CreateNoteRequestDTO request) {
         Set set = getSetById(request.getSetId());
@@ -33,6 +41,7 @@ public class NoteServiceImpl implements NoteService {
         log.info("✅ Created note '{}' in set id {}", note.getTitle(), set.getId());
     }
 
+    // Save note while taking
     @Override
     public void saveNote(Long noteId, SaveNoteRequestDTO request) {
         Note note = getNoteById(noteId);
@@ -40,6 +49,61 @@ public class NoteServiceImpl implements NoteService {
         note.setContent(request.getContent());
         noteRepository.save(note);
         log.info("✅ Updated note '{}'", noteId);
+    }
+
+    // Get all notes of set
+    @Override
+    public PageResponseDetail<?> getAllNotesOfSet(int pageNo, int pageSize, Long setId) {
+        int page = 0;
+        if (pageNo > 0) {
+            page = pageNo - 1;
+        }
+
+        Pageable pageable = PageRequest.of(page, pageSize, Sort.by("createdAt").descending());
+        Page<Note> notesPage = noteRepository.findNotesBySetId(setId, pageable);
+
+        List<GetAllNotesResponseDTO> noteDTOs = notesPage.getContent().stream()
+                .map(note -> GetAllNotesResponseDTO.builder()
+                        .id(note.getId())
+                        .title(note.getTitle())
+                        .description(note.getDescription())
+                        .privacy(note.getPrivacy())
+                        .created_at(note.getCreatedAt() != null ? note.getCreatedAt().toString() : null)
+                        .updated_at(note.getUpdatedAt() != null ? note.getUpdatedAt().toString() : null)
+                        .build())
+                .toList();
+
+        return PageResponseDetail.builder()
+                .pageNo(pageNo)
+                .pageSize(pageSize)
+                .totalPage(notesPage.getTotalPages())
+                .totalElements(notesPage.getTotalElements())
+                .items(noteDTOs)
+                .build();
+    }
+
+    @Override
+    public GetDetailNoteResponseDTO getDetailNote(Long noteId) {
+        Note note = noteRepository.findNoteWithDocsById(noteId).orElseThrow(() -> new ResourceNotFoundException("Note not found with id: " + noteId));
+
+        return GetDetailNoteResponseDTO.builder()
+                .id(note.getId())
+                .title(note.getTitle())
+                .description(note.getDescription())
+                .privacy(note.getPrivacy())
+                .content(note.getContent())
+                .noteDocs(
+                        note.getNoteDocs().stream()
+                                .map(doc -> GetDocsInNoteResponseDTO.builder()
+                                        .id(doc.getId())
+                                        .fileName(doc.getFileName())
+                                        .fileUrl(doc.getFileUrl())
+                                        .extension(doc.getExtension())
+                                        .publicId(doc.getPublicId())
+                                        .build())
+                                .toList()
+                )
+                .build();
     }
 
     private Set getSetById(Long setId) {
