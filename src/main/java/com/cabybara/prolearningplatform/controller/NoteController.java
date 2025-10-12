@@ -83,4 +83,13 @@ public class NoteController {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Explain note with AI fail");
         }
     }
+
+    @Operation(method = "GET", summary = "Get all notes of set", description = "Get all notes of set")
+    @GetMapping(value = "/{setId}")
+    public ResponseData<?> getAllNotesOfSet(@RequestParam(defaultValue = "0", required = false) int pageNo,
+                                            @Min(1) @RequestParam(defaultValue = "10", required = false) int pageSize,
+                                            @PathVariable @Min(1) Long setId) {
+        log.info("Get notes of set");
+        return new ResponseData<>(HttpStatus.OK.value(), "Get videos by category", noteService.getAllNotesOfSet(pageNo, pageSize, setId));
+    }
 }
