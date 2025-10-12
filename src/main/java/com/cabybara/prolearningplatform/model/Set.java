@@ -1,8 +1,12 @@
 package com.cabybara.prolearningplatform.model;
 
+import com.cabybara.prolearningplatform.enums.Privacy;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.List;
 
@@ -21,9 +25,11 @@ public class Set extends AbstractEntity {
     private String description;
 
     @Column(length = 50)
-    private String privacy;
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    private Privacy privacy;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_user", referencedColumnName = "id")
     private User user;
 

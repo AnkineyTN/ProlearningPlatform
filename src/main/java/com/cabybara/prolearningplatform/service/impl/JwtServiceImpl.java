@@ -39,6 +39,9 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public String generateToken(Authentication authentication) {
         Map<String, Object> privateClaims = new HashMap<>();
+        User user = (User) authentication.getPrincipal();
+
+        privateClaims.put("id", user.getId());
         privateClaims.put("roles", authentication.getAuthorities().stream().map(GrantedAuthority::getAuthority).toList());
         return createToken(privateClaims, authentication.getName());
     }
@@ -48,6 +51,7 @@ public class JwtServiceImpl implements JwtService {
         Map<String, Object> privateClaims = new HashMap<>();
         User user = (User) userService.loadUserByUsername(username);
 
+        privateClaims.put("id", user.getId());
         privateClaims.put("roles", user.getRoles().stream().map(Authority::getAuthority).toList());
         return createToken(privateClaims, username);
     }
