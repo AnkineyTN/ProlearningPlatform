@@ -2,7 +2,9 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.ConvertFileToVectorRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.CreateNoteRequestDTO;
+import com.cabybara.prolearningplatform.dto.request.ExplainNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.SaveNoteRequestDTO;
+import com.cabybara.prolearningplatform.dto.response.ExplainNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.ResponseData;
 import com.cabybara.prolearningplatform.dto.response.ResponseError;
 import com.cabybara.prolearningplatform.service.AIService;
@@ -30,7 +32,6 @@ public class NoteController {
 
     private static final String ERROR_MESSAGE = "errorMessage={}";
 
-    // CREATE VIDEO
     @Operation(method = "POST", summary = "Create note", description = "Create new note")
     @PostMapping(value = "/create")
     public ResponseData<Void> saveVideo(@Valid @RequestBody CreateNoteRequestDTO request) {
@@ -67,6 +68,19 @@ public class NoteController {
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e);
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Convert file to vector fail");
+        }
+    }
+
+    @Operation(method = "POST", summary = "Explain text with AI", description = "Explain text with AI")
+    @PostMapping(value = "/explain")
+    public ResponseData<ExplainNoteResponseDTO> explainNote(@Valid @RequestBody ExplainNoteRequestDTO request) {
+        log.info("Explain note with AI");
+        try {
+            ExplainNoteResponseDTO response = aiService.explainNote(request);
+            return new ResponseData<>(HttpStatus.CREATED.value(), "Explain note with AI successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Explain note with AI fail");
         }
     }
 }
