@@ -5,6 +5,7 @@ import com.cabybara.prolearningplatform.dto.request.CreateNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.ExplainNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.SaveNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.response.ExplainNoteResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.GetDetailNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.ResponseData;
 import com.cabybara.prolearningplatform.dto.response.ResponseError;
 import com.cabybara.prolearningplatform.service.AIService;
@@ -85,11 +86,23 @@ public class NoteController {
     }
 
     @Operation(method = "GET", summary = "Get all notes of set", description = "Get all notes of set")
-    @GetMapping(value = "/{setId}")
+    @GetMapping(value = "/all/{setId}")
     public ResponseData<?> getAllNotesOfSet(@RequestParam(defaultValue = "0", required = false) int pageNo,
                                             @Min(1) @RequestParam(defaultValue = "10", required = false) int pageSize,
                                             @PathVariable @Min(1) Long setId) {
         log.info("Get notes of set");
         return new ResponseData<>(HttpStatus.OK.value(), "Get videos by category", noteService.getAllNotesOfSet(pageNo, pageSize, setId));
+    }
+
+    @Operation(summary = "Get note detail", description = "Get note detail")
+    @GetMapping("/{noteId}")
+    public ResponseData<GetDetailNoteResponseDTO> getDetailNote(@PathVariable @Min(1) Long noteId) {
+        try {
+            log.info("Get note detail, noteId={}", noteId);
+            return new ResponseData<>(HttpStatus.OK.value(), "Video detail", noteService.getDetailNote(noteId));
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
+            return new ResponseError<>(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+        }
     }
 }

@@ -2,9 +2,7 @@ package com.cabybara.prolearningplatform.service.impl;
 
 import com.cabybara.prolearningplatform.dto.request.CreateNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.SaveNoteRequestDTO;
-import com.cabybara.prolearningplatform.dto.response.GetAllNotesResponseDTO;
-import com.cabybara.prolearningplatform.dto.response.PageResponse;
-import com.cabybara.prolearningplatform.dto.response.PageResponseDetail;
+import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.Note;
 import com.cabybara.prolearningplatform.model.Set;
@@ -81,6 +79,30 @@ public class NoteServiceImpl implements NoteService {
                 .totalPage(notesPage.getTotalPages())
                 .totalElements(notesPage.getTotalElements())
                 .items(noteDTOs)
+                .build();
+    }
+
+    @Override
+    public GetDetailNoteResponseDTO getDetailNote(Long noteId) {
+        Note note = noteRepository.findNoteWithDocsById(noteId).orElseThrow(() -> new ResourceNotFoundException("Note not found with id: " + noteId));
+
+        return GetDetailNoteResponseDTO.builder()
+                .id(note.getId())
+                .title(note.getTitle())
+                .description(note.getDescription())
+                .privacy(note.getPrivacy())
+                .content(note.getContent())
+                .noteDocs(
+                        note.getNoteDocs().stream()
+                                .map(doc -> GetDocsInNoteResponseDTO.builder()
+                                        .id(doc.getId())
+                                        .fileName(doc.getFileName())
+                                        .fileUrl(doc.getFileUrl())
+                                        .extension(doc.getExtension())
+                                        .publicId(doc.getPublicId())
+                                        .build())
+                                .toList()
+                )
                 .build();
     }
 
