@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.configuration;
 
 import com.cabybara.prolearningplatform.exception.JwtAuthEntryPoint;
-import com.cabybara.prolearningplatform.service.JwtService;
+import com.cabybara.prolearningplatform.service.auth.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,8 +1,7 @@
-package com.cabybara.prolearningplatform.dto;
+package com.cabybara.prolearningplatform.dto.response;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.Value;
 
 @Data
 @Builder

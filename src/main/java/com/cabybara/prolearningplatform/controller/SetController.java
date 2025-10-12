@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.PaginationResponseDto;
-import com.cabybara.prolearningplatform.dto.SetUpdateRequestDto;
+import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
+import com.cabybara.prolearningplatform.dto.request.SetUpdateRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,9 +16,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import com.cabybara.prolearningplatform.dto.SetCreationRequestDto;
-import com.cabybara.prolearningplatform.dto.SetResponseDto;
-import com.cabybara.prolearningplatform.service.SetService;
+import com.cabybara.prolearningplatform.dto.request.SetCreationRequestDto;
+import com.cabybara.prolearningplatform.dto.response.SetResponseDto;
+import com.cabybara.prolearningplatform.service.set.SetService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 

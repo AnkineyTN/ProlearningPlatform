@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.dto;
+package com.cabybara.prolearningplatform.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

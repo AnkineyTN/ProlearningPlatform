@@ -1,6 +1,6 @@
-package com.cabybara.prolearningplatform.service.impl;
+package com.cabybara.prolearningplatform.service.redis.impl;
 
-import com.cabybara.prolearningplatform.service.RedisService;
+import com.cabybara.prolearningplatform.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;

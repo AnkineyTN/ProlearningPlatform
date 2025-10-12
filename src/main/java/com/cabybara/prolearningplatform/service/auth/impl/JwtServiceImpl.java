@@ -1,13 +1,12 @@
-package com.cabybara.prolearningplatform.service.impl;
+package com.cabybara.prolearningplatform.service.auth.impl;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.cabybara.prolearningplatform.dto.GoogleUserInfoDto;
 import com.cabybara.prolearningplatform.model.Authority;
 import com.cabybara.prolearningplatform.model.User;
-import com.cabybara.prolearningplatform.service.JwtService;
-import com.cabybara.prolearningplatform.service.RedisService;
-import com.cabybara.prolearningplatform.service.UserService;
+import com.cabybara.prolearningplatform.service.auth.JwtService;
+import com.cabybara.prolearningplatform.service.redis.RedisService;
+import com.cabybara.prolearningplatform.service.user.UserService;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;

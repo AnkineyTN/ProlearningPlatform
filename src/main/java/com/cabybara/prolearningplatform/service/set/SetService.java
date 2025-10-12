@@ -1,8 +1,8 @@
-package com.cabybara.prolearningplatform.service;
+package com.cabybara.prolearningplatform.service.set;
 
-import com.cabybara.prolearningplatform.dto.SetCreationRequestDto;
-import com.cabybara.prolearningplatform.dto.SetResponseDto;
-import com.cabybara.prolearningplatform.dto.SetUpdateRequestDto;
+import com.cabybara.prolearningplatform.dto.request.SetCreationRequestDto;
+import com.cabybara.prolearningplatform.dto.response.SetResponseDto;
+import com.cabybara.prolearningplatform.dto.request.SetUpdateRequestDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.dto;
+package com.cabybara.prolearningplatform.dto.request;
 
 import com.cabybara.prolearningplatform.enums.Privacy;
 import lombok.Builder;

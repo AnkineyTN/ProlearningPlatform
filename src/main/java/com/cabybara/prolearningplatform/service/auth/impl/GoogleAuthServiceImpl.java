@@ -1,18 +1,17 @@
-package com.cabybara.prolearningplatform.service.impl;
+package com.cabybara.prolearningplatform.service.auth.impl;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.cabybara.prolearningplatform.dto.GoogleAuthUrlResponseDto;
+import com.cabybara.prolearningplatform.dto.response.GoogleAuthUrlResponseDto;
 import com.cabybara.prolearningplatform.dto.GoogleUserInfoDto;
-import com.cabybara.prolearningplatform.dto.LoginResponseDto;
-import com.cabybara.prolearningplatform.dto.UserResponseDto;
+import com.cabybara.prolearningplatform.dto.response.LoginResponseDto;
+import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
 import com.cabybara.prolearningplatform.exception.GoogleAuthException;
-import com.cabybara.prolearningplatform.mapper.GoogleAuthItemMapper;
 import com.cabybara.prolearningplatform.mapper.UserMapper;
 import com.cabybara.prolearningplatform.model.User;
-import com.cabybara.prolearningplatform.service.GoogleAuthService;
-import com.cabybara.prolearningplatform.service.JwtService;
-import com.cabybara.prolearningplatform.service.RedisService;
-import com.cabybara.prolearningplatform.service.UserService;
+import com.cabybara.prolearningplatform.service.auth.GoogleAuthService;
+import com.cabybara.prolearningplatform.service.auth.JwtService;
+import com.cabybara.prolearningplatform.service.redis.RedisService;
+import com.cabybara.prolearningplatform.service.user.UserService;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.StoredCredential;
 import com.google.api.client.auth.oauth2.TokenResponse;
@@ -24,7 +23,6 @@ import com.google.api.services.oauth2.model.Userinfo;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;

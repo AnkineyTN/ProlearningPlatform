@@ -1,8 +1,12 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.*;
-import com.cabybara.prolearningplatform.service.AuthService;
-import com.cabybara.prolearningplatform.service.GoogleAuthService;
+import com.cabybara.prolearningplatform.dto.request.LoginRequestDto;
+import com.cabybara.prolearningplatform.dto.request.RegisterRequestDto;
+import com.cabybara.prolearningplatform.dto.response.GoogleAuthUrlResponseDto;
+import com.cabybara.prolearningplatform.dto.response.LoginResponseDto;
+import com.cabybara.prolearningplatform.dto.response.RegisterResponseDto;
+import com.cabybara.prolearningplatform.service.auth.AuthService;
+import com.cabybara.prolearningplatform.service.auth.GoogleAuthService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -18,8 +22,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")

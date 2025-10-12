@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.dto;
+package com.cabybara.prolearningplatform.dto.request;
 
 import com.cabybara.prolearningplatform.enums.Role;
 import io.swagger.v3.oas.annotations.media.Schema;

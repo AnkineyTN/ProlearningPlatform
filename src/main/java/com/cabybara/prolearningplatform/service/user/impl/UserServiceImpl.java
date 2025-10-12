@@ -1,10 +1,10 @@
-package com.cabybara.prolearningplatform.service.impl;
+package com.cabybara.prolearningplatform.service.user.impl;
 
 
-import com.cabybara.prolearningplatform.dto.ChangePasswordRequestDto;
+import com.cabybara.prolearningplatform.dto.request.ChangePasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.GoogleUserInfoDto;
-import com.cabybara.prolearningplatform.dto.RegisterRequestDto;
-import com.cabybara.prolearningplatform.dto.UserResponseDto;
+import com.cabybara.prolearningplatform.dto.request.RegisterRequestDto;
+import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.enums.UserEducation;
 import com.cabybara.prolearningplatform.enums.UserHearAppFrom;
@@ -14,7 +14,7 @@ import com.cabybara.prolearningplatform.mapper.UserMapper;
 import com.cabybara.prolearningplatform.model.Authority;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.repository.UserRepository;
-import com.cabybara.prolearningplatform.service.UserService;
+import com.cabybara.prolearningplatform.service.user.UserService;
 import com.google.api.services.oauth2.model.Userinfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

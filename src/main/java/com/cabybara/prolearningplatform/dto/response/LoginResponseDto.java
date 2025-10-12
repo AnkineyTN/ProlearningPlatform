@@ -1,9 +1,6 @@
-package com.cabybara.prolearningplatform.dto;
+package com.cabybara.prolearningplatform.dto.response;
 
-import com.cabybara.prolearningplatform.enums.Role;
 import lombok.*;
-
-import java.util.Set;
 
 @Value
 @Builder

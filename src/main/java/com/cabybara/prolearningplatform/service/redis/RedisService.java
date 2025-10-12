@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.service;
+package com.cabybara.prolearningplatform.service.redis;
 
 public interface RedisService {
     void set(String key, Object value, long timeoutInSeconds);
