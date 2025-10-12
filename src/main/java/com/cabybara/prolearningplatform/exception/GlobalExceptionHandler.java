@@ -52,8 +52,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(
             AuthException.class
     )
-    public ResponseEntity<ApiResponse<Object>> handleAuthException(AuthException ex) {
-        ApiResponse<Object> response = ResponseUtil.error("Auth failed: " + ex.getMessage(), null);
+    public ResponseEntity<ApiResponse<Object>> handleAuthException(AuthException ex, WebRequest req) {
+        ApiResponse<Object> response = ResponseUtil.error("Auth failed: " + ex.getMessage(), null, "path: " + req.getDescription(false).replace("uri=", ""));
         return ResponseEntity
                 .status(ex.getStatus())
                 .body(response);
@@ -62,10 +62,20 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(
             GoogleAuthException.class
     )
-    public ResponseEntity<ApiResponse<Object>> handleGoogleAuthException(GoogleAuthException ex) {
-        ApiResponse<Object> response = ResponseUtil.error("Google auth failed: " + ex.getMessage(), null);
+    public ResponseEntity<ApiResponse<Object>> handleGoogleAuthException(GoogleAuthException ex, WebRequest req) {
+        ApiResponse<Object> response = ResponseUtil.error("Google auth failed: " + ex.getMessage(),null, "path: " + req.getDescription(false).replace("uri=", ""));
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
+                .body(response);
+    }
+
+
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleResourceAlreadyExistsException(
+            ResourceAlreadyExistsException ex, WebRequest request) {
+        ApiResponse<Object> response = ResponseUtil.error("Resource already exists: " + ex.getMessage(),null, "path: " + request.getDescription(false).replace("uri=", ""));
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
                 .body(response);
     }
 }
