@@ -39,11 +39,60 @@ CREATE TABLE "user" (
                         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE
-    public.authorities (
-                           id bigserial primary key NOT NULL,
-                           email character varying(128) NOT NULL,
-                           authority authority NOT NULL DEFAULT 'ROLE_USER'
+CREATE TABLE authorities
+(
+    id        bigserial primary key  NOT NULL,
+    email     character varying(128) NOT NULL,
+    authority authority              NOT NULL DEFAULT 'ROLE_USER'
+);
+
+CREATE TABLE set
+(
+    id          SERIAL PRIMARY KEY,
+    id_user     INTEGER NOT NULL,
+    title       VARCHAR(255),
+    description TEXT,
+    privacy     VARCHAR(50),
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_user
+        FOREIGN KEY (id_user)
+            REFERENCES "user" (id)
+            ON DELETE CASCADE
+);
+
+CREATE TABLE note
+(
+    id          SERIAL PRIMARY KEY,
+    note_url    VARCHAR(255),
+    title       VARCHAR(255),
+    content     TEXT,
+    description TEXT,
+    privacy     VARCHAR(50),
+    status      VARCHAR(50),
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id_set      INT,
+    CONSTRAINT fk_note_set
+        FOREIGN KEY (id_set)
+            REFERENCES set (id)
+            ON DELETE CASCADE
+);
+
+CREATE TABLE note_docs
+(
+    id         SERIAL PRIMARY KEY,
+    file_name  TEXT NOT NULL,
+    file_url   TEXT NOT NULL,
+    type       TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id_note    INT  NOT NULL,
+    CONSTRAINT fk_note
+        FOREIGN KEY (id_note)
+            REFERENCES note (id)
+            ON DELETE CASCADE
 );
 
 

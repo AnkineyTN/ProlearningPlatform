@@ -1,10 +1,11 @@
 package com.cabybara.prolearningplatform.exception;
 
 import lombok.Data;
+import lombok.Getter;
 import lombok.Value;
 import org.springframework.http.HttpStatus;
 
-@Value
+@Getter
 public class AuthException extends RuntimeException {
     HttpStatus status;
 

@@ -1,8 +1,8 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.ChangePasswordRequestDto;
-import com.cabybara.prolearningplatform.dto.UserResponseDto;
-import com.cabybara.prolearningplatform.service.UserService;
+import com.cabybara.prolearningplatform.dto.request.ChangePasswordRequestDto;
+import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
+import com.cabybara.prolearningplatform.service.user.UserService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import io.swagger.v3.oas.annotations.Hidden;

@@ -59,6 +59,12 @@ spring:
             redirect-uri: ${GOOGLE_REDIRECT_URI}
             scope: "email,profile,openid"
 
+cloud:
+  cloudinary:
+    name: ${CLOUD_CLOUDINARY_NAME}
+    apiKey: ${CLOUD_CLOUDINARY_API_KEY}
+    apiSecret: ${CLOUD_CLOUDINARY_API_SECRET}
+
 springdoc:
   swagger-ui:
     path: api-docs

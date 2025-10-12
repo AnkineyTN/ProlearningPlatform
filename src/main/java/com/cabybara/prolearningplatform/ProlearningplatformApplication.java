@@ -15,5 +15,4 @@ public class ProlearningplatformApplication {
 
 		application.run(args);
 	}
-
 }
