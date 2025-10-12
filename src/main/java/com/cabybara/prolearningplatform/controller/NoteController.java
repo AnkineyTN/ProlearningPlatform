@@ -1,9 +1,11 @@
 package com.cabybara.prolearningplatform.controller;
 
+import com.cabybara.prolearningplatform.dto.request.ConvertFileToVectorRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.CreateNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.SaveNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.response.ResponseData;
 import com.cabybara.prolearningplatform.dto.response.ResponseError;
+import com.cabybara.prolearningplatform.service.AIService;
 import com.cabybara.prolearningplatform.service.NoteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +25,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class NoteController {
     private final NoteService noteService;
+
+    private final AIService aiService;
 
     private static final String ERROR_MESSAGE = "errorMessage={}";
 
@@ -50,6 +54,19 @@ public class NoteController {
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Save note fail");
+        }
+    }
+
+    @Operation(method = "POST", summary = "Convert file to vector DB", description = "Convert file to vector DB")
+    @PostMapping(value = "/convert-to-vectordb")
+    public ResponseData<Void> convertFileToVector(@Valid @RequestBody ConvertFileToVectorRequestDTO request) {
+        log.info("Convert file to vector DB");
+        try {
+            aiService.convertFileToVector(request);
+            return new ResponseData<>(HttpStatus.CREATED.value(), "Convert file to vector successfully");
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Convert file to vector fail");
         }
     }
 }
