@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.service;
+package com.cabybara.prolearningplatform.service.cloudinary;
 
 import com.cabybara.prolearningplatform.dto.response.CloudinaryResponseDTO;
 import org.springframework.web.multipart.MultipartFile;

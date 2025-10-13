@@ -1,8 +1,8 @@
-package com.cabybara.prolearningplatform.service.impl;
+package com.cabybara.prolearningplatform.service.cloudinary.impl;
 
 import com.cabybara.prolearningplatform.dto.response.CloudinaryResponseDTO;
 import com.cabybara.prolearningplatform.exception.UploadFileException;
-import com.cabybara.prolearningplatform.service.CloudinaryService;
+import com.cabybara.prolearningplatform.service.cloudinary.CloudinaryService;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.service.impl;
+package com.cabybara.prolearningplatform.service.note.impl;
 
 import com.cabybara.prolearningplatform.dto.request.CreateNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.SaveNoteRequestDTO;
@@ -8,7 +8,7 @@ import com.cabybara.prolearningplatform.model.Note;
 import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
-import com.cabybara.prolearningplatform.service.NoteService;
+import com.cabybara.prolearningplatform.service.note.NoteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
