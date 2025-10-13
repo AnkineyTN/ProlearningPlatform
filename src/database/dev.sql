@@ -22,21 +22,22 @@ CREATE TYPE user_hear_app_from AS ENUM (
     'OTHER'
     );
 
-CREATE TABLE "user" (
-                        id SERIAL PRIMARY KEY,
-                        email VARCHAR(255) UNIQUE NOT NULL,
-                        first_name VARCHAR(100) NOT NULL,
-                        last_name VARCHAR(100) NOT NULL,
-                        password VARCHAR(255) NOT NULL,
-                        recovery_code character varying(255) NULL,
-                        language user_language default 'VI',
+CREATE TABLE "user"
+(
+    id            SERIAL PRIMARY KEY,
+    email         VARCHAR(255) UNIQUE NOT NULL,
+    first_name    VARCHAR(100)        NOT NULL,
+    last_name     VARCHAR(100)        NOT NULL,
+    password      VARCHAR(255)        NOT NULL,
+    recovery_code character varying(255) NULL,
+    language      user_language            default 'VI',
 
-                        education user_education default 'HIGH_SCHOOL',
+    education     user_education           default 'HIGH_SCHOOL',
 
-                        hear_app_from user_hear_app_from default 'GOOGLE',
+    hear_app_from user_hear_app_from       default 'GOOGLE',
 
-                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE authorities
@@ -58,15 +59,7 @@ CREATE TABLE set
 
     CONSTRAINT fk_user
         FOREIGN KEY (id_user)
-<<<<<<< HEAD
-<<<<<<< HEAD
-            REFERENCES "user" (id)
-=======
             REFERENCES users (id)
->>>>>>> feature/take-notes
-=======
-            REFERENCES "user" (id)
->>>>>>> acccf44ba55876384bbd09fdeae5575adf13f4e4
             ON DELETE CASCADE
 );
 
@@ -91,13 +84,13 @@ CREATE TABLE note
 CREATE TABLE note_docs
 (
     id         SERIAL PRIMARY KEY,
-    file_name  TEXT NOT NULL,
-    file_url   TEXT NOT NULL,
-    extension  TEXT NOT NULL,
-    public_id VARCHAR(255) NOT NULL,
+    file_name  TEXT         NOT NULL,
+    file_url   TEXT         NOT NULL,
+    extension  TEXT         NOT NULL,
+    public_id  VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    id_note    INT  NOT NULL,
+    id_note    INT          NOT NULL,
     CONSTRAINT fk_note
         FOREIGN KEY (id_note)
             REFERENCES note (id)
