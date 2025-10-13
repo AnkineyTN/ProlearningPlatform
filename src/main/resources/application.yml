@@ -29,7 +29,7 @@ spring:
         format_sql: true
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-  #    show-sql: true
+#    show-sql: true
 
   data:
     redis:

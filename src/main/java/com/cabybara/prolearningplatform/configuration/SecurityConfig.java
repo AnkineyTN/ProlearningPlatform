@@ -84,8 +84,8 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable());
 
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
-                        .decoder(jwtDecoder())
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                .decoder(jwtDecoder())
+                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
                 .authenticationEntryPoint(unauthorizedHandler)
         );
 
