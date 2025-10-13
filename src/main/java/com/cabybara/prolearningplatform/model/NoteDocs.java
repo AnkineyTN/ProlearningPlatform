@@ -17,8 +17,11 @@ public class NoteDocs extends AbstractEntity{
     @Column(name = "file_url", nullable = false)
     private String fileUrl;
 
-    @Column(name = "type", nullable = false)
-    private String type;
+    @Column(name = "extension")
+    private String extension;
+
+    @Column(name = "public_id")
+    private String publicId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_note", nullable = false)

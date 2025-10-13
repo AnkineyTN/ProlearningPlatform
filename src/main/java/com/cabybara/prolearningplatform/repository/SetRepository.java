@@ -11,7 +11,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SetRepository extends JpaRepository<Set, Long> {
-
     Optional<Set> findByTitle(String title);
 
     boolean existsByTitle(String title);
