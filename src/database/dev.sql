@@ -56,11 +56,7 @@ CREATE TABLE set
 
     CONSTRAINT fk_user
         FOREIGN KEY (id_user)
-<<<<<<< HEAD
-            REFERENCES "user" (id)
-=======
             REFERENCES users (id)
->>>>>>> feature/take-notes
             ON DELETE CASCADE
 );
 
@@ -85,13 +81,13 @@ CREATE TABLE note
 CREATE TABLE note_docs
 (
     id         SERIAL PRIMARY KEY,
-    file_name  TEXT NOT NULL,
-    file_url   TEXT NOT NULL,
-    extension  TEXT NOT NULL,
-    public_id VARCHAR(255) NOT NULL,
+    file_name  TEXT         NOT NULL,
+    file_url   TEXT         NOT NULL,
+    extension  TEXT         NOT NULL,
+    public_id  VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    id_note    INT  NOT NULL,
+    id_note    INT          NOT NULL,
     CONSTRAINT fk_note
         FOREIGN KEY (id_note)
             REFERENCES note (id)
