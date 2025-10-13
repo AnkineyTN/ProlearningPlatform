@@ -1,15 +1,9 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.request.ConvertFileToVectorRequestDTO;
-import com.cabybara.prolearningplatform.dto.request.CreateNoteRequestDTO;
-import com.cabybara.prolearningplatform.dto.request.ExplainNoteRequestDTO;
-import com.cabybara.prolearningplatform.dto.request.SaveNoteRequestDTO;
-import com.cabybara.prolearningplatform.dto.response.ExplainNoteResponseDTO;
-import com.cabybara.prolearningplatform.dto.response.GetDetailNoteResponseDTO;
-import com.cabybara.prolearningplatform.dto.response.ResponseData;
-import com.cabybara.prolearningplatform.dto.response.ResponseError;
-import com.cabybara.prolearningplatform.service.AIService;
-import com.cabybara.prolearningplatform.service.NoteService;
+import com.cabybara.prolearningplatform.dto.request.*;
+import com.cabybara.prolearningplatform.dto.response.*;
+import com.cabybara.prolearningplatform.service.ai.AIService;
+import com.cabybara.prolearningplatform.service.note.NoteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -80,6 +74,19 @@ public class NoteController {
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e);
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Explain note with AI fail");
+        }
+    }
+
+    @Operation(method = "POST", summary = "Summarize file with AI", description = "Summarize file with AI")
+    @PostMapping(value = "/summarize")
+    public ResponseData<SummarizeFileResponseDTO> explainNote(@Valid @RequestBody SummarizeFileRequestDTO request) {
+        log.info("Summarize file with AI");
+        try {
+            SummarizeFileResponseDTO response = aiService.summarizeFile(request);
+            return new ResponseData<>(HttpStatus.CREATED.value(), "Summarize file with AI successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Summarize file with AI fail");
         }
     }
 

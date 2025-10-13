@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.service.impl;
+package com.cabybara.prolearningplatform.service.upload.impl;
 
 
 import com.cabybara.prolearningplatform.dto.response.CloudinaryResponseDTO;
@@ -8,8 +8,8 @@ import com.cabybara.prolearningplatform.model.Note;
 import com.cabybara.prolearningplatform.model.NoteDocs;
 import com.cabybara.prolearningplatform.repository.NoteDocsRepository;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
-import com.cabybara.prolearningplatform.service.CloudinaryService;
-import com.cabybara.prolearningplatform.service.UploadFileService;
+import com.cabybara.prolearningplatform.service.cloudinary.CloudinaryService;
+import com.cabybara.prolearningplatform.service.upload.UploadFileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
