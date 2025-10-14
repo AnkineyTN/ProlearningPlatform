@@ -29,27 +29,30 @@ public class UploadFileController {
 
     @Operation(
             method = "POST",
-            summary = "Upload document",
+            summary = "Upload file",
             description = """
-                    Upload document from Notes, FlashCards,...
+                    Upload file from Notes, Flashcards, Tests, Mindmaps, Recaps
                     
                     📝 Form-data fields:
-                    - file: multipart file to upload (document)
-                    - subject: string ('note', 'flashcard', 'mindmap', )
+                    - file: multipart file to upload (document, image)
+                    - subject: string
+                        + Notes: Document (note-document), Image (note-image)
+                        + ...
                     
                     📌 Note:
                     - Max file size is limited by server config.
-                    - Supported formats: .txt, .pdf, .docx, .pptx
+                    - Document types accept: .pdf, .docx, .txt, .pptx
+                    - Image types accept: .jpg, .jpeg, .png
                     """
     )
-    @PostMapping(value = "/document")
-    public ResponseData<UploadFileResponseDTO> uploadDocument(@RequestParam("file") MultipartFile file, @RequestParam("subject") String subject, @RequestParam("noteId") Long noteId) {
-        log.info("Upload file");
+    @PostMapping(value = "")
+    public ResponseData<UploadFileResponseDTO> uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("subject") String subject, @RequestParam("id") Long id) {
+        log.info("Upload file (Document or Image)");
         try {
-            return new ResponseData<>(HttpStatus.OK.value(), "Upload documents", uploadFileService.uploadDocument(file, subject, noteId));
+            return new ResponseData<>(HttpStatus.OK.value(), "Upload file", uploadFileService.uploadFile(file, subject, id));
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
-            return new ResponseError<>(HttpStatus.BAD_REQUEST.value(), "Upload document fail");
+            return new ResponseError<>(HttpStatus.BAD_REQUEST.value(), "Upload file fail");
         }
     }
 }

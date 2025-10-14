@@ -19,23 +19,28 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     @Autowired
     private Cloudinary cloudinary;
 
+    // Folder for note
     private final String NOTE_DOCS_FOLDER = "ProLearning/note-documents";
+    private final String NOTE_IMAGES_FOLDER = "ProLearning/note-images";
 
     @Override
     public CloudinaryResponseDTO uploadMultipartFile(MultipartFile file, String fileName, String extension, String subject) throws IOException {
         log.info("Upload multipart files");
 
-        // TODO: Handle for many type (note, flashcard, test,...)
+        // Handle upload to correct folder on Cloudinary
         String folder = "";
-
-        if (subject.equals("note")) {
+        if (subject.equals("note-document")) {
             folder = NOTE_DOCS_FOLDER;
+        } else if(subject.equals("note-image")) {
+            folder = NOTE_IMAGES_FOLDER;
         }
 
         // Handle upload correct file type
         String type = "";
         if (extension.equals("txt") || extension.equals("pdf") || extension.equals("docx") || extension.equals("pptx")) {
             type = "raw";
+        } else if(extension.equals("jpg") || extension.equals("jpeg") || extension.equals("png")) {
+            type = "image";
         }
 
         Map<?, ?> result;
