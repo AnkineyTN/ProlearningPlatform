@@ -7,4 +7,6 @@ import java.io.IOException;
 
 public interface CloudinaryService {
     public CloudinaryResponseDTO uploadMultipartFile(MultipartFile file, String fileName, String extension, String subject) throws IOException;
+
+    public void deleteFile(String publicId, String type) throws IOException;
 }

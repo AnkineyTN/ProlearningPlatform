@@ -31,7 +31,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         String folder = "";
         if (subject.equals("note-document")) {
             folder = NOTE_DOCS_FOLDER;
-        } else if(subject.equals("note-image")) {
+        } else if (subject.equals("note-image")) {
             folder = NOTE_IMAGES_FOLDER;
         }
 
@@ -39,7 +39,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         String type = "";
         if (extension.equals("txt") || extension.equals("pdf") || extension.equals("docx") || extension.equals("pptx")) {
             type = "raw";
-        } else if(extension.equals("jpg") || extension.equals("jpeg") || extension.equals("png")) {
+        } else if (extension.equals("jpg") || extension.equals("jpeg") || extension.equals("png")) {
             type = "image";
         }
 
@@ -66,5 +66,18 @@ public class CloudinaryServiceImpl implements CloudinaryService {
                 .fileUrl(fileUrl)
                 .publicId(publicId)
                 .build();
+    }
+
+    @Override
+    public void deleteFile(String publicId, String extension) throws IOException {
+        String type = "";
+        if (extension.equals("txt") || extension.equals("pdf") || extension.equals("docx") || extension.equals("pptx")) {
+            type = "raw";
+        } else if (extension.equals("jpg") || extension.equals("jpeg") || extension.equals("png")) {
+            type = "image";
+        }
+        cloudinary.uploader().destroy(publicId, ObjectUtils.asMap(
+                "resource_type", type
+        ));
     }
 }
