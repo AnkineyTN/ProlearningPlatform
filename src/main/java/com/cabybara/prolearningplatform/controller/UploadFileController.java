@@ -3,7 +3,7 @@ package com.cabybara.prolearningplatform.controller;
 import com.cabybara.prolearningplatform.dto.response.ResponseData;
 import com.cabybara.prolearningplatform.dto.response.ResponseError;
 import com.cabybara.prolearningplatform.dto.response.UploadFileResponseDTO;
-import com.cabybara.prolearningplatform.service.UploadFileService;
+import com.cabybara.prolearningplatform.service.upload.UploadFileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

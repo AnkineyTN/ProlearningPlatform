@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.service;
+package com.cabybara.prolearningplatform.service.note;
 
 import com.cabybara.prolearningplatform.dto.request.CreateNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.SaveNoteRequestDTO;

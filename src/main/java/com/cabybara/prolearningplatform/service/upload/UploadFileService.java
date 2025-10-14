@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.service;
+package com.cabybara.prolearningplatform.service.upload;
 
 import com.cabybara.prolearningplatform.dto.response.UploadFileResponseDTO;
 import org.springframework.web.multipart.MultipartFile;
