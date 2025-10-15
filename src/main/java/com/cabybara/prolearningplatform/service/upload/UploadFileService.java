@@ -6,5 +6,5 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 
 public interface UploadFileService {
-    public UploadFileResponseDTO uploadDocument(MultipartFile file, String subject, Long noteId) throws IOException;
+    public UploadFileResponseDTO uploadFile(MultipartFile file, String subject, Long id) throws IOException;
 }

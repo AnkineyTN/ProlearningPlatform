@@ -1,13 +1,16 @@
 package com.cabybara.prolearningplatform.service.note.impl;
 
 import com.cabybara.prolearningplatform.dto.request.CreateNoteRequestDTO;
+import com.cabybara.prolearningplatform.dto.request.DeleteNoteDocRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.SaveNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.Note;
 import com.cabybara.prolearningplatform.model.Set;
+import com.cabybara.prolearningplatform.repository.NoteDocsRepository;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
+import com.cabybara.prolearningplatform.service.cloudinary.CloudinaryService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -25,6 +29,9 @@ import java.util.List;
 public class NoteServiceImpl implements NoteService {
     private final SetRepository setRepository;
     private final NoteRepository noteRepository;
+    private final NoteDocsRepository noteDocsRepository;
+
+    private final CloudinaryService cloudinaryService;
 
     // Create new note
     @Override
@@ -104,6 +111,12 @@ public class NoteServiceImpl implements NoteService {
                                 .toList()
                 )
                 .build();
+    }
+
+    @Override
+    public void deleteDocInNote(Long noteDocsId, DeleteNoteDocRequestDTO request) throws IOException {
+        noteDocsRepository.deleteById(noteDocsId);
+        cloudinaryService.deleteFile(request.getPublicId(), request.getExtension());
     }
 
     private Set getSetById(Long setId) {
