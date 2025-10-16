@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.service.note;
 
 import com.cabybara.prolearningplatform.dto.request.CreateNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.DeleteNoteDocRequestDTO;
+import com.cabybara.prolearningplatform.dto.request.DeleteNoteImgRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.SaveNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.response.GetDetailNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.PageResponseDetail;
@@ -18,4 +19,6 @@ public interface NoteService {
     public GetDetailNoteResponseDTO getDetailNote(Long noteId);
 
     public void deleteDocInNote(Long noteDocsId, DeleteNoteDocRequestDTO request) throws IOException;
+
+    public void deleteImgInNote(DeleteNoteImgRequestDTO request) throws IOException;
 }

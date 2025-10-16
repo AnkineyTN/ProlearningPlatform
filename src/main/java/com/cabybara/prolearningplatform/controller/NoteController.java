@@ -123,4 +123,17 @@ public class NoteController {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Delete document in note fail");
         }
     }
+
+    @Operation(summary = "Delete image in note", description = "Delete image in note")
+    @DeleteMapping("/delete-img")
+    public ResponseData<Void> deleteImgInNote(@Valid @RequestBody DeleteNoteImgRequestDTO request) {
+        log.info("Delete image in note, fileUrl={}", request.getFileUrl());
+        try {
+            noteService.deleteImgInNote(request);
+            return new ResponseData<>(HttpStatus.NO_CONTENT.value(), "Delete image in note successfully");
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Delete image in note fail");
+        }
+    }
 }

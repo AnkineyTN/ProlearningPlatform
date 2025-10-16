@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface NoteImgsRepository extends JpaRepository<NoteImgs, Long> {
+    NoteImgs findByFileUrl(String fileUrl);
 }
