@@ -1,9 +1,6 @@
 package com.cabybara.prolearningplatform.service.note.impl;
 
-import com.cabybara.prolearningplatform.dto.request.CreateNoteRequestDTO;
-import com.cabybara.prolearningplatform.dto.request.DeleteNoteDocRequestDTO;
-import com.cabybara.prolearningplatform.dto.request.DeleteNoteImgRequestDTO;
-import com.cabybara.prolearningplatform.dto.request.SaveNoteRequestDTO;
+import com.cabybara.prolearningplatform.dto.request.*;
 import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.Note;
@@ -131,6 +128,37 @@ public class NoteServiceImpl implements NoteService {
         NoteImgs noteImg = noteImgsRepository.findByFileUrl(request.getFileUrl());
         noteImgsRepository.deleteById(noteImg.getId());
         cloudinaryService.deleteFile(noteImg.getPublicId(), noteImg.getExtension());
+    }
+
+    @Override
+    public void updateNote(Long noteId, UpdateNoteRequestDTO request) {
+        Note note = getNoteById(noteId);
+        note.setTitle(request.getTitle());
+        note.setPrivacy(request.getPrivacy());
+        note.setDescription(request.getDescription());
+        noteRepository.save(note);
+    }
+
+    @Override
+    public void deleteNote(Long noteId) throws IOException {
+        Note note =  getNoteById(noteId);
+
+        List<NoteDocs> noteDocs = note.getNoteDocs();
+        for(NoteDocs noteDoc : noteDocs) {
+            DeleteNoteDocRequestDTO deleteDocReq = new  DeleteNoteDocRequestDTO();
+            deleteDocReq.setPublicId(noteDoc.getPublicId());
+            deleteDocReq.setExtension(noteDoc.getExtension());
+            deleteDocInNote(noteDoc.getId(), deleteDocReq);
+        }
+
+        List<NoteImgs> noteImgs = note.getNoteImgs();
+        for(NoteImgs noteImg : noteImgs) {
+            DeleteNoteImgRequestDTO deleteNoteImgReq = new  DeleteNoteImgRequestDTO();
+            deleteNoteImgReq.setFileUrl(noteImg.getFileUrl());
+            deleteImgInNote(deleteNoteImgReq);
+        }
+
+        noteRepository.deleteById(noteId);
     }
 
     private Set getSetById(Long setId) {
