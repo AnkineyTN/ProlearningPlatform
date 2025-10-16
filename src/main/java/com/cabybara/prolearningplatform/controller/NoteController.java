@@ -110,4 +110,17 @@ public class NoteController {
             return new ResponseError<>(HttpStatus.BAD_REQUEST.value(), e.getMessage());
         }
     }
+
+    @Operation(summary = "Delete document in note", description = "Delete document in note")
+    @DeleteMapping("/delete-doc/{noteDocsId}")
+    public ResponseData<Void> deleteDocInNote(@Min(value = 1) @PathVariable Long noteDocsId, @Valid @RequestBody DeleteNoteDocRequestDTO request) {
+        log.info("Delete document in note, noteDocsId={}", noteDocsId);
+        try {
+            noteService.deleteDocInNote(noteDocsId, request);
+            return new ResponseData<>(HttpStatus.NO_CONTENT.value(), "Delete document in note successfully");
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Delete document in note fail");
+        }
+    }
 }

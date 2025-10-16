@@ -37,4 +37,7 @@ public class Note extends AbstractEntity {
 
     @OneToMany(mappedBy = "note", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<NoteDocs> noteDocs;
+
+    @OneToMany(mappedBy = "note", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<NoteImgs> noteImgs;
 }
