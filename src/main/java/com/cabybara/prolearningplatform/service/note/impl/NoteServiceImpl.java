@@ -2,12 +2,16 @@ package com.cabybara.prolearningplatform.service.note.impl;
 
 import com.cabybara.prolearningplatform.dto.request.CreateNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.DeleteNoteDocRequestDTO;
+import com.cabybara.prolearningplatform.dto.request.DeleteNoteImgRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.SaveNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.Note;
+import com.cabybara.prolearningplatform.model.NoteDocs;
+import com.cabybara.prolearningplatform.model.NoteImgs;
 import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.repository.NoteDocsRepository;
+import com.cabybara.prolearningplatform.repository.NoteImgsRepository;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
 import com.cabybara.prolearningplatform.service.cloudinary.CloudinaryService;
@@ -30,10 +34,11 @@ public class NoteServiceImpl implements NoteService {
     private final SetRepository setRepository;
     private final NoteRepository noteRepository;
     private final NoteDocsRepository noteDocsRepository;
+    private final NoteImgsRepository noteImgsRepository;
 
     private final CloudinaryService cloudinaryService;
 
-    // Create new note
+    // [POST]: /api/note/create
     @Override
     public void createNote(CreateNoteRequestDTO request) {
         Set set = getSetById(request.getSetId());
@@ -48,17 +53,17 @@ public class NoteServiceImpl implements NoteService {
         log.info("✅ Created note '{}' in set id {}", note.getTitle(), set.getId());
     }
 
-    // Save note while taking
+    // [PATCh]: /api/note/save
     @Override
     public void saveNote(Long noteId, SaveNoteRequestDTO request) {
         Note note = getNoteById(noteId);
         note.setTitle(request.getTitle());
         note.setContent(request.getContent());
         noteRepository.save(note);
-        log.info("✅ Updated note '{}'", noteId);
+        log.info("✅ Save note '{}'", noteId);
     }
 
-    // Get all notes of set
+    // [GET]: /api/note/all/{setId}
     @Override
     public PageResponseDetail<?> getAllNotesOfSet(int pageNo, int pageSize, Long setId) {
         int page = 0;
@@ -89,6 +94,7 @@ public class NoteServiceImpl implements NoteService {
                 .build();
     }
 
+    // [GET]: /api/note/{noteId}
     @Override
     public GetDetailNoteResponseDTO getDetailNote(Long noteId) {
         Note note = noteRepository.findNoteWithDocsById(noteId).orElseThrow(() -> new ResourceNotFoundException("Note not found with id: " + noteId));
@@ -113,10 +119,19 @@ public class NoteServiceImpl implements NoteService {
                 .build();
     }
 
+    // [DELETE]: /api/note/delete-doc/{noteDocsId}
     @Override
     public void deleteDocInNote(Long noteDocsId, DeleteNoteDocRequestDTO request) throws IOException {
         noteDocsRepository.deleteById(noteDocsId);
         cloudinaryService.deleteFile(request.getPublicId(), request.getExtension());
+    }
+
+    // [DELETE]: /api/note/delete-img
+    @Override
+    public void deleteImgInNote(DeleteNoteImgRequestDTO request) throws IOException {
+        NoteImgs noteImg = noteImgsRepository.findByFileUrl(request.getFileUrl());
+        noteImgsRepository.deleteById(noteImg.getId());
+        cloudinaryService.deleteFile(noteImg.getPublicId(), noteImg.getExtension());
     }
 
     private Set getSetById(Long setId) {
