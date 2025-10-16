@@ -1,12 +1,14 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.ChangePasswordRequestDto;
+import com.cabybara.prolearningplatform.dto.request.UpdateUserRequestDto;
 import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,6 +43,18 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully", null, null));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @PatchMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody UpdateUserRequestDto updateUserRequestDto) {
+            Long userId = Long.parseLong(jwt.getClaims().get("id").toString());
+            UserResponseDto userResponseDto = userService.updateUser(userId, updateUserRequestDto);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Successfully", userResponseDto, null));
     }
 
     @PreAuthorize("isAuthenticated()")

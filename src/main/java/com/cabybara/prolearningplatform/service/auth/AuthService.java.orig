@@ -1,0 +1,23 @@
+package com.cabybara.prolearningplatform.service.auth;
+
+<<<<<<< HEAD:src/main/java/com/cabybara/prolearningplatform/service/AuthService.java
+import org.springframework.security.oauth2.jwt.Jwt;
+
+import com.cabybara.prolearningplatform.dto.LoginResponseDto;
+import com.cabybara.prolearningplatform.dto.RegisterRequestDto;
+import com.cabybara.prolearningplatform.dto.RegisterResponseDto;
+=======
+import com.cabybara.prolearningplatform.dto.response.LoginResponseDto;
+import com.cabybara.prolearningplatform.dto.request.RegisterRequestDto;
+import com.cabybara.prolearningplatform.dto.response.RegisterResponseDto;
+>>>>>>> feature/set:src/main/java/com/cabybara/prolearningplatform/service/auth/AuthService.java
+
+public interface AuthService {
+    LoginResponseDto authenticateAndGenerateToken(String email, String password);
+
+    RegisterResponseDto registerUser(RegisterRequestDto registerRequestDto) throws Exception;
+
+    RegisterResponseDto registerAdmin(RegisterRequestDto registerRequestDto) throws Exception;
+
+    void logout(Jwt jwt);
+}

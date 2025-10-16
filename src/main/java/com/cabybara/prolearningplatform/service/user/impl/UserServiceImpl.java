@@ -1,9 +1,11 @@
 package com.cabybara.prolearningplatform.service.user.impl;
 
+import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 
 import com.cabybara.prolearningplatform.dto.request.ChangePasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.GoogleUserInfoDto;
 import com.cabybara.prolearningplatform.dto.request.RegisterRequestDto;
+import com.cabybara.prolearningplatform.dto.request.UpdateUserRequestDto;
 import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.enums.UserEducation;
@@ -74,6 +76,18 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(newUser);
         return userMapper.toUserResponseDto(newUser);
+    }
+
+    @Override
+    public UserResponseDto updateUser(Long userId, UpdateUserRequestDto updateUserRequestDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " not found!"));
+
+        userMapper.updateUserFromDto(updateUserRequestDto, user);
+
+        userRepository.save(user);
+
+        return userMapper.toUserResponseDto(user);
     }
 
     @Override
@@ -153,4 +167,5 @@ public class UserServiceImpl implements UserService {
                     return userRepository.save(newUser);
                 });
     }
+
 }
