@@ -136,4 +136,31 @@ public class NoteController {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Delete image in note fail");
         }
     }
+
+    @Operation(method = "PATCH", summary = "Update note", description = "Update note")
+    @PatchMapping(value = "/update/{noteId}")
+    public ResponseData<Void> updateNote(@PathVariable @Min(1) Long noteId, @Valid @RequestBody UpdateNoteRequestDTO request) {
+        log.info("Update note, noteId={}", noteId);
+        try {
+            noteService.updateNote(noteId, request);
+            return new ResponseData<>(HttpStatus.OK.value(), "Update note successfully");
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Update note fail");
+        }
+    }
+
+    @Operation(summary = "Delete note", description = "Delete note permanently")
+    @DeleteMapping("/delete/{noteId}")
+    public ResponseData<Void> deleteNote(@Min(value = 1) @PathVariable Long noteId) {
+        log.info("Delete note, noteId={}", noteId);
+        try {
+            noteService.deleteNote(noteId);
+            return new ResponseData<>(HttpStatus.NO_CONTENT.value(), "Delete note successfully");
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Delete note fail");
+        }
+    }
+
 }
