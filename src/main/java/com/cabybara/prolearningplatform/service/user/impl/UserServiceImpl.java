@@ -7,6 +7,7 @@ import com.cabybara.prolearningplatform.dto.GoogleUserInfoDto;
 import com.cabybara.prolearningplatform.dto.request.RegisterRequestDto;
 import com.cabybara.prolearningplatform.dto.request.UpdateUserRequestDto;
 import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
+import com.cabybara.prolearningplatform.enums.AccountType;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.enums.UserEducation;
 import com.cabybara.prolearningplatform.enums.UserHearAppFrom;
@@ -65,6 +66,7 @@ public class UserServiceImpl implements UserService {
                 .education(UserEducation.COLLEGE)
                 .hearAppFrom(UserHearAppFrom.CLASSMATE)
                 .language(UserLanguage.VI)
+                .accountType(AccountType.FREE)
                 .build();
 
         Authority defaultAuthority = Authority.builder()

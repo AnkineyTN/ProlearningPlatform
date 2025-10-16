@@ -34,6 +34,7 @@ CREATE TABLE "user" (
                         education user_education default 'HIGH_SCHOOL',
 
                         hear_app_from user_hear_app_from default 'GOOGLE',
+                        account_type VARCHAR(50) default 'FREE',
 
                         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
