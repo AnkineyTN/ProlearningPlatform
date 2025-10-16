@@ -35,7 +35,6 @@ public class NoteServiceImpl implements NoteService {
     private final NoteRepository noteRepository;
     private final NoteDocsRepository noteDocsRepository;
     private final NoteImgsRepository noteImgsRepository;
-
     private final CloudinaryService cloudinaryService;
 
     // [POST]: /api/note/create
