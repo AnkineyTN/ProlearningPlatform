@@ -36,7 +36,7 @@ public class NoteServiceImpl implements NoteService {
 
     // [POST]: /api/note/create
     @Override
-    public void createNote(CreateNoteRequestDTO request) {
+    public CreateNoteResponseDTO createNote(CreateNoteRequestDTO request) {
         Set set = getSetById(request.getSetId());
 
         Note note = Note.builder()
@@ -45,8 +45,12 @@ public class NoteServiceImpl implements NoteService {
                 .description(request.getDescription())
                 .set(set)
                 .build();
-        noteRepository.save(note);
+        Note saved = noteRepository.save(note);
         log.info("✅ Created note '{}' in set id {}", note.getTitle(), set.getId());
+
+        return CreateNoteResponseDTO.builder()
+                .noteId(saved.getId())
+                .build();
     }
 
     // [PATCh]: /api/note/save

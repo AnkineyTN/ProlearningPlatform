@@ -27,11 +27,10 @@ public class NoteController {
 
     @Operation(method = "POST", summary = "Create note", description = "Create new note")
     @PostMapping(value = "/create")
-    public ResponseData<Void> saveVideo(@Valid @RequestBody CreateNoteRequestDTO request) {
+    public ResponseData<CreateNoteResponseDTO> saveVideo(@Valid @RequestBody CreateNoteRequestDTO request) {
         log.info("Create note");
         try {
-            noteService.createNote(request);
-            return new ResponseData<>(HttpStatus.CREATED.value(), "Create note successfully");
+            return new ResponseData<>(HttpStatus.CREATED.value(), "Create note successfully", noteService.createNote(request));
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e);
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Create note fail");
