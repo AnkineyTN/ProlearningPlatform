@@ -31,11 +31,8 @@ CREATE TABLE "user"
     password      VARCHAR(255)        NOT NULL,
     recovery_code character varying(255) NULL,
     language      user_language            default 'VI',
-
     education     user_education           default 'HIGH_SCHOOL',
-
     hear_app_from user_hear_app_from       default 'GOOGLE',
-
     created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -59,7 +56,7 @@ CREATE TABLE set
 
     CONSTRAINT fk_user
         FOREIGN KEY (id_user)
-            REFERENCES users (id)
+            REFERENCES "user" (id)
             ON DELETE CASCADE
 );
 

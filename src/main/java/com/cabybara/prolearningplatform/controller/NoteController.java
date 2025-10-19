@@ -161,5 +161,4 @@ public class NoteController {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Delete note fail");
         }
     }
-
 }

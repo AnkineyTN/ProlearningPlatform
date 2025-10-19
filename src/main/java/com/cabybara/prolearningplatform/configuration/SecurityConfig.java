@@ -120,26 +120,6 @@ public class SecurityConfig {
         ).build();
     }
 
-    class CustomJwtAuthenticationConverter extends JwtAuthenticationConverter {
-        private final JwtService jwtService;
-        private final Converter<Jwt, Collection<GrantedAuthority>> authoritiesConverter;
-
-        public CustomJwtAuthenticationConverter(JwtService jwtService, Converter<Jwt, Collection<GrantedAuthority>> authoritiesConverter) {
-            this.jwtService = jwtService;
-            this.authoritiesConverter = authoritiesConverter;
-            super.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
-        }
-
-        protected AbstractAuthenticationToken extractAuthentication(Jwt jwt) {
-            if (jwtService.isTokenBlacklisted(jwt.getTokenValue())) {
-                throw new JwtException("Token is blacklisted");
-            }
-
-            Collection<GrantedAuthority> authorities = authoritiesConverter.convert(jwt);
-            return new JwtAuthenticationToken(jwt, authorities);
-        }
-    }
-
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter gac = new JwtGrantedAuthoritiesConverter();
