@@ -4,7 +4,6 @@ import com.cabybara.prolearningplatform.enums.Privacy;
 import jakarta.persistence.Entity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 

@@ -67,12 +67,11 @@ public class SetController {
     @PreAuthorize("isAuthenticated()")
     @PostMapping("")
     public ResponseEntity<ApiResponse<SetResponseDto>> createSet(
-        @Valid @RequestBody SetCreationRequestDto setCreationRequestDto,
-        @AuthenticationPrincipal Jwt jwt
+            @Valid @RequestBody SetCreationRequestDto setCreationRequestDto,
+            @AuthenticationPrincipal Jwt jwt
     ) {
 
-        SetResponseDto setResponseDto = setService.createSet( (Long) jwt.getClaims().get("id"), setCreationRequestDto);
-
+        SetResponseDto setResponseDto = setService.createSet((Long) jwt.getClaims().get("id"), setCreationRequestDto);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Create set successfully", setResponseDto, null));

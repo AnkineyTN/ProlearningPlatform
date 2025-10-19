@@ -52,16 +52,23 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-                        .requestMatchers("/swagger-resources/**").permitAll()
-                        .requestMatchers("/webjars/**").permitAll()
-                        .requestMatchers("/api-docs/**").permitAll()
-                        .requestMatchers("/auth/register/**").permitAll()
-                        .requestMatchers("/auth/login/**").permitAll()
-                        .requestMatchers("/auth/google/**").permitAll()
-                        .anyRequest().authenticated()
-                );
+                        .anyRequest().permitAll()
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
+
+//                .authorizeHttpRequests((authorize) -> authorize
+//                        .requestMatchers("/swagger-ui/**").permitAll()
+//                        .requestMatchers("/v3/api-docs/**").permitAll()
+//                        .requestMatchers("/swagger-resources/**").permitAll()
+//                        .requestMatchers("/webjars/**").permitAll()
+//                        .requestMatchers("/api-docs/**").permitAll()
+//                        .requestMatchers("/auth/register/**").permitAll()
+//                        .requestMatchers("/auth/login/**").permitAll()
+//                        .requestMatchers("/auth/google/**").permitAll()
+//                        .anyRequest().authenticated()
+//                );
 
         http.sessionManagement(
                 session ->
@@ -111,26 +118,6 @@ public class SecurityConfig {
         return NimbusJwtDecoder.withSecretKey(
                 new SecretKeySpec(JWT_SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256")
         ).build();
-    }
-
-    class CustomJwtAuthenticationConverter extends JwtAuthenticationConverter {
-        private final JwtService jwtService;
-        private final Converter<Jwt, Collection<GrantedAuthority>> authoritiesConverter;
-
-        public CustomJwtAuthenticationConverter(JwtService jwtService, Converter<Jwt, Collection<GrantedAuthority>> authoritiesConverter) {
-            this.jwtService = jwtService;
-            this.authoritiesConverter = authoritiesConverter;
-            super.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
-        }
-
-        protected AbstractAuthenticationToken extractAuthentication(Jwt jwt) {
-            if (jwtService.isTokenBlacklisted(jwt.getTokenValue())) {
-                throw new JwtException("Token is blacklisted");
-            }
-
-            Collection<GrantedAuthority> authorities = authoritiesConverter.convert(jwt);
-            return new JwtAuthenticationToken(jwt, authorities);
-        }
     }
 
     @Bean

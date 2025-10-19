@@ -1,10 +1,10 @@
 package com.cabybara.prolearningplatform.repository;
 
-import com.cabybara.prolearningplatform.model.NoteDocs;
+import com.cabybara.prolearningplatform.model.NoteImgs;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface NoteDocsRepository extends JpaRepository<NoteDocs, Long> {
-
+public interface NoteImgsRepository extends JpaRepository<NoteImgs, Long> {
+    NoteImgs findByFileUrl(String fileUrl);
 }
