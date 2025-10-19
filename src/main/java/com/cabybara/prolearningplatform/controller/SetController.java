@@ -72,7 +72,6 @@ public class SetController {
     ) {
 
         SetResponseDto setResponseDto = setService.createSet((Long) jwt.getClaims().get("id"), setCreationRequestDto);
-
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Create set successfully", setResponseDto, null));
