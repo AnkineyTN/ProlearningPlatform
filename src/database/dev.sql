@@ -32,7 +32,8 @@ CREATE TABLE "user"
     recovery_code character varying(255) NULL,
     language      user_language            default 'VI',
     education     user_education           default 'HIGH_SCHOOL',
-    hear_app_from user_hear_app_from       default 'GOOGLE',
+    hear_app_from user_hear_app_from default 'GOOGLE',
+    account_type VARCHAR(50) default 'FREE',
     created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -80,7 +81,6 @@ CREATE TABLE note
 
 CREATE TABLE note_docs
 (
-    id         SERIAL PRIMARY KEY,
     file_name  TEXT         NOT NULL,
     file_url   TEXT         NOT NULL,
     extension  TEXT         NOT NULL,

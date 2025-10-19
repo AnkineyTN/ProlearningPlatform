@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.model;
 
+import com.cabybara.prolearningplatform.enums.AccountType;
 import com.cabybara.prolearningplatform.enums.UserEducation;
 import com.cabybara.prolearningplatform.enums.UserHearAppFrom;
 import com.cabybara.prolearningplatform.enums.UserLanguage;
@@ -51,6 +52,11 @@ public class User extends AbstractEntity implements UserDetails {
     @ColumnDefault("'Google'")
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private UserHearAppFrom hearAppFrom;
+
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("'FREE'")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    private AccountType accountType;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
     private Set<Authority> roles;

@@ -36,5 +36,5 @@ build/
 ### Differences ###
 *.mdj
 .env
-.env.*
+.env
 docker-compose-*.yml
