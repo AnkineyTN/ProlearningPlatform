@@ -20,8 +20,8 @@ public class RegisterRequestDto {
     private String lastName;
 
     @NotNull
-    @Length(min = 8, max = 20)
-    @Schema(minLength = 8, maxLength = 20)
+    @Length(min = 6, max = 30)
+    @Schema(minLength = 6, maxLength = 30)
     private String password;
 
     @NotNull
