@@ -51,7 +51,7 @@ public class UserServiceImpl implements UserService {
     public UserResponseDto addUser(RegisterRequestDto registerRequestDto, Role role) throws Exception {
         User existedUser = userRepository.findByEmail(registerRequestDto.getEmail()).orElseGet(() -> null);
         if (existedUser != null) {
-            throw new AuthException(HttpStatus.CONFLICT, "User has existed!");
+            throw new AuthException(HttpStatus.BAD_REQUEST, "User has existed!");
         }
 
         User newUser = User.builder()

@@ -53,10 +53,7 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests((authorize) -> authorize
                         .anyRequest().permitAll()
-                )
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
-                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
+                );
 
 //                .authorizeHttpRequests((authorize) -> authorize
 //                        .requestMatchers("/swagger-ui/**").permitAll()
@@ -118,26 +115,6 @@ public class SecurityConfig {
         return NimbusJwtDecoder.withSecretKey(
                 new SecretKeySpec(JWT_SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256")
         ).build();
-    }
-
-    class CustomJwtAuthenticationConverter extends JwtAuthenticationConverter {
-        private final JwtService jwtService;
-        private final Converter<Jwt, Collection<GrantedAuthority>> authoritiesConverter;
-
-        public CustomJwtAuthenticationConverter(JwtService jwtService, Converter<Jwt, Collection<GrantedAuthority>> authoritiesConverter) {
-            this.jwtService = jwtService;
-            this.authoritiesConverter = authoritiesConverter;
-            super.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
-        }
-
-        protected AbstractAuthenticationToken extractAuthentication(Jwt jwt) {
-            if (jwtService.isTokenBlacklisted(jwt.getTokenValue())) {
-                throw new JwtException("Token is blacklisted");
-            }
-
-            Collection<GrantedAuthority> authorities = authoritiesConverter.convert(jwt);
-            return new JwtAuthenticationToken(jwt, authorities);
-        }
     }
 
     @Bean
