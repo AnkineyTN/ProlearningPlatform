@@ -7,13 +7,15 @@ import org.mapstruct.factory.Mappers;
 
 import com.cabybara.prolearningplatform.dto.request.SetCreationRequestDto;
 import com.cabybara.prolearningplatform.dto.response.SetResponseDto;
+
+import org.mapstruct.*;
 import com.cabybara.prolearningplatform.model.Set;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface SetMapper {
-   SetMapper INSTANCE = Mappers.getMapper(SetMapper.class);
+    SetMapper INSTANCE = Mappers.getMapper(SetMapper.class);
 
     Set fromSetCreationRequestDto(SetCreationRequestDto setCreationRequestDto);
 

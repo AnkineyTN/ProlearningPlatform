@@ -52,16 +52,23 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-                        .requestMatchers("/swagger-resources/**").permitAll()
-                        .requestMatchers("/webjars/**").permitAll()
-                        .requestMatchers("/api-docs/**").permitAll()
-                        .requestMatchers("/auth/register/**").permitAll()
-                        .requestMatchers("/auth/login/**").permitAll()
-                        .requestMatchers("/auth/google/**").permitAll()
-                        .anyRequest().authenticated()
-                );
+                        .anyRequest().permitAll()
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+                .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin));
+
+//                .authorizeHttpRequests((authorize) -> authorize
+//                        .requestMatchers("/swagger-ui/**").permitAll()
+//                        .requestMatchers("/v3/api-docs/**").permitAll()
+//                        .requestMatchers("/swagger-resources/**").permitAll()
+//                        .requestMatchers("/webjars/**").permitAll()
+//                        .requestMatchers("/api-docs/**").permitAll()
+//                        .requestMatchers("/auth/register/**").permitAll()
+//                        .requestMatchers("/auth/login/**").permitAll()
+//                        .requestMatchers("/auth/google/**").permitAll()
+//                        .anyRequest().authenticated()
+//                );
 
         http.sessionManagement(
                 session ->

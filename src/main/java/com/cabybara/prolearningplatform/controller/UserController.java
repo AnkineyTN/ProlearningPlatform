@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.ChangePasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.request.UpdateUserRequestDto;
+
 import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;

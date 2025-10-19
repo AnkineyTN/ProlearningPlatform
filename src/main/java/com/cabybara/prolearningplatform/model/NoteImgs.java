@@ -9,8 +9,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "note_docs")
-public class NoteDocs extends AbstractEntity{
+@Table(name = "note_imgs")
+public class NoteImgs extends AbstractEntity {
     @Column(name = "file_name", nullable = false)
     private String fileName;
 
