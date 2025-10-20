@@ -1,6 +1,10 @@
 package com.cabybara.prolearningplatform.configuration;
 
 import com.cabybara.prolearningplatform.exception.JwtAuthEntryPoint;
+import com.cabybara.prolearningplatform.filter.TokenBlacklistFilter;
+
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import com.cabybara.prolearningplatform.service.auth.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -28,6 +32,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -38,6 +43,12 @@ import java.util.Collection;
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@SecurityScheme(
+    name = "Bearer Authentication", 
+    type = SecuritySchemeType.HTTP,
+    bearerFormat = "JWT", 
+    scheme = "bearer" 
+)
 public class SecurityConfig {
 
     @Value("${spring.security.jwt.secret}")
@@ -49,23 +60,24 @@ public class SecurityConfig {
     private final JwtAuthEntryPoint unauthorizedHandler;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public TokenBlacklistFilter tokenBlacklistFilter(JwtService jwtService) {
+        return new TokenBlacklistFilter(jwtService);
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, TokenBlacklistFilter tokenBlacklistFilter) throws Exception {
         http
                 .authorizeHttpRequests((authorize) -> authorize
-                        .anyRequest().permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-resources/**").permitAll()
+                        .requestMatchers("/webjars/**").permitAll()
+                        .requestMatchers("/api-docs/**").permitAll()
+                        .requestMatchers("/auth/register/**").permitAll()
+                        .requestMatchers("/auth/login/**").permitAll()
+                        .requestMatchers("/auth/google/**").permitAll()
+                        .anyRequest().authenticated()
                 );
-
-//                .authorizeHttpRequests((authorize) -> authorize
-//                        .requestMatchers("/swagger-ui/**").permitAll()
-//                        .requestMatchers("/v3/api-docs/**").permitAll()
-//                        .requestMatchers("/swagger-resources/**").permitAll()
-//                        .requestMatchers("/webjars/**").permitAll()
-//                        .requestMatchers("/api-docs/**").permitAll()
-//                        .requestMatchers("/auth/register/**").permitAll()
-//                        .requestMatchers("/auth/login/**").permitAll()
-//                        .requestMatchers("/auth/google/**").permitAll()
-//                        .anyRequest().authenticated()
-//                );
 
         http.sessionManagement(
                 session ->
@@ -80,9 +92,10 @@ public class SecurityConfig {
 
         http.csrf(csrf -> csrf.disable());
 
+        http.addFilterBefore(tokenBlacklistFilter, BearerTokenAuthenticationFilter.class);
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
-                        .decoder(jwtDecoder())
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                .decoder(jwtDecoder())
+                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
                 .authenticationEntryPoint(unauthorizedHandler)
         );
 
@@ -115,6 +128,26 @@ public class SecurityConfig {
         return NimbusJwtDecoder.withSecretKey(
                 new SecretKeySpec(JWT_SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256")
         ).build();
+    }
+
+    class CustomJwtAuthenticationConverter extends JwtAuthenticationConverter {
+        private final JwtService jwtService;
+        private final Converter<Jwt, Collection<GrantedAuthority>> authoritiesConverter;
+
+        public CustomJwtAuthenticationConverter(JwtService jwtService, Converter<Jwt, Collection<GrantedAuthority>> authoritiesConverter) {
+            this.jwtService = jwtService;
+            this.authoritiesConverter = authoritiesConverter;
+            super.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+        }
+
+        protected AbstractAuthenticationToken extractAuthentication(Jwt jwt) {
+            if (jwtService.isTokenBlacklisted(jwt.getTokenValue())) {
+                throw new JwtException("Token is blacklisted");
+            }
+
+            Collection<GrantedAuthority> authorities = authoritiesConverter.convert(jwt);
+            return new JwtAuthenticationToken(jwt, authorities);
+        }
     }
 
     @Bean

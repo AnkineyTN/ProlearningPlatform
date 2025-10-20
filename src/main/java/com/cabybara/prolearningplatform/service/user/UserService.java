@@ -3,6 +3,7 @@ package com.cabybara.prolearningplatform.service.user;
 import com.cabybara.prolearningplatform.dto.request.ChangePasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.GoogleUserInfoDto;
 import com.cabybara.prolearningplatform.dto.request.RegisterRequestDto;
+import com.cabybara.prolearningplatform.dto.request.UpdateUserRequestDto;
 import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.model.User;
@@ -18,6 +19,8 @@ public interface UserService extends UserDetailsService {
     UserResponseDto addUser(RegisterRequestDto registerRequestDto, Role role) throws Exception;
 
     void deleteUser(String email);
+
+    UserResponseDto updateUser(Long userId, UpdateUserRequestDto updateUserRequestDto);
 
     void updateUserPassword(String email, ChangePasswordRequestDto changePasswordRequestDto);
 

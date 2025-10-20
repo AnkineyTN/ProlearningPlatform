@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.dto.response;
 
+import com.cabybara.prolearningplatform.enums.AccountType;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.enums.UserEducation;
 import com.cabybara.prolearningplatform.enums.UserHearAppFrom;
@@ -24,4 +25,5 @@ public class UserResponseDto {
     private UserLanguage language;
     private UserEducation education;
     private UserHearAppFrom hearAppFrom;
+    private AccountType accountType;
 }

@@ -5,6 +5,7 @@ import com.cabybara.prolearningplatform.dto.response.LoginResponseDto;
 import com.cabybara.prolearningplatform.dto.response.RegisterResponseDto;
 import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
+import com.cabybara.prolearningplatform.exception.AuthException;
 import com.cabybara.prolearningplatform.mapper.GoogleAuthItemMapper;
 import com.cabybara.prolearningplatform.mapper.UserMapper;
 import com.cabybara.prolearningplatform.model.User;
@@ -15,7 +16,9 @@ import com.cabybara.prolearningplatform.service.user.UserService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -41,17 +44,22 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponseDto authenticateAndGenerateToken(String email, String password) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, password)
-        );
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(email, password)
+            );
 
-        UserResponseDto userResponseDto = userMapper.toUserResponseDto((User) authentication.getPrincipal());
-        String accessToken = jwtService.generateToken(authentication);
+            UserResponseDto userResponseDto = userMapper.toUserResponseDto((User) authentication.getPrincipal());
+            String accessToken = jwtService.generateToken(authentication);
 
-        return LoginResponseDto.builder()
-                .userResponseDto(userResponseDto)
-                .accessToken(accessToken)
-                .build();
+            return LoginResponseDto.builder()
+                    .userResponseDto(userResponseDto)
+                    .accessToken(accessToken)
+                    .build();
+
+        } catch (BadCredentialsException ex) {
+            throw new AuthException(HttpStatus.BAD_REQUEST, ex.getMessage());
+        }
     }
 
     @Override
