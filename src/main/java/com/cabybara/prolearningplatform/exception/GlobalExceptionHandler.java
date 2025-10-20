@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
             AuthException.class
     )
     public ResponseEntity<ApiResponse<Object>> handleAuthException(AuthException ex, WebRequest req) {
-        ApiResponse<Object> response = ResponseUtil.error("Auth failed: " + ex.getMessage(), null, "path: " + req.getDescription(false).replace("uri=", ""));
+        ApiResponse<Object> response = ResponseUtil.error("Authentication failed: " + ex.getMessage(), null, "path: " + req.getDescription(false).replace("uri=", ""));
         return ResponseEntity
                 .status(ex.getStatus())
                 .body(response);
@@ -76,6 +76,15 @@ public class GlobalExceptionHandler {
         ApiResponse<Object> response = ResponseUtil.error("Resource already exists: " + ex.getMessage(),null, "path: " + request.getDescription(false).replace("uri=", ""));
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
+                .body(response);
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleResourceNotFoundException(
+            ResourceAlreadyExistsException ex, WebRequest request) {
+        ApiResponse<Object> response = ResponseUtil.error("Resource not found: " + ex.getMessage(),null, "path: " + request.getDescription(false).replace("uri=", ""));
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
                 .body(response);
     }
 }

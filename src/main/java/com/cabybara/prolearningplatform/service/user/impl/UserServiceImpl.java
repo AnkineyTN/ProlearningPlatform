@@ -1,10 +1,13 @@
 package com.cabybara.prolearningplatform.service.user.impl;
 
+import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 
 import com.cabybara.prolearningplatform.dto.request.ChangePasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.GoogleUserInfoDto;
 import com.cabybara.prolearningplatform.dto.request.RegisterRequestDto;
+import com.cabybara.prolearningplatform.dto.request.UpdateUserRequestDto;
 import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
+import com.cabybara.prolearningplatform.enums.AccountType;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.enums.UserEducation;
 import com.cabybara.prolearningplatform.enums.UserHearAppFrom;
@@ -51,7 +54,7 @@ public class UserServiceImpl implements UserService {
     public UserResponseDto addUser(RegisterRequestDto registerRequestDto, Role role) throws Exception {
         User existedUser = userRepository.findByEmail(registerRequestDto.getEmail()).orElseGet(() -> null);
         if (existedUser != null) {
-            throw new AuthException(HttpStatus.CONFLICT, "User has existed!");
+            throw new AuthException(HttpStatus.BAD_REQUEST, "User has existed!");
         }
 
         User newUser = User.builder()
@@ -63,6 +66,7 @@ public class UserServiceImpl implements UserService {
                 .education(UserEducation.COLLEGE)
                 .hearAppFrom(UserHearAppFrom.CLASSMATE)
                 .language(UserLanguage.VI)
+                .accountType(AccountType.FREE)
                 .build();
 
         Authority defaultAuthority = Authority.builder()
@@ -74,6 +78,18 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(newUser);
         return userMapper.toUserResponseDto(newUser);
+    }
+
+    @Override
+    public UserResponseDto updateUser(Long userId, UpdateUserRequestDto updateUserRequestDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " not found!"));
+
+        userMapper.updateUserFromDto(updateUserRequestDto, user);
+
+        userRepository.save(user);
+
+        return userMapper.toUserResponseDto(user);
     }
 
     @Override
@@ -153,4 +169,5 @@ public class UserServiceImpl implements UserService {
                     return userRepository.save(newUser);
                 });
     }
+
 }
