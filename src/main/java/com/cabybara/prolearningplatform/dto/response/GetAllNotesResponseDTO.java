@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.dto.response;
 
+import com.cabybara.prolearningplatform.enums.Privacy;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,7 +14,7 @@ public class GetAllNotesResponseDTO {
     private Long id;
     private String title;
     private String description;
-    private String privacy;
+    private Privacy privacy;
     private String created_at;
     private String updated_at;
 }

@@ -86,7 +86,7 @@ CREATE TABLE note_docs
     extension  TEXT         NOT NULL,
     public_id  VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_T  IMESTAMP,
     id_note    INT          NOT NULL,
     CONSTRAINT fk_note
         FOREIGN KEY (id_note)
