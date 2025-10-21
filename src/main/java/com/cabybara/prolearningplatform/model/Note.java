@@ -1,7 +1,10 @@
 package com.cabybara.prolearningplatform.model;
 
+import com.cabybara.prolearningplatform.enums.Privacy;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.List;
 
@@ -26,7 +29,9 @@ public class Note extends AbstractEntity {
     private String description;
 
     @Column(length = 50)
-    private String privacy;
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    private Privacy privacy;
 
     @Column(length = 50)
     private String status;
