@@ -22,7 +22,7 @@ CREATE TYPE user_hear_app_from AS ENUM (
     'OTHER'
     );
 
-CREATE TABLE "user"
+CREATE TABLE users
 (
     id            SERIAL PRIMARY KEY,
     email         VARCHAR(255) UNIQUE NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE set
 
     CONSTRAINT fk_user
         FOREIGN KEY (id_user)
-            REFERENCES "user" (id)
+            REFERENCES users(id)
             ON DELETE CASCADE
 );
 
@@ -86,12 +86,53 @@ CREATE TABLE note_docs
     extension  TEXT         NOT NULL,
     public_id  VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_T  IMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     id_note    INT          NOT NULL,
     CONSTRAINT fk_note
         FOREIGN KEY (id_note)
             REFERENCES note (id)
             ON DELETE CASCADE
+);
+
+CREATE TABLE flashcard (
+                           id BIGSERIAL PRIMARY KEY,
+                           title VARCHAR(255) NOT NULL,
+                           description TEXT,
+                           status VARCHAR(50) not null default 'NOT_COMPLETED',
+                           create_from varchar(50) not null,
+                           user_id INT not null,
+                           privacy VARCHAR(50) not null default 'PRIVATE',
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           known INT DEFAULT 0,
+                           learning INT DEFAULT 0,
+                           remain INT DEFAULT 0,
+
+                           FOREIGN KEY (user_id) REFERENCES users(id)
+                               ON DELETE CASCADE,
+
+                           CONSTRAINT chk_status CHECK (status IN ('COMPLETED', 'NOT_COMPLETED', 'LEARNING')),
+                           CONSTRAINT chk_privacy CHECK (privacy IN ('PUBLIC', 'PRIVATE')),
+                           CONSTRAINT chk_known_non_negative CHECK (known >= 0),
+                           CONSTRAINT chk_learning_non_negative CHECK (learning >= 0),
+                           CONSTRAINT chk_remain_non_negative CHECK (remain >= 0)
+);
+
+CREATE TABLE card_item (
+                           id BIGSERIAL PRIMARY KEY,
+                           flashcard_id BIGINT NOT NULL,
+                           front_card TEXT NOT NULL,
+                           back_card TEXT NOT NULL,
+                           image_url VARCHAR(255),
+
+                           card_status VARCHAR(50) NOT NULL DEFAULT 'NEW',
+
+                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                           FOREIGN KEY (flashcard_id) REFERENCES flashcard(id) ON DELETE CASCADE,
+
+                           CONSTRAINT chk_card_status CHECK (card_status IN ('NEW', 'LEARNING', 'KNOWN'))
 );
 
 
