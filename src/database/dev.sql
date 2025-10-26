@@ -95,20 +95,22 @@ CREATE TABLE note_docs
 );
 
 CREATE TABLE flashcard (
-                           id BIGSERIAL PRIMARY KEY,
-                           title VARCHAR(255) NOT NULL,
-                           description TEXT,
-                           status VARCHAR(50) not null default 'NOT_COMPLETED',
-                           create_from varchar(50) not null,
-                           user_id INT not null,
-                           privacy VARCHAR(50) not null default 'PRIVATE',
-                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                           known INT DEFAULT 0,
-                           learning INT DEFAULT 0,
-                           remain INT DEFAULT 0,
+                           id bigserial NOT NULL,
+                           title character varying(255) NOT NULL,
+                           description text NULL,
+                           status character varying(50) NOT NULL DEFAULT 'NOT_COMPLETED'::character varying,
+                           create_method character varying(50) NOT NULL,
+                           id_user integer NOT NULL,
+                           privacy character varying(50) NOT NULL DEFAULT 'PRIVATE'::character varying,
+                           created_at timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP,
+                           updated_at timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP,
+                           known integer NULL DEFAULT 0,
+                           learning integer NULL DEFAULT 0,
+                           remain integer NULL DEFAULT 0,
+                           id_set integer NOT NULL,
+                           last_study timestamp without time zone NULL,
 
-                           FOREIGN KEY (user_id) REFERENCES users(id)
+                           FOREIGN KEY (id_user) REFERENCES users(id)
                                ON DELETE CASCADE,
 
                            CONSTRAINT chk_status CHECK (status IN ('COMPLETED', 'NOT_COMPLETED', 'LEARNING')),

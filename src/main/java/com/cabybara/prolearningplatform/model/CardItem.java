@@ -24,10 +24,12 @@ public class CardItem extends AbstractEntity {
     @Column(name = "back_card", nullable = false, columnDefinition = "TEXT")
     private String backCard;
 
-    @Column(name = "image_url")
-    private String imageUrl;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "card_status", nullable = false)
-    private CardStatus cardStatus;
+    @Builder.Default
+    private CardStatus cardStatus = CardStatus.NEW;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "image_asset_id")
+    private ImageAsset image;
 }

@@ -1,11 +1,13 @@
 package com.cabybara.prolearningplatform.model;
 
+import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.FlashcardStatus;
 import com.cabybara.prolearningplatform.enums.Privacy;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Getter
@@ -16,9 +18,6 @@ import java.util.List;
 @Entity
 @Table(name = "flashcard")
 public class Flashcard extends AbstractEntity {
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
-
     @Column(name = "title", nullable = false)
     private String title;
 
@@ -27,27 +26,46 @@ public class Flashcard extends AbstractEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private FlashcardStatus status;
+    @Builder.Default
+    private FlashcardStatus status = FlashcardStatus.NOT_COMPLETED;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "privacy", nullable = false)
-    private Privacy privacy;
+    @Builder.Default
+    private Privacy privacy = Privacy.PRIVATE;
 
     @Column(name = "last_study")
-    private LocalDateTime lastStudy;
+    @Builder.Default
+    private OffsetDateTime lastStudy = OffsetDateTime.now();
 
     @Column(name = "known", nullable = false)
+    @Builder.Default
     private Integer known = 0;
 
     @Column(name = "learning", nullable = false)
+    @Builder.Default
     private Integer learning = 0;
 
     @Column(name = "remain", nullable = false)
+    @Builder.Default
     private Integer remain = 0;
 
-    @Column(name = "create_from")
-    private String createFrom;
+    @Column(name = "create_method")
+    @Builder.Default
+    private CreationMethod create_method = CreationMethod.MANUAL;
 
     @OneToMany(mappedBy = "flashcard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CardItem> cards;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_set", referencedColumnName = "id")
+    @JsonIgnore
+    @ToString.Exclude
+    private Set set;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_user", referencedColumnName = "id")
+    @JsonIgnore
+    @ToString.Exclude
+    private User user;
 }
