@@ -7,6 +7,8 @@ import com.cabybara.prolearningplatform.dto.response.ImageUrlUploadResponseDto;
 import com.cabybara.prolearningplatform.service.upload.ImageUploadService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,11 +19,17 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/images")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Image upload")
 public class ImageUploadController {
     private final ImageUploadService imageUploadService;
 
+    @Operation(
+            summary = "Get signature to upload image (from file)",
+            description = "This endpoint will return an (presigned signature) and the parameters. " +
+                    "Client using these params to upload image directly to Cloudinary/S3. "
+    )
     @GetMapping("/signature")
-    public ResponseEntity<ApiResponse<?>> getUploadSignature() {
+    public ResponseEntity<ApiResponse<ImageSignatureResponseDto>> getUploadSignature() {
         ImageSignatureResponseDto imageSignatureResponseDto = imageUploadService.generateUploadSignature();
 
         return ResponseEntity
@@ -29,8 +37,13 @@ public class ImageUploadController {
                 .body(ResponseUtil.success("Successfully", imageSignatureResponseDto, null));
     }
 
+    @Operation(
+            summary = "Upload image from url",
+            description = "This endpoint used to upload image from url. " +
+                    "It will return uploaded url and assetId (will be used after)"
+    )
     @PostMapping("/upload-from-url")
-    public ResponseEntity<ApiResponse<?>> uploadFromUrl(
+    public ResponseEntity<ApiResponse<ImageUrlUploadResponseDto>> uploadFromUrl(
             @RequestBody ImageUrlUploadRequestDto request
     ) {
         ImageUrlUploadResponseDto imageUrlUploadResponseDto = imageUploadService.uploadImageFromUrl(request);
@@ -40,8 +53,13 @@ public class ImageUploadController {
                 .body(ResponseUtil.success("Successfully", imageUrlUploadResponseDto, null));
     }
 
+    @Operation(
+            summary = "Callback used to verify upload image successfully (from file)",
+            description = "FORCE: After client upload file success (using /signature), " +
+                    "client have to call this endpoint to send final URL (secure_url) returning from Cloudinart. "
+    )
     @PostMapping("/update-uploaded-image")
-    public ResponseEntity<ApiResponse<?>> updateUploadedImageSigned(
+    public ResponseEntity<ApiResponse<String>> updateUploadedImageSigned(
             @RequestBody UpdateUploadedImageRequestDto updateUploadedImageRequestDto
     ) {
         imageUploadService.updateUploadedImageSigned(updateUploadedImageRequestDto);

@@ -16,7 +16,7 @@ public interface FlashcardService {
 
     DetailFlashcardResponseDto getDetailFlashcard(Long setId, Long flashcardId);
 
-    void addFlashcardManual(Long setId, FlashcardCreateRequestDto flashcardCreateRequestDto);
+    FlashcardResponseDto addFlashcardManual(Long setId, FlashcardCreateRequestDto flashcardCreateRequestDto);
 
     DetailFlashcardResponseDto addCardToFlashcard(Long setId, Long flashcardId, List<CardItemCreateRequestDto> dtos);
 }

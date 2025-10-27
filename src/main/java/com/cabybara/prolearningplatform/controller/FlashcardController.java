@@ -8,6 +8,10 @@ import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -24,11 +28,17 @@ import java.util.List;
 @RequestMapping("/sets/{setId}/flashcards")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Flashcard")
 public class FlashcardController {
     private final FlashcardService flashcardService;
 
+    @Operation(
+            summary = "Get All Flashcards in a Set (Paginated)",
+            description = "Retrieves a paginated list of all flashcards associated with a specific Set."
+    )
     @GetMapping("")
-    public ResponseEntity<ApiResponse<?>> getAllFlashcard(
+    public ResponseEntity<ApiResponse<List<FlashcardResponseDto>>> getAllFlashcard(
+            @Parameter(description = "The ID of the Set to retrieve flashcards from", required = true)
             @PathVariable Long setId,
             @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
     ) {
@@ -49,11 +59,17 @@ public class FlashcardController {
                 ));
     }
 
+    @Operation(
+            summary = "Get a Specific Flashcard's Details",
+            description = "Retrieves the full details of a single flashcard, including all its associated card items."
+    )
     @GetMapping("/{flashcardId}")
-    public ResponseEntity<ApiResponse<?>> getDetailFlashcard(
+    public ResponseEntity<ApiResponse<DetailFlashcardResponseDto>> getDetailFlashcard(
+            @Parameter(description = "The ID of the Set", required = true)
             @PathVariable Long setId,
-            @PathVariable Long flashcardId,
-            @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
+
+            @Parameter(description = "The ID of the Flashcard to retrieve", required = true)
+            @PathVariable Long flashcardId
     ) {
         DetailFlashcardResponseDto detailFlashcardResponseDto = flashcardService.getDetailFlashcard(
                 setId, flashcardId);
@@ -67,26 +83,20 @@ public class FlashcardController {
                 ));
     }
 
+    @Operation(
+            summary = "Create a new Flashcard (Manual - Batch processing)",
+            description = "Manually creates a new flashcard within a specific set. For cards with images, " +
+                    "the 'imageAssetId' (obtained from the Image Upload endpoints) must be provided in the request body."
+    )
     @PostMapping("/manual")
-    public ResponseEntity<ApiResponse<String>> createFlashcardManual(
+    public ResponseEntity<ApiResponse<FlashcardResponseDto>> createFlashcardManual(
             @PathVariable Long setId,
             @RequestBody FlashcardCreateRequestDto flashcardCreateRequestDto
     ) {
-        flashcardService.addFlashcardManual(setId, flashcardCreateRequestDto);
+        FlashcardResponseDto flashcardResponseDto = flashcardService.addFlashcardManual(setId, flashcardCreateRequestDto);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ResponseUtil.success("Create flashcard successfully", null, null));
-    }
-
-    @PostMapping("/import")
-    public ResponseEntity<ApiResponse<String>> createFlashcardFromImport(
-            @PathVariable Long setId,
-            @RequestBody FlashcardCreateRequestDto flashcardCreateRequestDto
-    ) {
-
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ResponseUtil.success("Create flashcard successfully", null, null));
+                .body(ResponseUtil.success("Create flashcard successfully", flashcardResponseDto, null));
     }
 }

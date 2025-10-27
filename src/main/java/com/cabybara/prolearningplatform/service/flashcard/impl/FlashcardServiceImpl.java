@@ -60,7 +60,7 @@ public class FlashcardServiceImpl implements FlashcardService {
 
     @Override
     @Transactional
-    public void addFlashcardManual(Long setId, FlashcardCreateRequestDto flashcardCreateRequestDto) {
+    public FlashcardResponseDto addFlashcardManual(Long setId, FlashcardCreateRequestDto flashcardCreateRequestDto) {
         Long userId = authenticationContext.getCurrentUserId();
         User userFlashcard = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + "not found!"));
@@ -85,7 +85,7 @@ public class FlashcardServiceImpl implements FlashcardService {
         flashcard.setUser(userFlashcard);
         flashcard.setSet(setFlashcard);
 
-        flashcardRepository.save(flashcard);
+        return flashcardMapper.toFlashcardResponseDto(flashcardRepository.save(flashcard));
     }
 
     @Override
