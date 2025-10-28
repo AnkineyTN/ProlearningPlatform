@@ -15,8 +15,6 @@ import java.time.ZoneOffset;
 
 @Mapper(componentModel = "spring")
 public interface GoogleAuthItemMapper {
-    GoogleAuthItemMapper INSTANCE = Mappers.getMapper(GoogleAuthItemMapper.class);
-
     @Mapping(source = "accessToken", target = "accessToken")
     @Mapping(source = "refreshToken", target = "refreshToken")
     @Mapping(source = "expirationTimeMilliseconds", target = "expiresAt",

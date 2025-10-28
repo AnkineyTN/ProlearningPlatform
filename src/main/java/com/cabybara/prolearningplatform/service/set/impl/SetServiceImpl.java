@@ -31,6 +31,12 @@ public class SetServiceImpl implements SetService {
     private final SetMapper setMapper;
 
     @Override
+    public Set getSetById(Long setId) {
+        return setRepository.findById(setId)
+                .orElseThrow(() -> new ResourceNotFoundException("Set with id " + setId + " not found"));
+    }
+
+    @Override
     public Page<SetResponseDto> getAllSet(Long userId, Pageable pageable) {
         Page<Set> allSetPages = setRepository.findAllByUserId(userId, pageable);
 

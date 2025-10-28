@@ -4,13 +4,17 @@ import com.cabybara.prolearningplatform.dto.response.CloudinaryResponseDTO;
 import com.cabybara.prolearningplatform.exception.UploadFileException;
 import com.cabybara.prolearningplatform.service.cloudinary.CloudinaryService;
 import com.cloudinary.Cloudinary;
+import com.cloudinary.Configuration;
 import com.cloudinary.utils.ObjectUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -19,9 +23,66 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     @Autowired
     private Cloudinary cloudinary;
 
+    @Value("${cloud.cloudinary.flashcard_preset}")
+    private String flashcardPreset;
+
     // Folder for note
     private final String NOTE_DOCS_FOLDER = "ProLearning/note-documents";
     private final String NOTE_IMAGES_FOLDER = "ProLearning/note-images";
+
+    @Override
+    public String generateUploadSignature() {
+        long timestamp = Instant.now().getEpochSecond();
+
+        Map<String, Object> paramsToSign = Map.of(
+                "timestamp", timestamp,
+                "upload_preset", flashcardPreset
+        );
+
+        return cloudinary.apiSignRequest(paramsToSign, cloudinary.config.apiSecret);
+    }
+
+    @Override
+    public Configuration getConfiguration() {
+        return cloudinary.config;
+    }
+
+    @Override
+    public Map uploadImageFromUrl(String imageUrl, String targetFolder) throws IOException {
+        if (imageUrl == null || imageUrl.trim().isEmpty()) {
+            throw new IllegalArgumentException("Source URL cannot be null or empty.");
+        }
+
+        Map options = ObjectUtils.asMap(
+                "upload_preset", flashcardPreset,
+                "resource_type", "image",
+                "overwrite", false
+        );
+
+        return cloudinary.uploader().upload(
+                imageUrl,
+                options
+        );
+    }
+
+    @Override
+    public void deleteImages(List<String> publicIds) throws Exception {
+        if (publicIds == null || publicIds.isEmpty()) {
+            return;
+        }
+
+        int MAX_IDS_PER_REQUEST = 100;
+
+        int start = MAX_IDS_PER_REQUEST;
+        while (start < publicIds.size()) {
+            int end = Math.min(start + 100, publicIds.size());
+
+            List<String> subPublicIds = publicIds.subList(start, end);
+            cloudinary.api().deleteResources(subPublicIds, ObjectUtils.emptyMap());
+
+            start += MAX_IDS_PER_REQUEST;
+        }
+    }
 
     @Override
     public CloudinaryResponseDTO uploadMultipartFile(MultipartFile file, String fileName, String extension, String subject) throws IOException {

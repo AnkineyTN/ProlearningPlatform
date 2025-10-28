@@ -27,4 +27,6 @@ public interface UserService extends UserDetailsService {
     User findOrCreateFromGoogle(Userinfo userInfo);
 
     User findOrCreateFromGoogle(GoogleUserInfoDto googleUserInfoDto);
+
+    User getUserById(Long userId);
 }
