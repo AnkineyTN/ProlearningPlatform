@@ -13,7 +13,7 @@ import com.cabybara.prolearningplatform.repository.FlashcardRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
-import com.cabybara.prolearningplatform.service.upload.ImageUploadService;
+import com.cabybara.prolearningplatform.service.upload.ImageAssetService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -37,7 +36,7 @@ public class FlashcardServiceImpl implements FlashcardService {
     private final UserRepository userRepository;
     private final SetRepository setRepository;
     private final FlashcardMapper flashcardMapper;
-    private final ImageUploadService imageUploadService;
+    private final ImageAssetService imageAssetService;
 
     @Override
     public Page<FlashcardResponseDto> getAllFlashcard(Long setId, Pageable pageable) {
@@ -116,7 +115,7 @@ public class FlashcardServiceImpl implements FlashcardService {
                 .distinct()
                 .collect(Collectors.toList());
 
-        return imageUploadService.findAndActivateAssets(assetIdsToActivate, userId);
+        return imageAssetService.findAndActivateAssets(assetIdsToActivate, userId);
     }
 
     private List<CardItem> buildCardItemList(List<CardItemCreateRequestDto> cardItemCreateRequestDtos,

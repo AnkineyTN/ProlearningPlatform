@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -62,6 +63,25 @@ public class CloudinaryServiceImpl implements CloudinaryService {
                 imageUrl,
                 options
         );
+    }
+
+    @Override
+    public void deleteImages(List<String> publicIds) throws Exception {
+        if (publicIds == null || publicIds.isEmpty()) {
+            return;
+        }
+
+        int MAX_IDS_PER_REQUEST = 100;
+
+        int start = MAX_IDS_PER_REQUEST;
+        while (start < publicIds.size()) {
+            int end = Math.min(start + 100, publicIds.size());
+
+            List<String> subPublicIds = publicIds.subList(start, end);
+            cloudinary.api().deleteResources(subPublicIds, ObjectUtils.emptyMap());
+
+            start += MAX_IDS_PER_REQUEST;
+        }
     }
 
     @Override

@@ -4,7 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.ImageUrlUploadRequestDto;
 import com.cabybara.prolearningplatform.dto.request.UpdateUploadedImageRequestDto;
 import com.cabybara.prolearningplatform.dto.response.ImageSignatureResponseDto;
 import com.cabybara.prolearningplatform.dto.response.ImageUrlUploadResponseDto;
-import com.cabybara.prolearningplatform.service.upload.ImageUploadService;
+import com.cabybara.prolearningplatform.service.upload.ImageAssetService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 @Tag(name = "Image upload")
 public class ImageUploadController {
-    private final ImageUploadService imageUploadService;
+    private final ImageAssetService imageAssetService;
 
     @Operation(
             summary = "Get signature to upload image (from file)",
@@ -30,7 +30,7 @@ public class ImageUploadController {
     )
     @GetMapping("/signature")
     public ResponseEntity<ApiResponse<ImageSignatureResponseDto>> getUploadSignature() {
-        ImageSignatureResponseDto imageSignatureResponseDto = imageUploadService.generateUploadSignature();
+        ImageSignatureResponseDto imageSignatureResponseDto = imageAssetService.generateUploadSignature();
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -46,7 +46,7 @@ public class ImageUploadController {
     public ResponseEntity<ApiResponse<ImageUrlUploadResponseDto>> uploadFromUrl(
             @RequestBody ImageUrlUploadRequestDto request
     ) {
-        ImageUrlUploadResponseDto imageUrlUploadResponseDto = imageUploadService.uploadImageFromUrl(request);
+        ImageUrlUploadResponseDto imageUrlUploadResponseDto = imageAssetService.uploadImageFromUrl(request);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -62,7 +62,7 @@ public class ImageUploadController {
     public ResponseEntity<ApiResponse<String>> updateUploadedImageSigned(
             @RequestBody UpdateUploadedImageRequestDto updateUploadedImageRequestDto
     ) {
-        imageUploadService.updateUploadedImageSigned(updateUploadedImageRequestDto);
+        imageAssetService.updateUploadedImageSigned(updateUploadedImageRequestDto);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

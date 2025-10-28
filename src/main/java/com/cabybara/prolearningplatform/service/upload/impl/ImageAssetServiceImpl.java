@@ -11,25 +11,24 @@ import com.cabybara.prolearningplatform.model.ImageAsset;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.repository.ImageAssetRepository;
 import com.cabybara.prolearningplatform.service.cloudinary.CloudinaryService;
-import com.cabybara.prolearningplatform.service.upload.ImageUploadService;
+import com.cabybara.prolearningplatform.service.upload.ImageAssetService;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ImageUploadServiceImpl implements ImageUploadService {
+public class ImageAssetServiceImpl implements ImageAssetService {
     private final CloudinaryService cloudinaryService;
     private final UserService userService;
     private final ImageAssetRepository imageAssetRepository;
@@ -132,5 +131,15 @@ public class ImageUploadServiceImpl implements ImageUploadService {
         imageAsset.setUrl(updateUploadedImageRequestDto.getUrl());
 
         imageAssetRepository.save(imageAsset);
+    }
+
+    @Override
+    public List<ImageAsset> findOldPendingImages(OffsetDateTime cutoffTime) {
+        return imageAssetRepository.findByStatusAndCreatedAtBefore(ImageStatus.PENDING, cutoffTime);
+    }
+
+    @Override
+    public void deleteAllAssets(List<ImageAsset> assets) {
+        imageAssetRepository.deleteAll(assets);
     }
 }
