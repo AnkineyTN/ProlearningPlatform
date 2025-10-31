@@ -3,6 +3,7 @@ package com.cabybara.prolearningplatform.service.set;
 import com.cabybara.prolearningplatform.dto.request.SetCreationRequestDto;
 import com.cabybara.prolearningplatform.dto.response.SetResponseDto;
 import com.cabybara.prolearningplatform.dto.request.SetUpdateRequestDto;
+import com.cabybara.prolearningplatform.model.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -15,4 +16,6 @@ public interface SetService {
     SetResponseDto updateSet(Long setId, Long userId, SetUpdateRequestDto setUpdateRequestDto);
 
     void deleteSet(Long setId, Long userId);
+
+    Set getSetById(Long setId);
 }

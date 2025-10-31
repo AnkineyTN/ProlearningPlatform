@@ -14,6 +14,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -59,7 +60,16 @@ public class User extends AbstractEntity implements UserDetails {
     private AccountType accountType;
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
+    @ToString.Exclude
     private Set<Authority> roles;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
+    @ToString.Exclude
+    private List<Flashcard> flashcards;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
+    @ToString.Exclude
+    private List<ImageAsset> imageAssets;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

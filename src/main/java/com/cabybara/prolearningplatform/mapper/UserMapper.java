@@ -19,8 +19,6 @@ import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
-    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
-
     @Mapping(source = "roles", target = "roles", qualifiedByName = "mapAuthoritiesToStrings")
     UserResponseDto toUserResponseDto(User user);
 
