@@ -64,6 +64,7 @@ cloud:
     name: ${CLOUD_CLOUDINARY_NAME}
     apiKey: ${CLOUD_CLOUDINARY_API_KEY}
     apiSecret: ${CLOUD_CLOUDINARY_API_SECRET}
+    flashcard_preset: ${CLOUD_CLOUDINARY_FLASHCARD_PRESET}
 
 springdoc:
   swagger-ui:

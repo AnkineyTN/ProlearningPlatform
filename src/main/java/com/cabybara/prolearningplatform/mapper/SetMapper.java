@@ -14,8 +14,6 @@ import java.util.List;
 
 @Mapper(componentModel = "spring", uses = {DateTimeMapper.class})
 public interface SetMapper {
-    SetMapper INSTANCE = Mappers.getMapper(SetMapper.class);
-
     Set fromSetCreationRequestDto(SetCreationRequestDto setCreationRequestDto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

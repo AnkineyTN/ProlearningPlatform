@@ -1,0 +1,103 @@
+package com.cabybara.prolearningplatform.controller;
+
+import com.cabybara.prolearningplatform.dto.request.CardItemCreateRequestDto;
+import com.cabybara.prolearningplatform.dto.request.FlashcardCreateRequestDto;
+import com.cabybara.prolearningplatform.dto.response.DetailFlashcardResponseDto;
+import com.cabybara.prolearningplatform.dto.response.FlashcardResponseDto;
+import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
+import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
+import com.cabybara.prolearningplatform.utils.ApiResponse;
+import com.cabybara.prolearningplatform.utils.ResponseUtil;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/sets/{setId}/flashcards")
+@RequiredArgsConstructor
+@Validated
+@Tag(name = "Flashcard")
+public class FlashcardController {
+    private final FlashcardService flashcardService;
+
+    @Operation(
+            summary = "Get All Flashcards in a Set (Paginated)",
+            description = "Retrieves a paginated list of all flashcards associated with a specific Set."
+    )
+    @GetMapping("")
+    public ResponseEntity<ApiResponse<List<FlashcardResponseDto>>> getAllFlashcard(
+            @Parameter(description = "The ID of the Set to retrieve flashcards from", required = true)
+            @PathVariable Long setId,
+            @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
+    ) {
+        Page<FlashcardResponseDto> allFlashcardResponseDtos = flashcardService.getAllFlashcard(setId, pageable);
+        PaginationResponseDto paginationResponseDto = PaginationResponseDto.builder()
+                .currentPage(allFlashcardResponseDtos.getNumber())
+                .totalPages(allFlashcardResponseDtos.getTotalPages())
+                .totalItems(allFlashcardResponseDtos.getTotalElements())
+                .pageSize(allFlashcardResponseDtos.getSize())
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success(
+                        "Successfully get all flashcard",
+                        allFlashcardResponseDtos.getContent(),
+                        paginationResponseDto
+                ));
+    }
+
+    @Operation(
+            summary = "Get a Specific Flashcard's Details",
+            description = "Retrieves the full details of a single flashcard, including all its associated card items."
+    )
+    @GetMapping("/{flashcardId}")
+    public ResponseEntity<ApiResponse<DetailFlashcardResponseDto>> getDetailFlashcard(
+            @Parameter(description = "The ID of the Set", required = true)
+            @PathVariable Long setId,
+
+            @Parameter(description = "The ID of the Flashcard to retrieve", required = true)
+            @PathVariable Long flashcardId
+    ) {
+        DetailFlashcardResponseDto detailFlashcardResponseDto = flashcardService.getDetailFlashcard(
+                setId, flashcardId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success(
+                        "Successfully get all flashcard",
+                        detailFlashcardResponseDto,
+                        null
+                ));
+    }
+
+    @Operation(
+            summary = "Create a new Flashcard (Manual - Batch processing)",
+            description = "Manually creates a new flashcard within a specific set. For cards with images, " +
+                    "the 'imageAssetId' (obtained from the Image Upload endpoints) must be provided in the request body."
+    )
+    @PostMapping("/manual")
+    public ResponseEntity<ApiResponse<FlashcardResponseDto>> createFlashcardManual(
+            @PathVariable Long setId,
+            @RequestBody FlashcardCreateRequestDto flashcardCreateRequestDto
+    ) {
+        FlashcardResponseDto flashcardResponseDto = flashcardService.addFlashcardManual(setId, flashcardCreateRequestDto);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ResponseUtil.success("Create flashcard successfully", flashcardResponseDto, null));
+    }
+}

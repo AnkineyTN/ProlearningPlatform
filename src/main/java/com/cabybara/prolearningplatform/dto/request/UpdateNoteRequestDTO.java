@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.dto.request;
 
+import com.cabybara.prolearningplatform.enums.Privacy;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
@@ -9,7 +10,6 @@ import lombok.Setter;
 public class UpdateNoteRequestDTO {
     @NotBlank
     private String title;
-    @NotBlank
-    private String privacy;
+    private Privacy privacy;
     private String description;
 }
