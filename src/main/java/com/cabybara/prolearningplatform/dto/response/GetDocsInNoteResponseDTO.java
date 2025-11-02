@@ -13,6 +13,7 @@ public class GetDocsInNoteResponseDTO {
     private Long id;
     private String fileName;
     private String fileUrl;
+    private String content;
     private String extension;
     private String publicId;
 }

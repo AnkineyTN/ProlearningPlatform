@@ -83,6 +83,7 @@ CREATE TABLE note_docs
 (
     file_name  TEXT         NOT NULL,
     file_url   TEXT         NOT NULL,
+    content    TEXT,
     extension  TEXT         NOT NULL,
     public_id  VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
