@@ -9,7 +9,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class UpdateUserRequestDto {
+public class UserUpdatingRequestDto {
     private String firstName;
     private String lastName;
     private UserLanguage language;

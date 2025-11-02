@@ -1,6 +1,6 @@
 package com.cabybara.prolearningplatform.service.set.impl;
 
-import com.cabybara.prolearningplatform.dto.request.SetUpdateRequestDto;
+import com.cabybara.prolearningplatform.dto.request.SetUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.SetCreationRequestDto;
 import com.cabybara.prolearningplatform.dto.response.SetResponseDto;
 import org.springframework.data.domain.Page;
@@ -62,7 +62,7 @@ public class SetServiceImpl implements SetService {
     }
 
     @Override
-    public SetResponseDto updateSet(Long setId, Long userId, SetUpdateRequestDto setUpdateRequestDto) {
+    public SetResponseDto updateSet(Long setId, Long userId, SetUpdatingRequestDto setUpdatingRequestDto) {
         Set set = setRepository.findById(setId)
                 .orElseThrow(() -> new ResourceNotFoundException("Set with id: " + setId + " not found!"));
 
@@ -70,11 +70,11 @@ public class SetServiceImpl implements SetService {
             throw new AccessDeniedException("You are not allowed to update this set.");
         }
 
-        if (setUpdateRequestDto.getTitle() != null && setRepository.existsByTitleAndIdNot(setUpdateRequestDto.getTitle(), setId)) {
-            throw new ResourceAlreadyExistsException("Another Set with title '" + setUpdateRequestDto.getTitle() + "' already exists.");
+        if (setUpdatingRequestDto.getTitle() != null && setRepository.existsByTitleAndIdNot(setUpdatingRequestDto.getTitle(), setId)) {
+            throw new ResourceAlreadyExistsException("Another Set with title '" + setUpdatingRequestDto.getTitle() + "' already exists.");
         }
 
-        setMapper.updateSetFromDto(setUpdateRequestDto, set);
+        setMapper.updateSetFromDto(setUpdatingRequestDto, set);
         Set updatedSet = setRepository.save(set);
 
         return setMapper.toSetResponseDto(updatedSet);

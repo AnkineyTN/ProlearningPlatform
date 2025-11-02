@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.controller;
 
+import com.cabybara.prolearningplatform.dto.request.SetUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
-import com.cabybara.prolearningplatform.dto.request.SetUpdateRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -85,14 +85,14 @@ public class SetController {
     @PatchMapping("/{setId}")
     public ResponseEntity<ApiResponse<SetResponseDto>> updateSet(
             @Parameter(description = "ID of the set to update", example = "5") @PathVariable Long setId,
-            @RequestBody SetUpdateRequestDto setUpdateRequestDto,
+            @RequestBody SetUpdatingRequestDto setUpdatingRequestDto,
             @AuthenticationPrincipal Jwt jwt
     ) {
 
         SetResponseDto updatedSet = setService.updateSet(
                 setId,
                 (Long) jwt.getClaims().get("id"),
-                setUpdateRequestDto
+                setUpdatingRequestDto
         );
 
         return ResponseEntity

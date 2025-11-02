@@ -1,12 +1,11 @@
 package com.cabybara.prolearningplatform.mapper;
 
-import com.cabybara.prolearningplatform.dto.request.SetUpdateRequestDto;
+import com.cabybara.prolearningplatform.dto.request.SetUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.SetCreationRequestDto;
 import com.cabybara.prolearningplatform.dto.response.SetResponseDto;
 import com.cabybara.prolearningplatform.mapper.helpers.DateTimeMapper;
 import com.cabybara.prolearningplatform.model.Note;
 import org.mapstruct.*;
-import org.mapstruct.factory.Mappers;
 
 import com.cabybara.prolearningplatform.model.Set;
 
@@ -17,7 +16,7 @@ public interface SetMapper {
     Set fromSetCreationRequestDto(SetCreationRequestDto setCreationRequestDto);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateSetFromDto(SetUpdateRequestDto setUpdateRequestDto, @MappingTarget Set targetSet);
+    void updateSetFromDto(SetUpdatingRequestDto setUpdatingRequestDto, @MappingTarget Set targetSet);
 
     @Mapping(source = "notes", target = "numNotes", qualifiedByName = "listNotesToNumNotes")
     SetResponseDto toSetResponseDto(Set set);

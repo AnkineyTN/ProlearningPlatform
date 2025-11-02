@@ -3,20 +3,23 @@ package com.cabybara.prolearningplatform.service.flashcard.impl;
 import com.cabybara.prolearningplatform.bean.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.request.CardItemCreateRequestDto;
 import com.cabybara.prolearningplatform.dto.request.FlashcardCreateRequestDto;
+import com.cabybara.prolearningplatform.dto.request.FlashcardUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceAlreadyExistsException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
+import com.cabybara.prolearningplatform.mapper.CardItemMapper;
 import com.cabybara.prolearningplatform.mapper.FlashcardMapper;
 import com.cabybara.prolearningplatform.model.*;
 import com.cabybara.prolearningplatform.repository.FlashcardRepository;
-import com.cabybara.prolearningplatform.repository.SetRepository;
-import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
+import com.cabybara.prolearningplatform.service.set.SetService;
 import com.cabybara.prolearningplatform.service.upload.ImageAssetService;
+import com.cabybara.prolearningplatform.service.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -33,10 +36,11 @@ import java.util.stream.Collectors;
 public class FlashcardServiceImpl implements FlashcardService {
     private final AuthenticationContext authenticationContext;
     private final FlashcardRepository flashcardRepository;
-    private final UserRepository userRepository;
-    private final SetRepository setRepository;
+    private final UserService userService;
+    private final SetService setService;
     private final FlashcardMapper flashcardMapper;
     private final ImageAssetService imageAssetService;
+    private final CardItemMapper cardItemMapper;
 
     @Override
     public Page<FlashcardResponseDto> getAllFlashcard(Long setId, Pageable pageable) {
@@ -61,11 +65,9 @@ public class FlashcardServiceImpl implements FlashcardService {
     @Transactional
     public FlashcardResponseDto addFlashcardManual(Long setId, FlashcardCreateRequestDto flashcardCreateRequestDto) {
         Long userId = authenticationContext.getCurrentUserId();
-        User userFlashcard = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + "not found!"));
+        User userFlashcard = userService.getUserById(userId);
 
-        Set setFlashcard = setRepository.findById(setId)
-                .orElseThrow(() -> new ResourceNotFoundException("Set with id: " + setId + "not found!"));
+        Set setFlashcard = setService.getSetById(setId);
 
         if (flashcardRepository.existsBySetIdAndTitle(setId, flashcardCreateRequestDto.getTitle())) {
             throw new ResourceAlreadyExistsException("Flashcard already exists in this set");
@@ -87,27 +89,6 @@ public class FlashcardServiceImpl implements FlashcardService {
         return flashcardMapper.toFlashcardResponseDto(flashcardRepository.save(flashcard));
     }
 
-    @Override
-    @Transactional
-    public DetailFlashcardResponseDto addCardToFlashcard(Long setId, Long flashcardId, List<CardItemCreateRequestDto> dtos) {
-        Flashcard flashcard = flashcardRepository.findById(flashcardId)
-                .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id " + flashcardId + " not found!"));
-
-        List<CardItem> cardItems = dtos.stream()
-                .map(dto -> {
-                    CardItem card = flashcardMapper.toCardItem(dto);
-
-                    card.setFlashcard(flashcard);
-
-                    return card;
-                })
-                .toList();
-
-        flashcard.getCards().addAll(cardItems);
-
-        return flashcardMapper.toDetailFlashcardResponseDto(flashcardRepository.save(flashcard));
-    }
-
     private Map<Long, ImageAsset> activateCardImages(List<CardItemCreateRequestDto> cardDtos, Long userId) {
         List<Long> assetIdsToActivate = cardDtos.stream()
                 .map(CardItemCreateRequestDto::getImageAssetId)
@@ -124,7 +105,7 @@ public class FlashcardServiceImpl implements FlashcardService {
 
         return cardItemCreateRequestDtos.stream()
                 .map(cardDto -> {
-                    CardItem cardItem = flashcardMapper.toCardItem(cardDto);
+                    CardItem cardItem = cardItemMapper.toCardItem(cardDto);
 
                     if (cardDto.getImageAssetId() != null) {
                         ImageAsset asset = activatedAssetsMap.get(cardDto.getImageAssetId());
@@ -135,5 +116,41 @@ public class FlashcardServiceImpl implements FlashcardService {
                     return cardItem;
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void deleteFlashcard(Long setId, Long flashcardId) throws BadRequestException {
+        Long userId = authenticationContext.getCurrentUserId();
+        int deletedCount = flashcardRepository.deleteByIdAndSetIdAndSetUserId(flashcardId, setId, userId);
+
+        if (deletedCount == 0) {
+            throw new BadRequestException("Flashcard not found or access denied.");
+        }
+    }
+
+    @Override
+    public FlashcardResponseDto updateFlashcard(Long setId, Long flashcardId, FlashcardUpdatingRequestDto flashcardUpdatingRequestDto) throws BadRequestException {
+        Flashcard flashcard = flashcardRepository.getFlashcardByIdAndSetIdAndSetUserId(
+                flashcardId,
+                setId,
+                authenticationContext.getCurrentUserId()
+        )
+                .orElseThrow(() -> new BadRequestException("Flashcard not found or access denied."));
+
+        flashcardMapper.updateFlashcardFromDto(flashcardUpdatingRequestDto, flashcard);
+        Flashcard updatedFlashcard = flashcardRepository.save(flashcard);
+
+        return flashcardMapper.toFlashcardResponseDto(updatedFlashcard);
+    }
+
+    @Override
+    public DetailFlashcardResponseDto updateFlashcard(Flashcard newFlashcard) {
+        return flashcardMapper.toDetailFlashcardResponseDto(flashcardRepository.save(newFlashcard));
+    }
+
+    @Override
+    public Flashcard getFlashcardById(Long flashcardId) {
+        return flashcardRepository.findById(flashcardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id " + flashcardId + " not found!"));
     }
 }

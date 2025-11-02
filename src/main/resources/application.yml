@@ -27,6 +27,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        jdbc:
+          batch_size: 20
+        order_updates: true
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
 #    show-sql: true

@@ -1,19 +1,18 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.request.CardItemCreateRequestDto;
 import com.cabybara.prolearningplatform.dto.request.FlashcardCreateRequestDto;
+import com.cabybara.prolearningplatform.dto.request.FlashcardUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
-import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -91,6 +90,7 @@ public class FlashcardController {
     )
     @PostMapping("/manual")
     public ResponseEntity<ApiResponse<FlashcardResponseDto>> createFlashcardManual(
+            @Parameter(description = "The ID of the Set", required = true)
             @PathVariable Long setId,
             @RequestBody FlashcardCreateRequestDto flashcardCreateRequestDto
     ) {
@@ -99,5 +99,41 @@ public class FlashcardController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ResponseUtil.success("Create flashcard successfully", flashcardResponseDto, null));
+    }
+
+    @PatchMapping("/{flashcardId}")
+    public ResponseEntity<ApiResponse<FlashcardResponseDto>> updateFlashcard(
+            @Parameter(description = "The ID of the Set", required = true)
+            @PathVariable Long setId,
+
+            @Parameter(description = "The ID of the Flashcard to update", required = true)
+            @PathVariable Long flashcardId,
+
+            @RequestBody FlashcardUpdatingRequestDto flashcardUpdatingRequestDto
+    ) throws BadRequestException {
+        FlashcardResponseDto updatedFlashcard = flashcardService.updateFlashcard(
+                setId,
+                flashcardId,
+                flashcardUpdatingRequestDto
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Update flashcard successfully", updatedFlashcard, null));
+    }
+
+    @DeleteMapping("/{flashcardId}")
+    public ResponseEntity<ApiResponse<String>> deleteFlashcard(
+            @Parameter(description = "The ID of the Set", required = true)
+            @PathVariable Long setId,
+
+            @Parameter(description = "The ID of the Flashcard to delete", required = true)
+            @PathVariable Long flashcardId
+    ) throws BadRequestException {
+        flashcardService.deleteFlashcard(setId, flashcardId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Delete flashcard successfully", null, null));
     }
 }
