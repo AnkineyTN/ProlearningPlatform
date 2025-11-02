@@ -11,6 +11,7 @@ public class UploadFileResponseDTO {
     Long id;
     String fileName;
     String fileUrl;
+    String content;
     String extension;
     String publicId;
 }
