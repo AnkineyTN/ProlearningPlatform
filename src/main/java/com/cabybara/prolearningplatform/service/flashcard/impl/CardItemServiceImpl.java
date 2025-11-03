@@ -9,15 +9,19 @@ import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.CardItemMapper;
 import com.cabybara.prolearningplatform.model.CardItem;
 import com.cabybara.prolearningplatform.model.Flashcard;
+import com.cabybara.prolearningplatform.model.ImageAsset;
 import com.cabybara.prolearningplatform.repository.CardItemRepository;
 import com.cabybara.prolearningplatform.service.flashcard.CardItemService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
+import com.cabybara.prolearningplatform.service.upload.ImageAssetService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -26,16 +30,31 @@ public class CardItemServiceImpl implements CardItemService {
     private final CardItemMapper cardItemMapper;
     private final AuthenticationContext authenticationContext;
     private final CardItemRepository cardItemRepository;
+    private final ImageAssetService imageAssetService;
 
     @Override
     @Transactional
     public DetailFlashcardResponseDto addCardToFlashcard(Long setId, Long flashcardId, List<CardItemCreateRequestDto> dtos) {
+        Long userId = authenticationContext.getCurrentUserId();
+
         Flashcard flashcard = flashcardService.getFlashcardById(flashcardId);
+
+        List<Long> assetIdsToActivate = dtos.stream()
+                .map(CardItemCreateRequestDto::getImageAssetId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        Map<Long, ImageAsset> activatedAssetsMap = imageAssetService.findAndActivateAssets(assetIdsToActivate, userId);
 
         List<CardItem> cardItems = dtos.stream()
                 .map(dto -> {
                     CardItem card = cardItemMapper.toCardItem(dto);
 
+                    if (dto.getImageAssetId() != null) {
+                        ImageAsset asset = activatedAssetsMap.get(dto.getImageAssetId());
+                        card.setImage(asset);
+                    }
                     card.setFlashcard(flashcard);
 
                     return card;

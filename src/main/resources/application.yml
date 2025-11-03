@@ -43,7 +43,7 @@ spring:
   security:
     jwt:
       secret: fee55fe254d24a95863994171c5e5404AKN0108cigquahfdja
-      access-ttl-ms: 900000
+      access-ttl-ms: 1800000
       refresh-ttl-ms: 604800000
     refresh-cookie:
       name: refresh_token
