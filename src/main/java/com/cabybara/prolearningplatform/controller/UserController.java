@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.ChangePasswordRequestDto;
-import com.cabybara.prolearningplatform.dto.request.UpdateUserRequestDto;
+import com.cabybara.prolearningplatform.dto.request.UserUpdatingRequestDto;
 
 import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
 import com.cabybara.prolearningplatform.service.user.UserService;
@@ -50,9 +50,9 @@ public class UserController {
     @PatchMapping("/me")
     public ResponseEntity<ApiResponse<UserResponseDto>> updateUser(
             @AuthenticationPrincipal Jwt jwt,
-            @Valid @RequestBody UpdateUserRequestDto updateUserRequestDto) {
+            @Valid @RequestBody UserUpdatingRequestDto userUpdatingRequestDto) {
             Long userId = Long.parseLong(jwt.getClaims().get("id").toString());
-            UserResponseDto userResponseDto = userService.updateUser(userId, updateUserRequestDto);
+            UserResponseDto userResponseDto = userService.updateUser(userId, userUpdatingRequestDto);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully", userResponseDto, null));
