@@ -11,6 +11,7 @@ import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springdoc.core.annotations.ParameterObject;
@@ -92,7 +93,7 @@ public class FlashcardController {
     public ResponseEntity<ApiResponse<FlashcardResponseDto>> createFlashcardManual(
             @Parameter(description = "The ID of the Set", required = true)
             @PathVariable Long setId,
-            @RequestBody FlashcardCreateRequestDto flashcardCreateRequestDto
+            @Valid @RequestBody FlashcardCreateRequestDto flashcardCreateRequestDto
     ) {
         FlashcardResponseDto flashcardResponseDto = flashcardService.addFlashcardManual(setId, flashcardCreateRequestDto);
 
@@ -101,6 +102,10 @@ public class FlashcardController {
                 .body(ResponseUtil.success("Create flashcard successfully", flashcardResponseDto, null));
     }
 
+    @Operation(
+            summary = "Update existing flashcard",
+            description = "Update the flashcard title, description and privacy only"
+    )
     @PatchMapping("/{flashcardId}")
     public ResponseEntity<ApiResponse<FlashcardResponseDto>> updateFlashcard(
             @Parameter(description = "The ID of the Set", required = true)
@@ -109,7 +114,7 @@ public class FlashcardController {
             @Parameter(description = "The ID of the Flashcard to update", required = true)
             @PathVariable Long flashcardId,
 
-            @RequestBody FlashcardUpdatingRequestDto flashcardUpdatingRequestDto
+            @Valid @RequestBody FlashcardUpdatingRequestDto flashcardUpdatingRequestDto
     ) throws BadRequestException {
         FlashcardResponseDto updatedFlashcard = flashcardService.updateFlashcard(
                 setId,
@@ -122,6 +127,10 @@ public class FlashcardController {
                 .body(ResponseUtil.success("Update flashcard successfully", updatedFlashcard, null));
     }
 
+    @Operation(
+            summary = "Deletes a specific Flashcard from a Set",
+            description = "Removes a Flashcard using its ID within the context of a specific Set ID"
+    )
     @DeleteMapping("/{flashcardId}")
     public ResponseEntity<ApiResponse<String>> deleteFlashcard(
             @Parameter(description = "The ID of the Set", required = true)

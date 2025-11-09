@@ -81,7 +81,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleResourceNotFoundException(
-            ResourceAlreadyExistsException ex, WebRequest request) {
+            ResourceNotFoundException ex, WebRequest request) {
         ApiResponse<Object> response = ResponseUtil.error("Resource not found: " + ex.getMessage(),null, "path: " + request.getDescription(false).replace("uri=", ""));
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)

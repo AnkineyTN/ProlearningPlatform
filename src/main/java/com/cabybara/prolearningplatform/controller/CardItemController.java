@@ -2,19 +2,22 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.CardItemCreateRequestDto;
 import com.cabybara.prolearningplatform.dto.request.CardItemUpdatingRequestDto;
-import com.cabybara.prolearningplatform.dto.request.CardItemDeletionRequestDto;
+import com.cabybara.prolearningplatform.dto.request.CardItemsDeletionRequestDto;
 import com.cabybara.prolearningplatform.dto.response.CardItemResponseDto;
 import com.cabybara.prolearningplatform.dto.response.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.service.flashcard.CardItemService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +25,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/sets/{setId}/flashcards/{flashcardId}/cards")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "Flashcard")
 public class CardItemController {
     private final CardItemService cardItemService;
@@ -38,7 +42,7 @@ public class CardItemController {
             @Parameter(description = "The ID of the Flashcard to retrieve", required = true)
             @PathVariable Long flashcardId,
 
-            @RequestBody List<CardItemCreateRequestDto> cardItemCreateRequestDtos
+            @Valid @RequestBody List<CardItemCreateRequestDto> cardItemCreateRequestDtos
     ) {
         DetailFlashcardResponseDto detailFlashcardResponseDto = cardItemService.addCardToFlashcard(setId, flashcardId, cardItemCreateRequestDtos);
 
@@ -47,6 +51,10 @@ public class CardItemController {
                 .body(ResponseUtil.success("Add card successfully", detailFlashcardResponseDto, null));
     }
 
+    @Operation(
+            summary = "Update a specific card in flashcard",
+            description = "Update a existing card item of the flashcard in a set"
+    )
     @PatchMapping("/{cardId}")
     public ResponseEntity<ApiResponse<CardItemResponseDto>> updateCardItems(
             @Parameter(description = "The ID of the Set", required = true)
@@ -58,7 +66,7 @@ public class CardItemController {
             @Parameter(description = "The ID of the Card to update", required = true)
             @PathVariable Long cardId,
 
-            @RequestBody CardItemUpdatingRequestDto cardItemUpdatingRequestDto
+            @Valid @RequestBody CardItemUpdatingRequestDto cardItemUpdatingRequestDto
     ) {
         CardItemResponseDto updatedCardItem = cardItemService.updateCardItem(setId, flashcardId, cardId, cardItemUpdatingRequestDto);
 
@@ -67,6 +75,31 @@ public class CardItemController {
                 .body(ResponseUtil.success("Update card successfully", updatedCardItem, null));
     }
 
+    @Operation(
+            summary = "Update multiple Card Items from a specific Flashcard",
+            description = "Deletes a list of Card Items based on the provided IDs, all belonging to a specific Flashcard within a Set."
+    )
+    @PatchMapping("")
+    public ResponseEntity<ApiResponse<List<CardItemResponseDto>>> updateCardItems(
+            @Parameter(description = "The ID of the Set", required = true)
+            @PathVariable Long setId,
+
+            @Parameter(description = "The ID of the Flashcard to update", required = true)
+            @PathVariable Long flashcardId,
+
+            @Valid  @RequestBody List<CardItemUpdatingRequestDto> cardItemUpdatingRequestDto
+    ) {
+        List<CardItemResponseDto> updatedCardItems = cardItemService.updateCardItems(setId, flashcardId, cardItemUpdatingRequestDto);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Update cards successfully", updatedCardItems, null));
+    }
+
+    @Operation(
+            summary = "Delete a specific card in flashcard",
+            description = "Delete a existing card item using its id"
+    )
     @DeleteMapping("/{cardId}")
     public ResponseEntity<ApiResponse<String>> deleteCardItem(
             @Parameter(description = "The ID of the Set", required = true)
@@ -85,6 +118,10 @@ public class CardItemController {
                 .body(ResponseUtil.success("Delete card successfully", null, null));
     }
 
+    @Operation(
+            summary = "Deletes multiple Card Items from a specific Flashcard",
+            description = "Deletes a list of Card Items based on the provided IDs, all belonging to a specific Flashcard within a Set. **This operation requires a request body.**"
+    )
     @DeleteMapping("")
     public ResponseEntity<ApiResponse<String>> deleteCardItems(
             @Parameter(description = "The ID of the Set", required = true)
@@ -93,9 +130,9 @@ public class CardItemController {
             @Parameter(description = "The ID of the Flashcard to retrieve", required = true)
             @PathVariable Long flashcardId,
 
-            @RequestBody CardItemDeletionRequestDto cardItemDeletionRequestDto
+            @RequestBody CardItemsDeletionRequestDto cardItemsDeletionRequestDto
     ) throws BadRequestException {
-        cardItemService.deleteCards(setId, flashcardId, cardItemDeletionRequestDto.getCardIds());
+        cardItemService.deleteCards(setId, flashcardId, cardItemsDeletionRequestDto.getCardIds());
 
         return ResponseEntity
                 .status(HttpStatus.OK)

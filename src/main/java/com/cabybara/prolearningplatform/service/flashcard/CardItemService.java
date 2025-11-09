@@ -13,6 +13,8 @@ public interface CardItemService {
 
     CardItemResponseDto updateCardItem(Long setId, Long flashcardId, Long cardId, CardItemUpdatingRequestDto updateFlashcardRequestDto);
 
+    List<CardItemResponseDto> updateCardItems(Long setId, Long flashcardId, List<CardItemUpdatingRequestDto> updatingRequestDtos);
+
     void deleteCards(Long setId, Long flashcardId, List<Long> cardIds) throws BadRequestException;
 
     void deleteCard(Long setId, Long flashcardId, Long cardId) throws BadRequestException;

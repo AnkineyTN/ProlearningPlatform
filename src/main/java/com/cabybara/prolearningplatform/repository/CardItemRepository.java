@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.repository;
 
 import com.cabybara.prolearningplatform.model.CardItem;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -27,4 +28,7 @@ public interface CardItemRepository extends JpaRepository<CardItem, Long> {
             @Param("setId") Long setId,
             @Param("userId") Long userId
     );
+
+    @EntityGraph(attributePaths = {"flashcard", "flashcard.set", "flashcard.user"})
+    List<CardItem> findAllByIdIn(List<Long> ids);
 }
