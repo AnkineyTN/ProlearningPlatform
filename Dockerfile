@@ -1,5 +1,5 @@
 # Stage 1: Build the Spring Boot application 
-FROM openjdk:21-jdk-slim AS builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
 
 COPY mvnw .
