@@ -19,6 +19,7 @@ public interface FlashcardMapper {
     @Mapping(source = "create_method", target = "createMethod")
     DetailFlashcardResponseDto toDetailFlashcardResponseDto(Flashcard flashcard);
 
+
     @Named("calNumCard")
     default Long calNumCard(Flashcard flashcard) {
         return (long) flashcard.getCards().size();

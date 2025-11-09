@@ -1,4 +1,6 @@
 server:
+  frontend_host_dev: ${FRONTEND_HOST_DEV:http://localhost:3000}
+  frontend_host_prod: ${FRONTEND_HOST_PROD:http://localhost:3001}
   port: ${SERVER_PORT:8080}
   servlet:
     context-path: /api
