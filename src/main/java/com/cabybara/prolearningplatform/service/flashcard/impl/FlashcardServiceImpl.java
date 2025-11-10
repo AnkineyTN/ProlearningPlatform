@@ -119,6 +119,7 @@ public class FlashcardServiceImpl implements FlashcardService {
     }
 
     @Override
+    @Transactional
     public void deleteFlashcard(Long setId, Long flashcardId) throws BadRequestException {
         Long userId = authenticationContext.getCurrentUserId();
         int deletedCount = flashcardRepository.deleteByIdAndSetIdAndSetUserId(flashcardId, setId, userId);
