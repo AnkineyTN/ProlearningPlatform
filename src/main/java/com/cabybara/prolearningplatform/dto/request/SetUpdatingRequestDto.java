@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class SetUpdateRequestDto {
+public class SetUpdatingRequestDto {
     private String title;
     private String description;
     private Privacy privacy;

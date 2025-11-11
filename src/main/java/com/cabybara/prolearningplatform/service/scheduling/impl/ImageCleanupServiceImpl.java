@@ -24,25 +24,25 @@ public class ImageCleanupServiceImpl implements ImageCleanupService {
     @Scheduled(cron = "0 0 3 * * ?")
     @Async("heavyTaskExecutor")
     @Transactional
-    public void cleanupPendingImages() {
+    public void cleanupImageAssets() {
         OffsetDateTime cutoffTime = OffsetDateTime.now().minusHours(24);
 
-        List<ImageAsset> oldPendingAssets = imageAssetService
-                .findOldPendingImages(cutoffTime);
+        List<ImageAsset> cleanupAssets = imageAssetService
+                .findAssetsToCleanup(cutoffTime);
 
-        if (oldPendingAssets.isEmpty()) {
+        if (cleanupAssets.isEmpty()) {
             log.info("Nothing to cleanup image assets are PENDING");
             return;
         }
 
-        log.info("Found {} image PENDING. ", oldPendingAssets.size());
+        log.info("Found {} image PENDING. ", cleanupAssets.size());
 
-        List<String> publicIds = oldPendingAssets.stream()
+        List<String> publicIds = cleanupAssets.stream()
                 .map(ImageAsset::getPublicId)
                 .toList();
 
         try {
-            imageAssetService.deleteAllAssets(oldPendingAssets);
+            imageAssetService.deleteAllAssets(cleanupAssets);
 
             cloudinaryService.deleteImages(publicIds);
         } catch (Exception e) {

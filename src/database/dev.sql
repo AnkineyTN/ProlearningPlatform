@@ -140,6 +140,19 @@ CREATE TABLE card_item
     CONSTRAINT chk_card_status CHECK (card_status IN ('NEW', 'LEARNING', 'KNOWN'))
 );
 
+CREATE TABLE image_asset (
+                             id BIGSERIAL PRIMARY KEY,
+                             public_id varchar(255) not null,
+                             url varchar(255) not null,
+                             id_user int not null,
+                             status varchar(10) not null default 'PENDING',
+
+                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                             foreign key (id_user) references users(id) on delete cascade,
+                             constraint chk_status check (status in ('PENDING', 'ACTIVE'))
+);
 
 
 
