@@ -17,6 +17,9 @@ public class NoteDocs extends AbstractEntity{
     @Column(name = "file_url", nullable = false)
     private String fileUrl;
 
+    @Column(name = "content")
+    private String content;
+
     @Column(name = "extension")
     private String extension;
 

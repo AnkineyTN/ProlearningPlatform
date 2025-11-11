@@ -29,8 +29,8 @@ CREATE TABLE user
     recovery_code character varying(255) NULL,
     language      user_language            default 'VI',
     education     user_education           default 'HIGH_SCHOOL',
-    hear_app_from user_hear_app_from default 'GOOGLE',
-    account_type VARCHAR(50) default 'FREE',
+    hear_app_from user_hear_app_from       default 'GOOGLE',
+    account_type  VARCHAR(50)              default 'FREE',
     created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -80,6 +80,7 @@ CREATE TABLE note_docs
 (
     file_name  TEXT         NOT NULL,
     file_url   TEXT         NOT NULL,
+    content    TEXT,
     extension  TEXT         NOT NULL,
     public_id  VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -134,6 +135,19 @@ CREATE TABLE card_item (
                            CONSTRAINT chk_card_status CHECK (card_status IN ('NEW', 'LEARNING', 'KNOWN'))
 );
 
+CREATE TABLE image_asset (
+                             id BIGSERIAL PRIMARY KEY,
+                             public_id varchar(255) not null,
+                             url varchar(255) not null,
+                             id_user int not null,
+                             status varchar(10) not null default 'PENDING',
+
+                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                             foreign key (id_user) references users(id) on delete cascade,
+                             constraint chk_status check (status in ('PENDING', 'ACTIVE'))
+);
 
 
 

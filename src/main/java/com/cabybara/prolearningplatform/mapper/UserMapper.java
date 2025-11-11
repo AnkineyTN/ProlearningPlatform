@@ -1,6 +1,6 @@
 package com.cabybara.prolearningplatform.mapper;
 
-import com.cabybara.prolearningplatform.dto.request.UpdateUserRequestDto;
+import com.cabybara.prolearningplatform.dto.request.UserUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.model.Authority;
@@ -12,7 +12,6 @@ import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
-import org.mapstruct.factory.Mappers;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,7 +22,7 @@ public interface UserMapper {
     UserResponseDto toUserResponseDto(User user);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateUserFromDto(UpdateUserRequestDto updateUserRequestDto, @MappingTarget User user);
+    void updateUserFromDto(UserUpdatingRequestDto userUpdatingRequestDto, @MappingTarget User user);
 
     @Named("mapAuthoritiesToStrings")
     default Set<Role> mapAuthoritiesToStrings(Set<Authority> authorities) {

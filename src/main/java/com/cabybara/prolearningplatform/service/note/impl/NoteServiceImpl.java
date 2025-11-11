@@ -111,6 +111,7 @@ public class NoteServiceImpl implements NoteService {
                                         .id(doc.getId())
                                         .fileName(doc.getFileName())
                                         .fileUrl(doc.getFileUrl())
+                                        .content(doc.getContent())
                                         .extension(doc.getExtension())
                                         .publicId(doc.getPublicId())
                                         .build())

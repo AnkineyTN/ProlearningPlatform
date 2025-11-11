@@ -1,25 +1,18 @@
 package com.cabybara.prolearningplatform.dto.request;
 
-import jakarta.validation.Valid;
+import com.cabybara.prolearningplatform.enums.FlashcardStatus;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
 
-import java.util.List;
-
+@Builder
 @Data
-@SuperBuilder
 @NoArgsConstructor
-public class FlashcardCreateRequestDto {
-    @NotNull
+@AllArgsConstructor
+public class FlashcardUpdatingRequestDto {
     private String title;
-
     private String description;
-
-    @NotNull
     private String privacy;
-
-    @Valid
-    private List<CardItemCreateRequestDto> cards;
 }

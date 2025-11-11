@@ -11,4 +11,6 @@ import java.util.List;
 @Repository
 public interface ImageAssetRepository extends JpaRepository<ImageAsset, Long> {
     List<ImageAsset> findByStatusAndCreatedAtBefore(ImageStatus status, OffsetDateTime cutoff);
+
+    List<ImageAsset> findByStatus(ImageStatus status);
 }

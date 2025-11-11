@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -105,7 +106,7 @@ public class ImageAssetServiceImpl implements ImageAssetService {
         List<ImageAsset> assets = imageAssetRepository.findAllById(assetIds);
 
         if (assets.size() != assetIds.size()) {
-            throw new ResourceNotFoundException("Một hoặc nhiều tài nguyên ảnh không tìm thấy.");
+            throw new ResourceNotFoundException("Some image asset not found!");
         }
 
         for (ImageAsset asset : assets) {
@@ -122,6 +123,25 @@ public class ImageAssetServiceImpl implements ImageAssetService {
     }
 
     @Override
+    public ImageAsset findAndActivateAsset(Long assetId, Long userId) {
+        if (assetId == null) {
+            return null;
+        }
+
+        ImageAsset asset = imageAssetRepository.findById(assetId)
+                .orElseThrow(() -> new ResourceNotFoundException("Image asset not found!"));
+
+        if (!asset.getUser().getId().equals(userId)) {
+            throw new SecurityException("User not have permission with assets: " + asset.getId());
+        }
+        asset.setStatus(ImageStatus.ACTIVE);
+
+        imageAssetRepository.save(asset);
+
+        return asset;
+    }
+
+    @Override
     @Transactional
     public void updateUploadedImageSigned(UpdateUploadedImageRequestDto updateUploadedImageRequestDto) {
         ImageAsset imageAsset = imageAssetRepository.findById(updateUploadedImageRequestDto.getAssetId())
@@ -134,12 +154,25 @@ public class ImageAssetServiceImpl implements ImageAssetService {
     }
 
     @Override
-    public List<ImageAsset> findOldPendingImages(OffsetDateTime cutoffTime) {
-        return imageAssetRepository.findByStatusAndCreatedAtBefore(ImageStatus.PENDING, cutoffTime);
+    public List<ImageAsset> findAssetsToCleanup(OffsetDateTime cutoffTime) {
+        List<ImageAsset> pending = imageAssetRepository.findByStatusAndCreatedAtBefore(
+                ImageStatus.PENDING, cutoffTime);
+
+        List<ImageAsset> deleted = imageAssetRepository.findByStatus(ImageStatus.DELETED);
+
+        List<ImageAsset> cleanupList = new ArrayList<>(pending);
+        cleanupList.addAll(deleted);
+        return cleanupList;
     }
 
     @Override
     public void deleteAllAssets(List<ImageAsset> assets) {
         imageAssetRepository.deleteAll(assets);
+    }
+
+    @Override
+    public void deleteImageAsset(ImageAsset imageAsset) {
+        imageAsset.setStatus(ImageStatus.DELETED);
+        imageAssetRepository.save(imageAsset);
     }
 }

@@ -27,4 +27,9 @@ public class FlashcardResponseDto {
     private Integer remain;
 
     private CreationMethod createMethod;
+
+    private Long numCards;
+
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 }
