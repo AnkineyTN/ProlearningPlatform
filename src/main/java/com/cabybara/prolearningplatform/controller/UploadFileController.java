@@ -3,7 +3,7 @@ package com.cabybara.prolearningplatform.controller;
 import com.cabybara.prolearningplatform.dto.response.ResponseData;
 import com.cabybara.prolearningplatform.dto.response.ResponseError;
 import com.cabybara.prolearningplatform.dto.response.UploadFileResponseDTO;
-import com.cabybara.prolearningplatform.service.upload.ConvertFileService;
+import com.cabybara.prolearningplatform.service.upload.ConvertToHTMLService;
 import com.cabybara.prolearningplatform.service.upload.UploadFileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,7 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "Upload File APIs")
 @RequiredArgsConstructor
 public class UploadFileController {
-    private final ConvertFileService convertFileService;
+    private final ConvertToHTMLService convertFileService;
     private final UploadFileService uploadFileService;
 
     private static final String ERROR_MESSAGE = "errorMessage={}";
