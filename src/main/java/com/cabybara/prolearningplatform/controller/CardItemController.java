@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +34,7 @@ public class CardItemController {
             summary = "Add a/many cards to existed flashcard",
             description = "This api used to add a or many card items to existed flashcard"
     )
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("")
     public ResponseEntity<ApiResponse<DetailFlashcardResponseDto>> addCardToFlashcard(
             @Parameter(description = "The ID of the Set", required = true)
@@ -54,6 +56,7 @@ public class CardItemController {
             summary = "Update a specific card in flashcard",
             description = "Update a existing card item of the flashcard in a set"
     )
+    @PreAuthorize("isAuthenticated()")
     @PatchMapping("/{cardId}")
     public ResponseEntity<ApiResponse<CardItemResponseDto>> updateCardItems(
             @Parameter(description = "The ID of the Set", required = true)
@@ -78,6 +81,7 @@ public class CardItemController {
             summary = "Update multiple Card Items from a specific Flashcard",
             description = "Deletes a list of Card Items based on the provided IDs, all belonging to a specific Flashcard within a Set."
     )
+    @PreAuthorize("isAuthenticated()")
     @PatchMapping("")
     public ResponseEntity<ApiResponse<List<CardItemResponseDto>>> updateCardItems(
             @Parameter(description = "The ID of the Set", required = true)
@@ -99,6 +103,7 @@ public class CardItemController {
             summary = "Delete a specific card in flashcard",
             description = "Delete a existing card item using its id"
     )
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{cardId}")
     public ResponseEntity<ApiResponse<String>> deleteCardItem(
             @Parameter(description = "The ID of the Set", required = true)
@@ -121,6 +126,7 @@ public class CardItemController {
             summary = "Deletes multiple Card Items from a specific Flashcard",
             description = "Deletes a list of Card Items based on the provided IDs, all belonging to a specific Flashcard within a Set. **This operation requires a request body.**"
     )
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("")
     public ResponseEntity<ApiResponse<String>> deleteCardItems(
             @Parameter(description = "The ID of the Set", required = true)
@@ -129,7 +135,7 @@ public class CardItemController {
             @Parameter(description = "The ID of the Flashcard to retrieve", required = true)
             @PathVariable Long flashcardId,
 
-            @RequestBody CardItemsDeletionRequestDto cardItemsDeletionRequestDto
+            @Valid @RequestBody CardItemsDeletionRequestDto cardItemsDeletionRequestDto
     ) throws BadRequestException {
         cardItemService.deleteCards(setId, flashcardId, cardItemsDeletionRequestDto.getCardIds());
 

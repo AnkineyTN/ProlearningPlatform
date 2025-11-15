@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,6 +38,7 @@ public class FlashcardController {
             summary = "Get All Flashcards in a Set (Paginated)",
             description = "Retrieves a paginated list of all flashcards associated with a specific Set."
     )
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("")
     public ResponseEntity<ApiResponse<List<FlashcardResponseDto>>> getAllFlashcard(
             @Parameter(description = "The ID of the Set to retrieve flashcards from", required = true)
@@ -64,6 +66,7 @@ public class FlashcardController {
             summary = "Get a Specific Flashcard's Details",
             description = "Retrieves the full details of a single flashcard, including all its associated card items."
     )
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/{flashcardId}")
     public ResponseEntity<ApiResponse<DetailFlashcardResponseDto>> getDetailFlashcard(
             @Parameter(description = "The ID of the Set", required = true)
@@ -89,6 +92,7 @@ public class FlashcardController {
             description = "Manually creates a new flashcard within a specific set. For cards with images, " +
                     "the 'imageAssetId' (obtained from the Image Upload endpoints) must be provided in the request body."
     )
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/manual")
     public ResponseEntity<ApiResponse<FlashcardResponseDto>> createFlashcardManual(
             @Parameter(description = "The ID of the Set", required = true)
@@ -106,6 +110,7 @@ public class FlashcardController {
             summary = "Update existing flashcard",
             description = "Update the flashcard title, description and privacy only"
     )
+    @PreAuthorize("isAuthenticated()")
     @PatchMapping("/{flashcardId}")
     public ResponseEntity<ApiResponse<FlashcardResponseDto>> updateFlashcard(
             @Parameter(description = "The ID of the Set", required = true)
@@ -131,6 +136,7 @@ public class FlashcardController {
             summary = "Deletes a specific Flashcard from a Set",
             description = "Removes a Flashcard using its ID within the context of a specific Set ID"
     )
+    @PreAuthorize("isAuthenticated()")
     @DeleteMapping("/{flashcardId}")
     public ResponseEntity<ApiResponse<String>> deleteFlashcard(
             @Parameter(description = "The ID of the Set", required = true)
