@@ -61,6 +61,19 @@ public class SetController {
     }
 
     @Operation(
+            summary = "Get detail a set of the current user"
+    )
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("{setId}")
+    public ResponseEntity<ApiResponse<SetResponseDto>> getSet(@PathVariable Long setId) {
+        SetResponseDto setResponseDto = setService.getSet(setId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Successfully", setResponseDto, null));
+    }
+
+    @Operation(
             summary = "Create a new set",
             description = "Create a new set for the authenticated user using the provided data."
     )
@@ -85,7 +98,7 @@ public class SetController {
     @PatchMapping("/{setId}")
     public ResponseEntity<ApiResponse<SetResponseDto>> updateSet(
             @Parameter(description = "ID of the set to update", example = "5") @PathVariable Long setId,
-            @RequestBody SetUpdatingRequestDto setUpdatingRequestDto,
+            @Valid @RequestBody SetUpdatingRequestDto setUpdatingRequestDto,
             @AuthenticationPrincipal Jwt jwt
     ) {
 

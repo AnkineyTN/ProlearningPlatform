@@ -1,11 +1,10 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
-import com.cabybara.prolearningplatform.bean.AuthenticationContext;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.request.CardItemCreateRequestDto;
 import com.cabybara.prolearningplatform.dto.request.CardItemUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.CardItemResponseDto;
 import com.cabybara.prolearningplatform.dto.response.DetailFlashcardResponseDto;
-import com.cabybara.prolearningplatform.enums.ImageStatus;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.CardItemMapper;
 import com.cabybara.prolearningplatform.model.CardItem;
@@ -18,6 +17,7 @@ import com.cabybara.prolearningplatform.service.upload.ImageAssetService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -31,6 +31,7 @@ public class CardItemServiceImpl implements CardItemService {
     private final AuthenticationContext authenticationContext;
     private final CardItemRepository cardItemRepository;
     private final ImageAssetService imageAssetService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -152,7 +153,7 @@ public class CardItemServiceImpl implements CardItemService {
                 .collect(Collectors.toMap(
                         CardItemUpdatingRequestDto::getId,
                         dto -> dto,
-                        (existing, replacement) -> existing // Xử lý ID trùng lặp
+                        (existing, replacement) -> existing
                 ));
     }
 

@@ -15,6 +15,7 @@ public class SetResponseDto {
     private String description;
     private Privacy privacy;
     private Long numNotes;
-    private Long createdAt;
-    private Long updatedAt;
+    private Long numFlashcards;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 }

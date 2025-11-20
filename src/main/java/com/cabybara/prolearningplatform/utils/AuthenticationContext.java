@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.bean;
+package com.cabybara.prolearningplatform.utils;
 
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.core.Authentication;

@@ -43,7 +43,7 @@ public class AuthController {
         RegisterResponseDto registerResponseDto = authService.registerUser(registerRequestDto);
         ApiResponse<RegisterResponseDto> response = ResponseUtil.success("Registration successfully", registerResponseDto, null);
         return ResponseEntity
-                .status(HttpStatus.OK)
+                .status(HttpStatus.CREATED)
                 .body(response);
     }
 
@@ -53,7 +53,7 @@ public class AuthController {
         RegisterResponseDto registerResponseDto = authService.registerAdmin(registerRequestDto);
         ApiResponse<RegisterResponseDto> response = ResponseUtil.success("Registration successfully", registerResponseDto, null);
         return ResponseEntity
-                .status(HttpStatus.OK)
+                .status(HttpStatus.CREATED)
                 .body(response);
     }
 

@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.SetUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.SetCreationRequestDto;
 import com.cabybara.prolearningplatform.dto.response.SetResponseDto;
 import com.cabybara.prolearningplatform.mapper.helpers.DateTimeMapper;
+import com.cabybara.prolearningplatform.model.Flashcard;
 import com.cabybara.prolearningplatform.model.Note;
 import org.mapstruct.*;
 
@@ -19,10 +20,16 @@ public interface SetMapper {
     void updateSetFromDto(SetUpdatingRequestDto setUpdatingRequestDto, @MappingTarget Set targetSet);
 
     @Mapping(source = "notes", target = "numNotes", qualifiedByName = "listNotesToNumNotes")
+    @Mapping(source = "flashcards", target = "numFlashcards", qualifiedByName = "listFlashcardsToNumFlashcards")
     SetResponseDto toSetResponseDto(Set set);
 
     @Named("listNotesToNumNotes")
     default Long numNotesMapping(List<Note> listNotes) {
         return (long) listNotes.size();
+    }
+
+    @Named("listFlashcardsToNumFlashcards")
+    default Long numFlashcardsMapping(List<Flashcard> listFlashcards) {
+        return (long) listFlashcards.size();
     }
 }

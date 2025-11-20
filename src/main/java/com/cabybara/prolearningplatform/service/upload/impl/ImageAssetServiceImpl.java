@@ -1,6 +1,6 @@
 package com.cabybara.prolearningplatform.service.upload.impl;
 
-import com.cabybara.prolearningplatform.bean.AuthenticationContext;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.request.ImageUrlUploadRequestDto;
 import com.cabybara.prolearningplatform.dto.request.UpdateUploadedImageRequestDto;
 import com.cabybara.prolearningplatform.dto.response.ImageSignatureResponseDto;
