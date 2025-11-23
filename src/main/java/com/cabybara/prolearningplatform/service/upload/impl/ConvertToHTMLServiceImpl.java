@@ -1,18 +1,17 @@
 package com.cabybara.prolearningplatform.service.upload.impl;
 
-import com.cabybara.prolearningplatform.service.upload.ConvertFileService;
+import com.cabybara.prolearningplatform.service.upload.ConvertToHTMLService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class ConvertFileServiceImpl implements ConvertFileService {
+public class ConvertToHTMLServiceImpl implements ConvertToHTMLService {
     private final String PDF_TO_HTML_API = "https://prolearning-pdftohtmlconverter.onrender.com/convert?url=";
 
     private final RestTemplate restTemplate = new RestTemplate();
