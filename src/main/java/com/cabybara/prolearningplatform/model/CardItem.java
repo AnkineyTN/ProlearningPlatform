@@ -30,6 +30,6 @@ public class CardItem extends AbstractEntity {
     private CardStatus cardStatus = CardStatus.NEW;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "image_asset_id")
-    private ImageAsset image;
+    @JoinColumn(name = "asset_id")
+    private Asset image;
 }

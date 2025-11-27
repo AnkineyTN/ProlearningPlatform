@@ -1,6 +1,8 @@
 package com.cabybara.prolearningplatform.service.cloudinary;
 
+import com.cabybara.prolearningplatform.dto.helper.AssetToDeleteDto;
 import com.cabybara.prolearningplatform.dto.response.CloudinaryResponseDTO;
+import com.cabybara.prolearningplatform.enums.AssetType;
 import com.cloudinary.Configuration;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -9,13 +11,13 @@ import java.util.List;
 import java.util.Map;
 
 public interface CloudinaryService {
-    String generateUploadSignature();
-
     Configuration getConfiguration();
 
-    Map uploadImageFromUrl(String imageUrl, String targetFolder) throws IOException;
+    Map generateUploadSignature(AssetType type);
 
-    void deleteImages(List<String> publicIds) throws Exception;
+    Map uploadResourceFromUrl(String url, AssetType type) throws IOException;
+
+    void deleteAssets(List<AssetToDeleteDto> assetToDeleteDtos) throws Exception;
 
     public CloudinaryResponseDTO uploadMultipartFile(MultipartFile file, String fileName, String extension, String subject) throws IOException;
 
