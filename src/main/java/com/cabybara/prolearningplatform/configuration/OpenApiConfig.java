@@ -16,6 +16,9 @@ import java.util.List;
 
 @Configuration
 public class OpenApiConfig {
+
+    private static final String SCHEME_NAME = "bearerAuth";
+
     @Bean
     public OpenAPI openApi(@Value("${open.api.title}") String title,
                            @Value("${open.api.version}") String version,
@@ -25,17 +28,18 @@ public class OpenApiConfig {
         return new OpenAPI().info(
                 new Info().title(title)
                         .version(version).description(description)
-                        .license(new License().name("API License").url("http://domain.name.vn/license")));
-//                .servers(List.of(new Server().url(serverUrl).description(serverName)));
-//                .components(
-//                        new Components()
-//                                .addSecuritySchemes(
-//                                        "bearerAuth",
-//                                        new SecurityScheme()
-//                                                .type(SecurityScheme.Type.HTTP)
-//                                                .scheme("bearer")
-//                                                .bearerFormat("JWT")))
-//                .security(List.of(new SecurityRequirement().addList("bearerAuth")));
+                        .license(new License().name("API License").url("http://domain.name.vn/license")))
+                        .components(new Components()
+                                .addSecuritySchemes(SCHEME_NAME,
+                                        new SecurityScheme()
+                                                .name(SCHEME_NAME)
+                                                .type(SecurityScheme.Type.HTTP)
+                                                .scheme("bearer")
+                                                .bearerFormat("JWT")
+                                                .description("Please give the JWT Access Token to use apis")
+                                )
+                        )
+                        .addSecurityItem(new SecurityRequirement().addList(SCHEME_NAME));
     }
 
     @Bean

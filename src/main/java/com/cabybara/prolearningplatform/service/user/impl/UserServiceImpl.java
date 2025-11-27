@@ -67,10 +67,6 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(registerRequestDto.getPassword()))
                 .email(registerRequestDto.getEmail())
                 .roles(new HashSet<>())
-                .education(UserEducation.COLLEGE)
-                .hearAppFrom(UserHearAppFrom.CLASSMATE)
-                .language(UserLanguage.VI)
-                .accountType(AccountType.FREE)
                 .build();
 
         Authority defaultAuthority = Authority.builder()
@@ -126,9 +122,6 @@ public class UserServiceImpl implements UserService {
                             .email(userInfo.getEmail())
                             .firstName(userInfo.getFamilyName())
                             .lastName(userInfo.getGivenName())
-                            .language(UserLanguage.VI)
-                            .hearAppFrom(UserHearAppFrom.CLASSMATE)
-                            .education(UserEducation.COLLEGE)
                             .roles(new HashSet<>())
                             .build();
 
@@ -152,9 +145,6 @@ public class UserServiceImpl implements UserService {
                             .email(googleUserInfoDto.getEmail())
                             .firstName(googleUserInfoDto.getFamilyName())
                             .lastName(googleUserInfoDto.getGivenName())
-                            .language(UserLanguage.VI)
-                            .hearAppFrom(UserHearAppFrom.CLASSMATE)
-                            .education(UserEducation.COLLEGE)
                             .roles(new HashSet<>())
                             .build();
 
