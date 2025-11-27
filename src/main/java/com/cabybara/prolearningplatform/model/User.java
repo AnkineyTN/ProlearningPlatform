@@ -69,7 +69,7 @@ public class User extends AbstractEntity implements UserDetails {
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
     @ToString.Exclude
-    private List<ImageAsset> imageAssets;
+    private List<Asset> assets;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -5,16 +5,15 @@ import com.cabybara.prolearningplatform.dto.request.CardItemCreateRequestDto;
 import com.cabybara.prolearningplatform.dto.request.CardItemUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.CardItemResponseDto;
 import com.cabybara.prolearningplatform.dto.response.DetailFlashcardResponseDto;
-import com.cabybara.prolearningplatform.enums.ImageStatus;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.CardItemMapper;
 import com.cabybara.prolearningplatform.model.CardItem;
 import com.cabybara.prolearningplatform.model.Flashcard;
-import com.cabybara.prolearningplatform.model.ImageAsset;
+import com.cabybara.prolearningplatform.model.Asset;
 import com.cabybara.prolearningplatform.repository.CardItemRepository;
 import com.cabybara.prolearningplatform.service.flashcard.CardItemService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
-import com.cabybara.prolearningplatform.service.upload.ImageAssetService;
+import com.cabybara.prolearningplatform.service.asset.AssetService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
@@ -30,7 +29,7 @@ public class CardItemServiceImpl implements CardItemService {
     private final CardItemMapper cardItemMapper;
     private final AuthenticationContext authenticationContext;
     private final CardItemRepository cardItemRepository;
-    private final ImageAssetService imageAssetService;
+    private final AssetService assetService;
 
     @Override
     @Transactional
@@ -45,14 +44,14 @@ public class CardItemServiceImpl implements CardItemService {
                 .distinct()
                 .toList();
 
-        Map<Long, ImageAsset> activatedAssetsMap = imageAssetService.findAndActivateAssets(assetIdsToActivate, userId);
+        Map<Long, Asset> activatedAssetsMap = assetService.findAndActivateAssets(assetIdsToActivate, userId);
 
         List<CardItem> cardItems = dtos.stream()
                 .map(dto -> {
                     CardItem card = cardItemMapper.toCardItem(dto);
 
                     if (dto.getImageAssetId() != null) {
-                        ImageAsset asset = activatedAssetsMap.get(dto.getImageAssetId());
+                        Asset asset = activatedAssetsMap.get(dto.getImageAssetId());
                         card.setImage(asset);
                     }
                     card.setFlashcard(flashcard);
@@ -77,13 +76,13 @@ public class CardItemServiceImpl implements CardItemService {
 
         if (updateFlashcardRequestDto.getImageAssetId() != null) {
             if (cardItem.getImage() != null) {
-                imageAssetService.deleteImageAsset(cardItem.getImage());
+                assetService.markDeletedAsset(cardItem.getImage());
             }
 
             Long newImageAssetId = updateFlashcardRequestDto.getImageAssetId();
-            ImageAsset newImageAsset = imageAssetService.findAndActivateAsset(newImageAssetId, userId);
+            Asset newAsset = assetService.findAndActivateAsset(newImageAssetId, userId);
 
-            cardItem.setImage(newImageAsset);
+            cardItem.setImage(newAsset);
         }
 
         return cardItemMapper.toCardItemResponseDto(cardItemRepository.save(cardItem));
@@ -152,7 +151,7 @@ public class CardItemServiceImpl implements CardItemService {
                 .collect(Collectors.toMap(
                         CardItemUpdatingRequestDto::getId,
                         dto -> dto,
-                        (existing, replacement) -> existing // Xử lý ID trùng lặp
+                                                (existing, replacement) -> existing // Handle duplicate IDs
                 ));
     }
 
@@ -211,11 +210,11 @@ public class CardItemServiceImpl implements CardItemService {
         }
 
         if (cardItem.getImage().getUrl() != null) {
-            imageAssetService.deleteImageAsset(cardItem.getImage());
+            assetService.markDeletedAsset(cardItem.getImage());
         }
 
-        ImageAsset newImageAsset = imageAssetService.findAndActivateAsset(newImageAssetId, userId);
+        Asset newAsset = assetService.findAndActivateAsset(newImageAssetId, userId);
 
-        cardItem.setImage(newImageAsset);
+        cardItem.setImage(newAsset);
     }
 }
