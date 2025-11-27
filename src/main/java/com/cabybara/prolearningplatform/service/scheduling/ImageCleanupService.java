@@ -1,5 +1,0 @@
-package com.cabybara.prolearningplatform.service.scheduling;
-
-public interface ImageCleanupService {
-    void cleanupImageAssets();
-}
