@@ -62,6 +62,7 @@ public class AssetServiceImpl implements AssetService {
                 .cloudName(cloudinaryName)
                 .assetId(newAsset.getId())
                 .uploadPreset(signInfo.get("uploadPreset").toString())
+                .uploadResourceType(signInfo.get("uploadResourceType").toString())
                 .build();
     }
 

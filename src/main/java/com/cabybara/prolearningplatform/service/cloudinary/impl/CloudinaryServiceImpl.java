@@ -27,11 +27,10 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     private final Cloudinary cloudinary;
 
     @Value("${cloud.cloudinary.flashcard_preset}")
-    private String flashcardPreset;
+    private String imagePreset;
 
     @Value("${cloud.cloudinary.document_preset}")
     private String documentPreset;
-
 
     // Folder for note
     private final String NOTE_DOCS_FOLDER = "ProLearning/note-documents";
@@ -45,8 +44,9 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     @Override
     public Map generateUploadSignature(AssetType type) {
         long timestamp = Instant.now().getEpochSecond();
-
-        String selectedPreset = type == AssetType.IMAGE ? flashcardPreset : documentPreset;
+        
+        String selectedPreset = type == AssetType.IMAGE ? imagePreset : documentPreset;
+        String selectedResourceType = type == AssetType.IMAGE ? "image" : "raw";
 
         Map<String, Object> paramsToSign = Map.of(
                 "timestamp", timestamp,
@@ -57,7 +57,8 @@ public class CloudinaryServiceImpl implements CloudinaryService {
 
         return ObjectUtils.asMap(
                 "signature", signature,
-                "uploadPreset", selectedPreset
+                "uploadPreset", selectedPreset,
+                "uploadResourceType", selectedResourceType
         );
     }
 
@@ -74,7 +75,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
             targetPreset = documentPreset;
             resourceType = "auto";
         } else {
-            targetPreset = flashcardPreset;
+            targetPreset = imagePreset;
             resourceType = "image";
         }
 
