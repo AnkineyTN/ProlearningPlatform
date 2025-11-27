@@ -9,9 +9,11 @@ import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,6 +30,7 @@ public class ImageUploadController {
             description = "This endpoint will return an (presigned signature) and the parameters. " +
                     "Client using these params to upload image directly to Cloudinary/S3. "
     )
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/signature")
     public ResponseEntity<ApiResponse<ImageSignatureResponseDto>> getUploadSignature() {
         ImageSignatureResponseDto imageSignatureResponseDto = imageAssetService.generateUploadSignature();
@@ -42,9 +45,10 @@ public class ImageUploadController {
             description = "This endpoint used to upload image from url. " +
                     "It will return uploaded url and assetId (will be used after)"
     )
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/upload-from-url")
     public ResponseEntity<ApiResponse<ImageUrlUploadResponseDto>> uploadFromUrl(
-            @RequestBody ImageUrlUploadRequestDto request
+            @Valid @RequestBody ImageUrlUploadRequestDto request
     ) {
         ImageUrlUploadResponseDto imageUrlUploadResponseDto = imageAssetService.uploadImageFromUrl(request);
 
@@ -58,9 +62,10 @@ public class ImageUploadController {
             description = "FORCE: After client upload file success (using /signature), " +
                     "client have to call this endpoint to send final URL (secure_url) returning from Cloudinart. "
     )
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/update-uploaded-image")
     public ResponseEntity<ApiResponse<String>> updateUploadedImageSigned(
-            @RequestBody UpdateUploadedImageRequestDto updateUploadedImageRequestDto
+            @Valid @RequestBody UpdateUploadedImageRequestDto updateUploadedImageRequestDto
     ) {
         imageAssetService.updateUploadedImageSigned(updateUploadedImageRequestDto);
 

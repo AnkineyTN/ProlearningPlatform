@@ -223,6 +223,11 @@
             <version>25.9</version>
             <classifier>jdk17</classifier>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
