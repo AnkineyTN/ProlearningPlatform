@@ -12,4 +12,5 @@ public class AssetSignatureResponseDto {
     private String cloudName;
     private Long assetId;
     private String uploadPreset;
+    private String uploadResourceType;
 }
