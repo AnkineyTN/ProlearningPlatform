@@ -34,8 +34,6 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    //    private final EmailService emailService;
-//    private final JwtService jwtService;
     private final UserMapper userMapper;
 
     @Override
@@ -105,8 +103,8 @@ public class UserServiceImpl implements UserService {
         String encodedNewPassword = passwordEncoder.encode(changePasswordRequestDto.getNewPassword());
 
         if (!passwordEncoder.matches(changePasswordRequestDto.getOldPassword(), existedUser.getPassword())) {
-            throw new AuthException(HttpStatus.CONFLICT, "Password is equal to old password");
-        }
+            throw new AuthException(HttpStatus.CONFLICT, "Old password is not match");
+        } new AuthException(HttpStatus.CONFLICT, "Password is equal to old password");
 
         existedUser.setPassword(encodedNewPassword);
         userRepository.save(existedUser);
