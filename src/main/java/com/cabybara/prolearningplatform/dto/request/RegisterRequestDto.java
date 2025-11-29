@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.enums.Role;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,9 +15,11 @@ import org.hibernate.validator.constraints.Length;
 @AllArgsConstructor
 public class RegisterRequestDto {
     @NotNull
+    @Pattern(regexp = "^[\\p{L}\\p{Nd}\\s]+$", message = "Not contains special characters")
     private String firstName;
 
     @NotNull
+    @Pattern(regexp = "^[\\p{L}\\p{Nd}\\s]+$", message = "Not contains special characters")
     private String lastName;
 
     @NotNull

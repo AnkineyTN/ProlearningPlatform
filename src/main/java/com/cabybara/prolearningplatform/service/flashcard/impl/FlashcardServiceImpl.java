@@ -14,7 +14,7 @@ import com.cabybara.prolearningplatform.model.*;
 import com.cabybara.prolearningplatform.repository.FlashcardRepository;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.service.set.SetService;
-import com.cabybara.prolearningplatform.service.upload.ImageAssetService;
+import com.cabybara.prolearningplatform.service.asset.AssetService;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +39,7 @@ public class FlashcardServiceImpl implements FlashcardService {
     private final UserService userService;
     private final SetService setService;
     private final FlashcardMapper flashcardMapper;
-    private final ImageAssetService imageAssetService;
+    private final AssetService assetService;
     private final CardItemMapper cardItemMapper;
 
     @Override
@@ -56,7 +56,7 @@ public class FlashcardServiceImpl implements FlashcardService {
         Long userId = authenticationContext.getCurrentUserId();
 
         Flashcard flashcard = flashcardRepository.findByIdAndSetIdAndUserId(flashcardId, setId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id: " + flashcardId + "not found!"));
+                                .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id: " + flashcardId + " not found!"));
 
         return flashcardMapper.toDetailFlashcardResponseDto(flashcard);
     }
@@ -76,7 +76,7 @@ public class FlashcardServiceImpl implements FlashcardService {
         Flashcard flashcard = flashcardMapper.toFlashcard(flashcardCreateRequestDto);
 
         if (flashcardCreateRequestDto.getCards() != null && !flashcardCreateRequestDto.getCards().isEmpty()) {
-            Map<Long, ImageAsset> activatedAssetsMap = activateCardImages(flashcardCreateRequestDto.getCards(), userId);
+            Map<Long, Asset> activatedAssetsMap = activateCardImages(flashcardCreateRequestDto.getCards(), userId);
 
             List<CardItem> cardItems = buildCardItemList(flashcardCreateRequestDto.getCards(), flashcard, activatedAssetsMap);
 
@@ -89,26 +89,26 @@ public class FlashcardServiceImpl implements FlashcardService {
         return flashcardMapper.toFlashcardResponseDto(flashcardRepository.save(flashcard));
     }
 
-    private Map<Long, ImageAsset> activateCardImages(List<CardItemCreateRequestDto> cardDtos, Long userId) {
+    private Map<Long, Asset> activateCardImages(List<CardItemCreateRequestDto> cardDtos, Long userId) {
         List<Long> assetIdsToActivate = cardDtos.stream()
                 .map(CardItemCreateRequestDto::getImageAssetId)
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
 
-        return imageAssetService.findAndActivateAssets(assetIdsToActivate, userId);
+        return assetService.findAndActivateAssets(assetIdsToActivate, userId);
     }
 
     private List<CardItem> buildCardItemList(List<CardItemCreateRequestDto> cardItemCreateRequestDtos,
                                              Flashcard flashcard,
-                                             Map<Long, ImageAsset> activatedAssetsMap) {
+                                             Map<Long, Asset> activatedAssetsMap) {
 
         return cardItemCreateRequestDtos.stream()
                 .map(cardDto -> {
                     CardItem cardItem = cardItemMapper.toCardItem(cardDto);
 
                     if (cardDto.getImageAssetId() != null) {
-                        ImageAsset asset = activatedAssetsMap.get(cardDto.getImageAssetId());
+                        Asset asset = activatedAssetsMap.get(cardDto.getImageAssetId());
                         cardItem.setImage(asset);
                     }
 
