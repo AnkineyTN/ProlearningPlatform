@@ -4,7 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.UserUpdatingRequestDto;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 
 import com.cabybara.prolearningplatform.dto.request.ChangePasswordRequestDto;
-import com.cabybara.prolearningplatform.dto.GoogleUserInfoDto;
+import com.cabybara.prolearningplatform.dto.helper.GoogleUserInfoDto;
 import com.cabybara.prolearningplatform.dto.request.RegisterRequestDto;
 import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.AccountType;
@@ -34,8 +34,6 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    //    private final EmailService emailService;
-//    private final JwtService jwtService;
     private final UserMapper userMapper;
 
     @Override
@@ -69,10 +67,6 @@ public class UserServiceImpl implements UserService {
                 .password(passwordEncoder.encode(registerRequestDto.getPassword()))
                 .email(registerRequestDto.getEmail())
                 .roles(new HashSet<>())
-                .education(UserEducation.COLLEGE)
-                .hearAppFrom(UserHearAppFrom.CLASSMATE)
-                .language(UserLanguage.VI)
-                .accountType(AccountType.FREE)
                 .build();
 
         Authority defaultAuthority = Authority.builder()
@@ -103,15 +97,10 @@ public class UserServiceImpl implements UserService {
         User existedUser = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User with username: " + email + " not found!"));
 
         String encodedNewPassword = passwordEncoder.encode(changePasswordRequestDto.getNewPassword());
-        String encodedOldPassword = passwordEncoder.encode(changePasswordRequestDto.getOldPassword());
 
-        if (existedUser.getPassword().equals(encodedOldPassword)) {
+        if (!passwordEncoder.matches(changePasswordRequestDto.getOldPassword(), existedUser.getPassword())) {
             throw new AuthException(HttpStatus.CONFLICT, "Old password is not match");
-        }
-
-        if (encodedNewPassword.equals(encodedOldPassword)) {
-            throw new AuthException(HttpStatus.CONFLICT, "Password is equal to old password");
-        }
+        } new AuthException(HttpStatus.CONFLICT, "Password is equal to old password");
 
         existedUser.setPassword(encodedNewPassword);
         userRepository.save(existedUser);
@@ -133,9 +122,6 @@ public class UserServiceImpl implements UserService {
                             .email(userInfo.getEmail())
                             .firstName(userInfo.getFamilyName())
                             .lastName(userInfo.getGivenName())
-                            .language(UserLanguage.VI)
-                            .hearAppFrom(UserHearAppFrom.CLASSMATE)
-                            .education(UserEducation.COLLEGE)
                             .roles(new HashSet<>())
                             .build();
 
@@ -159,9 +145,6 @@ public class UserServiceImpl implements UserService {
                             .email(googleUserInfoDto.getEmail())
                             .firstName(googleUserInfoDto.getFamilyName())
                             .lastName(googleUserInfoDto.getGivenName())
-                            .language(UserLanguage.VI)
-                            .hearAppFrom(UserHearAppFrom.CLASSMATE)
-                            .education(UserEducation.COLLEGE)
                             .roles(new HashSet<>())
                             .build();
 

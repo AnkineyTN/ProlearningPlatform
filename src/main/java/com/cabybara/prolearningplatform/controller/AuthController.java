@@ -11,6 +11,7 @@ import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -22,14 +23,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @Tag(name = "Auth")
 @Validated
+@SecurityRequirements({})
 public class AuthController {
     private final AuthService authService;
     private final GoogleAuthService googleAuthService;
@@ -75,7 +75,7 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "Login with user for web application",
+            summary = "Login with google user for web application",
             description = "Web application login with google process:\n" +
                     "- Call this api to get an auththorization url (AUTH_URL)\n" +
                     "- Redirect user to AUTH_URL"
