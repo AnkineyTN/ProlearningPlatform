@@ -146,9 +146,11 @@ public class AssetServiceImpl implements AssetService {
         Asset asset = assetRepository.findById(updateUploadedAssetRequestDto.getAssetId())
                 .orElseThrow(() -> new ResourceNotFoundException("Asset ID: " + updateUploadedAssetRequestDto.getAssetId() + " not found."));
 
+        String url = updateUploadedAssetRequestDto.getUrl();
         asset.setPublicId(updateUploadedAssetRequestDto.getPublicId());
         asset.setStatus(AssetStatus.ACTIVE);
-        asset.setUrl(updateUploadedAssetRequestDto.getUrl());
+        asset.setUrl(url);
+        asset.setFileName(updateUploadedAssetRequestDto.getFileName());
 
         assetRepository.save(asset);
     }

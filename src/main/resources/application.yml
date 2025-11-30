@@ -70,7 +70,7 @@ cloud:
     name: ${CLOUD_CLOUDINARY_NAME}
     apiKey: ${CLOUD_CLOUDINARY_API_KEY}
     apiSecret: ${CLOUD_CLOUDINARY_API_SECRET}
-    flashcard_preset: ${CLOUD_CLOUDINARY_FLASHCARD_PRESET}
+    image_preset: ${CLOUD_CLOUDINARY_IMAGE_PRESET}
     document_preset: ${CLOUD_CLOUDINARY_DOCUMENT_PRESET}
 
 springdoc:

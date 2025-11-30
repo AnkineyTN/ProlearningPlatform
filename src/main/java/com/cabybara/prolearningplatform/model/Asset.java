@@ -30,6 +30,9 @@ public class Asset extends AbstractEntity {
     @Builder.Default
     private AssetType type = AssetType.IMAGE;
 
+    @Column(name = "file_name", nullable = false, length = 1024)
+    private String fileName;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_user", referencedColumnName = "id")
     @JsonIgnore
