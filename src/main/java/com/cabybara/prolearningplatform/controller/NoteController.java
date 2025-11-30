@@ -1,6 +1,9 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.*;
+import com.cabybara.prolearningplatform.dto.request.note.DeleteNoteDocRequestDTO;
+import com.cabybara.prolearningplatform.dto.request.note.SaveDocInNoteRequestDto;
+import com.cabybara.prolearningplatform.dto.request.note.SaveImgInNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.service.ai.AIService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
@@ -27,7 +30,7 @@ public class NoteController {
 
     @Operation(method = "POST", summary = "Create note", description = "Create new note")
     @PostMapping(value = "/create")
-    public ResponseData<CreateNoteResponseDTO> saveVideo(@Valid @RequestBody CreateNoteRequestDTO request) {
+    public ResponseData<CreateNoteResponseDTO> createNote(@Valid @RequestBody CreateNoteRequestDTO request) {
         log.info("Create note");
         try {
             return new ResponseData<>(HttpStatus.CREATED.value(), "Create note successfully", noteService.createNote(request));
@@ -37,7 +40,7 @@ public class NoteController {
         }
     }
 
-    @Operation(method = "PATCH", summary = "Save note", description = "Save note")
+    @Operation(method = "PATCH", summary = "Save note", description = "Save note while taking note")
     @PatchMapping(value = "/save/{noteId}")
     public ResponseData<Void> saveNote(@PathVariable @Min(1) Long noteId, @Valid @RequestBody SaveNoteRequestDTO request) {
         log.info("Save note, noteId={}", noteId);
@@ -50,7 +53,33 @@ public class NoteController {
         }
     }
 
-    @Operation(method = "POST", summary = "Convert file to vector DB", description = "Convert file to vector DB")
+    @Operation(method = "POST", summary = "Save document in note", description = "Save document to note_docs table after uploading to cloudinary and having assetId")
+    @PostMapping(value = "/save-doc")
+    public ResponseData<Void> saveDocumentInNote(@Valid @RequestBody SaveDocInNoteRequestDto request) {
+        log.info("Save document in note");
+        try {
+            noteService.saveDocInNote(request);
+            return new ResponseData<>(HttpStatus.CREATED.value(), "Save document in note successfully");
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Save document in note fail");
+        }
+    }
+
+    @Operation(method = "POST", summary = "Save image in note", description = "Save image to note_imgs table after uploading to cloudinary and having assetId")
+    @PostMapping(value = "/save-img")
+    public ResponseData<Void> saveImageInNote(@Valid @RequestBody SaveImgInNoteRequestDto request) {
+        log.info("Save image in note");
+        try {
+            noteService.saveImgInNote(request);
+            return new ResponseData<>(HttpStatus.CREATED.value(), "Save image in note successfully");
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Save image in note fail");
+        }
+    }
+
+    @Operation(method = "POST", summary = "Convert file to vector DB", description = "Convert file to vector DB to query when explaining with AI")
     @PostMapping(value = "/convert-to-vectordb")
     public ResponseData<Void> convertFileToVector(@Valid @RequestBody ConvertFileToVectorRequestDTO request) {
         log.info("Convert file to vector DB");
@@ -63,7 +92,7 @@ public class NoteController {
         }
     }
 
-    @Operation(method = "POST", summary = "Explain text with AI", description = "Explain text with AI")
+    @Operation(method = "POST", summary = "Explain note with AI", description = "Explain selected text in note with AI")
     @PostMapping(value = "/explain")
     public ResponseData<ExplainNoteResponseDTO> explainNote(@Valid @RequestBody ExplainNoteRequestDTO request) {
         log.info("Explain note with AI");
@@ -76,9 +105,10 @@ public class NoteController {
         }
     }
 
+    // TODO: Add option when summarizing file (Limit words, more detail,...)
     @Operation(method = "POST", summary = "Summarize file with AI", description = "Summarize file with AI")
     @PostMapping(value = "/summarize")
-    public ResponseData<SummarizeFileResponseDTO> explainNote(@Valid @RequestBody SummarizeFileRequestDTO request) {
+    public ResponseData<SummarizeFileResponseDTO> summarizeFile(@Valid @RequestBody SummarizeFileRequestDTO request) {
         log.info("Summarize file with AI");
         try {
             SummarizeFileResponseDTO response = aiService.summarizeFile(request);
@@ -111,11 +141,11 @@ public class NoteController {
     }
 
     @Operation(summary = "Delete document in note", description = "Delete document in note")
-    @DeleteMapping("/delete-doc/{noteDocsId}")
-    public ResponseData<Void> deleteDocInNote(@Min(value = 1) @PathVariable Long noteDocsId, @Valid @RequestBody DeleteNoteDocRequestDTO request) {
-        log.info("Delete document in note, noteDocsId={}", noteDocsId);
+    @DeleteMapping("/delete-doc")
+    public ResponseData<Void> deleteDocInNote(@Valid @RequestBody DeleteNoteDocRequestDTO request) {
+        log.info("Delete document in note, notedId={}, assetId={}", request.getNoteId(), request.getAssetId() );
         try {
-            noteService.deleteDocInNote(noteDocsId, request);
+            noteService.deleteDocInNote(request);
             return new ResponseData<>(HttpStatus.NO_CONTENT.value(), "Delete document in note successfully");
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());

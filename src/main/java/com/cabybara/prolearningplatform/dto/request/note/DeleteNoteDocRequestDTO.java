@@ -1,15 +1,17 @@
-package com.cabybara.prolearningplatform.dto.request;
+package com.cabybara.prolearningplatform.dto.request.note;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@Builder
 public class DeleteNoteDocRequestDTO {
     @NotNull
-    String publicId;
-    @NotBlank
-    String extension;
+    Long noteId;
+    @NotNull
+    Long assetId;
 }

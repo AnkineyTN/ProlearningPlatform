@@ -10,10 +10,8 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class GetDocsInNoteResponseDTO {
-    private Long id;
+    private Long assetId;
     private String fileName;
     private String fileUrl;
-    private String content;
-    private String extension;
     private String publicId;
 }
