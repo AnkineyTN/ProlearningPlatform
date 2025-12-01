@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class CloudinaryServiceImpl implements CloudinaryService {
     private final Cloudinary cloudinary;
 
-    @Value("${cloud.cloudinary.flashcard_preset}")
+    @Value("${cloud.cloudinary.image_preset}")
     private String imagePreset;
 
     @Value("${cloud.cloudinary.document_preset}")

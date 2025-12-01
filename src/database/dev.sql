@@ -22,40 +22,22 @@ CREATE TYPE user_hear_app_from AS ENUM (
 CREATE TABLE user
 (
     id
-    SERIAL
-    PRIMARY
-    KEY,
+                  SERIAL
+        PRIMARY
+            KEY,
     email
-    VARCHAR
-(
-    255
-) UNIQUE NOT NULL,
-    first_name VARCHAR
-(
-    100
-) NOT NULL,
-    last_name VARCHAR
-(
-    100
-) NOT NULL,
-    password VARCHAR
-(
-    255
-) NOT NULL,
-    recovery_code character varying
-(
-    255
-) NULL,
-    language user_language default 'VI',
-    education user_education default 'HIGH_SCHOOL',
-    hear_app_from user_hear_app_from default 'GOOGLE',
-    account_type VARCHAR
-(
-    50
-) default 'FREE',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-                             );
+                  VARCHAR(255) UNIQUE NOT NULL,
+    first_name    VARCHAR(100)        NOT NULL,
+    last_name     VARCHAR(100)        NOT NULL,
+    password      VARCHAR(255)        NOT NULL,
+    recovery_code character varying(255) NULL,
+    language      user_language            default 'VI',
+    education     user_education           default 'HIGH_SCHOOL',
+    hear_app_from user_hear_app_from       default 'GOOGLE',
+    account_type  VARCHAR(50)              default 'FREE',
+    created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE authorities
 (
@@ -100,18 +82,20 @@ CREATE TABLE note
 
 CREATE TABLE note_docs
 (
-    file_name  TEXT         NOT NULL,
-    file_url   TEXT         NOT NULL,
-    content    TEXT,
-    extension  TEXT         NOT NULL,
-    public_id  VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_T IMESTAMP,
-    id_note    INT          NOT NULL,
-    CONSTRAINT fk_note
-        FOREIGN KEY (id_note)
-            REFERENCES note (id)
-            ON DELETE CASCADE
+    id_note  BIGINT NOT NULL,
+    id_asset BIGINT NOT NULL,
+    PRIMARY KEY (id_note, id_asset), -- composite primary key
+    FOREIGN KEY (id_note) REFERENCES note (id),
+    FOREIGN KEY (id_asset) REFERENCES asset (id)
+);
+
+CREATE TABLE note_imgs
+(
+    id_note  BIGINT NOT NULL,
+    id_asset BIGINT NOT NULL,
+    PRIMARY KEY (id_note, id_asset), -- composite primary key
+    FOREIGN KEY (id_note) REFERENCES note (id),
+    FOREIGN KEY (id_asset) REFERENCES asset (id)
 );
 
 CREATE TABLE flashcard
