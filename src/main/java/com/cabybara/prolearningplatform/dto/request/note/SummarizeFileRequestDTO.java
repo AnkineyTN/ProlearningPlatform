@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.dto.request;
+package com.cabybara.prolearningplatform.dto.request.note;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,9 +9,11 @@ import lombok.Setter;
 @Setter
 public class SummarizeFileRequestDTO {
     @NotNull
-    private Long noteDocsId;
+    private Long assetId;
     @NotBlank
     private String fileUrl;
-    @NotBlank
-    private String extension;
+
+    private String lang;
+
+    private int limit;
 }

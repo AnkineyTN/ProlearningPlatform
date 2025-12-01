@@ -1,17 +1,18 @@
-package com.cabybara.prolearningplatform.dto.request;
+package com.cabybara.prolearningplatform.dto.request.note;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-@Builder
-public class DeleteNoteImgRequestDTO {
+public class ExplainNoteRequestDTO {
     @NotNull
     private Long noteId;
+
     @NotBlank
-    private String fileUrl;
+    private String queryText;
+
+    private String lang;
 }

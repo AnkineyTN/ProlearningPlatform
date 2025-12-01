@@ -1,10 +1,11 @@
 package com.cabybara.prolearningplatform.service.note.impl;
 
-import com.cabybara.prolearningplatform.dto.request.*;
-import com.cabybara.prolearningplatform.dto.request.note.DeleteNoteDocRequestDTO;
-import com.cabybara.prolearningplatform.dto.request.note.SaveDocInNoteRequestDto;
-import com.cabybara.prolearningplatform.dto.request.note.SaveImgInNoteRequestDto;
+import com.cabybara.prolearningplatform.dto.request.note.*;
 import com.cabybara.prolearningplatform.dto.response.*;
+import com.cabybara.prolearningplatform.dto.response.note.CreateNoteResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.note.GetAllNotesResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.note.GetDetailNoteResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.note.GetDocsInNoteResponseDTO;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.*;
 import com.cabybara.prolearningplatform.model.composite_key.NoteDocsId;
@@ -20,8 +21,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
