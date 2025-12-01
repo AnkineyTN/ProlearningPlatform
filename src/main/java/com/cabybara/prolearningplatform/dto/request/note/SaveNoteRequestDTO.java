@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.dto.request;
+package com.cabybara.prolearningplatform.dto.request.note;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

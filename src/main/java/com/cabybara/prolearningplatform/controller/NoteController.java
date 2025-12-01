@@ -1,10 +1,11 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.request.*;
-import com.cabybara.prolearningplatform.dto.request.note.DeleteNoteDocRequestDTO;
-import com.cabybara.prolearningplatform.dto.request.note.SaveDocInNoteRequestDto;
-import com.cabybara.prolearningplatform.dto.request.note.SaveImgInNoteRequestDto;
+import com.cabybara.prolearningplatform.dto.request.note.*;
 import com.cabybara.prolearningplatform.dto.response.*;
+import com.cabybara.prolearningplatform.dto.response.note.CreateNoteResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.note.ExplainNoteResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.note.GetDetailNoteResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.note.SummarizeFileResponseDTO;
 import com.cabybara.prolearningplatform.service.ai.AIService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
 import io.swagger.v3.oas.annotations.Operation;

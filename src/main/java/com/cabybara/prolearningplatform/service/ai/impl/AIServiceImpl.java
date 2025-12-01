@@ -1,10 +1,10 @@
 package com.cabybara.prolearningplatform.service.ai.impl;
 
-import com.cabybara.prolearningplatform.dto.request.ConvertFileToVectorRequestDTO;
-import com.cabybara.prolearningplatform.dto.request.ExplainNoteRequestDTO;
-import com.cabybara.prolearningplatform.dto.request.SummarizeFileRequestDTO;
-import com.cabybara.prolearningplatform.dto.response.ExplainNoteResponseDTO;
-import com.cabybara.prolearningplatform.dto.response.SummarizeFileResponseDTO;
+import com.cabybara.prolearningplatform.dto.request.note.ConvertFileToVectorRequestDTO;
+import com.cabybara.prolearningplatform.dto.request.note.ExplainNoteRequestDTO;
+import com.cabybara.prolearningplatform.dto.request.note.SummarizeFileRequestDTO;
+import com.cabybara.prolearningplatform.dto.response.note.ExplainNoteResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.note.SummarizeFileResponseDTO;
 import com.cabybara.prolearningplatform.service.ai.AIService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,10 +40,10 @@ public class AIServiceImpl implements AIService {
                     entity,
                     String.class
             );
-            log.info("Response from AI Service: {}", response.getBody());
+            log.info("🐳 Response from AI Service: {}", response.getBody());
 
         } catch (Exception e) {
-            log.error("❌ Error converting file to vector db: {}", e.getMessage(), e);
+            log.error("😡 Error converting file to vector db: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to convert file to vector db", e);
         }
     }
@@ -68,7 +68,7 @@ public class AIServiceImpl implements AIService {
                     entity,
                     String.class
             );
-            log.info("Response from AI Service: {}", response.getBody());
+            log.info("🐳 Response from AI Service: {}", response.getBody());
 
             // Parse JSON response
             ObjectMapper mapper = new ObjectMapper();
@@ -83,7 +83,7 @@ public class AIServiceImpl implements AIService {
                     .answer(data)
                     .build();
         } catch (Exception e) {
-            log.error("❌ Error explaining note with AI: {}", e.getMessage(), e);
+            log.error("😡 Error explaining note with AI: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to explain note with AI", e);
         }
     }
@@ -108,7 +108,7 @@ public class AIServiceImpl implements AIService {
                     entity,
                     String.class
             );
-            log.info("Response from AI Service: {}", response.getBody());
+            log.info("🐳 Response from AI Service: {}", response.getBody());
 
             // Parse JSON response
             ObjectMapper mapper = new ObjectMapper();
@@ -119,11 +119,10 @@ public class AIServiceImpl implements AIService {
             String data = root.path("data").asText("");
 
             return SummarizeFileResponseDTO.builder()
-                    .noteDocsId(request.getNoteDocsId())
                     .summary(data)
                     .build();
         } catch (Exception e) {
-            log.error("❌ Error explaining note with AI: {}", e.getMessage(), e);
+            log.error("😡 Error explaining note with AI: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to explain note with AI", e);
         }
     }
