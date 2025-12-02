@@ -37,4 +37,12 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
             Long setId,
             Long userId
     );
+
+    @Query("SELECT CASE WHEN COUNT(f) > 0 THEN true ELSE false END FROM Flashcard f " +
+            "WHERE f.set.id = :setId " +
+            "AND f.id = :flashcardId " +
+            "AND f.set.user.id = :userId")
+    boolean existsBySetIdAndIdAndUserId(@Param("setId") Long setId,
+                                        @Param("flashcardId") Long flashcardId,
+                                        @Param("userId") Long userId);
 }

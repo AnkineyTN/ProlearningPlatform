@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.bean.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.request.CardItemCreateRequestDto;
 import com.cabybara.prolearningplatform.dto.request.CardItemUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.CardItemResponseDto;
+import com.cabybara.prolearningplatform.dto.response.CardLearnResponseDto;
 import com.cabybara.prolearningplatform.dto.response.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.CardItemMapper;
@@ -11,14 +12,17 @@ import com.cabybara.prolearningplatform.model.CardItem;
 import com.cabybara.prolearningplatform.model.Flashcard;
 import com.cabybara.prolearningplatform.model.Asset;
 import com.cabybara.prolearningplatform.repository.CardItemRepository;
+import com.cabybara.prolearningplatform.repository.FlashcardRepository;
 import com.cabybara.prolearningplatform.service.flashcard.CardItemService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,6 +34,7 @@ public class CardItemServiceImpl implements CardItemService {
     private final AuthenticationContext authenticationContext;
     private final CardItemRepository cardItemRepository;
     private final AssetService assetService;
+    private final FlashcardRepository flashcardRepository;
 
     @Override
     @Transactional
@@ -124,6 +129,27 @@ public class CardItemServiceImpl implements CardItemService {
         }
 
         cardItemRepository.delete(cardItem);
+    }
+
+    @Override
+    public List<CardItem> getCardsForReview(Long setId, Long flashcardId, int limit) {
+        Long userId = authenticationContext.getCurrentUserId();
+        if (!flashcardRepository.existsBySetIdAndIdAndUserId(setId, flashcardId, userId)) {
+            throw new ResourceNotFoundException("Flashcard not found or invalid");
+        }
+
+        List<CardItem> dueCards = cardItemRepository.findDueCards(flashcardId, OffsetDateTime.now(), PageRequest.of(0, limit));
+
+        List<CardItem> finalQueue = new ArrayList<>(dueCards);
+
+        // not enough limit param
+        if (finalQueue.size() < limit) {
+            int remain = limit - finalQueue.size();
+            List<CardItem> newCards = cardItemRepository.findNewCards(flashcardId, PageRequest.of(0, remain));
+            finalQueue.addAll(newCards);
+        }
+
+        return finalQueue;
     }
 
     @Override

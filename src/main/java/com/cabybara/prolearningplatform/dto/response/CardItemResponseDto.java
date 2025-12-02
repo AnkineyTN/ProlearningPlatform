@@ -3,9 +3,10 @@ package com.cabybara.prolearningplatform.dto.response;
 import com.cabybara.prolearningplatform.enums.CardStatus;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@Builder
+@SuperBuilder
 public class CardItemResponseDto {
     private Long id;
     private String frontCard;

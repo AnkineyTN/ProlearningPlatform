@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.OffsetDateTime;
+
 @Getter
 @Setter
 @Builder
@@ -28,6 +30,21 @@ public class CardItem extends AbstractEntity {
     @Column(name = "card_status", nullable = false)
     @Builder.Default
     private CardStatus cardStatus = CardStatus.NEW;
+
+    @Column(name = "next_review_at", nullable = true)
+    private OffsetDateTime nextReviewAt;
+
+    @Column(name = "interval_days")
+    @Builder.Default
+    private Integer intervalDays = 0;
+
+    @Column(name = "ease_factor")
+    @Builder.Default
+    private Float easeFactor = 2.5f;
+
+    @Column(name = "repetitions")
+    @Builder.Default
+    private Integer repetitions = 0;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "asset_id")
