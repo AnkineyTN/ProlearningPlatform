@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.dto.helper.UserDueStatDto;
 import com.cabybara.prolearningplatform.model.CardItem;
 import com.cabybara.prolearningplatform.model.Flashcard;
 import org.springframework.data.domain.PageRequest;
@@ -48,4 +49,10 @@ public interface CardItemRepository extends JpaRepository<CardItem, Long> {
             "AND c.repetitions = 0 " +
             "ORDER BY c.id ASC")
     List<CardItem> findNewCards(@Param("flashcardId") Long flashcardId, Pageable pageable);
+
+    @Query("SELECT c.flashcard.user.id as userId, COUNT(c) as dueCount " +
+            "FROM CardItem c " +
+            "WHERE c.nextReviewAt <= :now " +
+            "GROUP BY c.flashcard.user.id")
+    List<UserDueStatDto> findUsersWithDueCards(@Param("now") LocalDateTime now);
 }

@@ -1,3 +1,6 @@
+firebase:
+  googleCredentials: prolearningplatform-bc37d-firebase-adminsdk-fbsvc-00eb825965.json
+
 server:
   forward-headers-strategy: framework
   frontend_host_dev: ${FRONTEND_HOST_DEV:http://localhost:3000}
