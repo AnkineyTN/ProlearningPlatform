@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.dto.response;
+package com.cabybara.prolearningplatform.dto.response.note;
 
 import lombok.*;
 
@@ -8,6 +8,5 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class SummarizeFileResponseDTO {
-    private Long noteDocsId;
     private String summary;
 }

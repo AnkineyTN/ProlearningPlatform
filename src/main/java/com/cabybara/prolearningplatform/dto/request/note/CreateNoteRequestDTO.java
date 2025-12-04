@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.dto.request;
+package com.cabybara.prolearningplatform.dto.request.note;
 
 import com.cabybara.prolearningplatform.enums.Privacy;
 import jakarta.validation.constraints.NotBlank;
