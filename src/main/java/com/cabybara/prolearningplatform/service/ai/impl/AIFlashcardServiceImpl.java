@@ -24,7 +24,7 @@ import java.util.Map;
 public class AIFlashcardServiceImpl implements AIFlashcardService {
     private static final String GENERATE_FLASHCARD_BY_FILES = "https://prolearning-aiservice.onrender.com/flashcard/generate-by-file";
 
-    private static final String GENERATE_FLASHCARD_BY_NOTES = "https://prolearning-aiservice.onrender.com/generate-by-note";
+    private static final String GENERATE_FLASHCARD_BY_NOTES = "https://prolearning-aiservice.onrender.com/flashcard/generate-by-note";
 
 
     @Override
