@@ -4,14 +4,20 @@ import com.cabybara.prolearningplatform.bean.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.request.CardItemCreateRequestDto;
 import com.cabybara.prolearningplatform.dto.request.FlashcardCreateRequestDto;
 import com.cabybara.prolearningplatform.dto.request.FlashcardUpdatingRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.response.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.FlashcardResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceAlreadyExistsException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.CardItemMapper;
 import com.cabybara.prolearningplatform.mapper.FlashcardMapper;
 import com.cabybara.prolearningplatform.model.*;
 import com.cabybara.prolearningplatform.repository.FlashcardRepository;
+import com.cabybara.prolearningplatform.repository.NoteRepository;
+import com.cabybara.prolearningplatform.service.ai.AIFlashcardService;
+import com.cabybara.prolearningplatform.service.file.FileService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.service.set.SetService;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
@@ -23,6 +29,7 @@ import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -36,11 +43,15 @@ import java.util.stream.Collectors;
 public class FlashcardServiceImpl implements FlashcardService {
     private final AuthenticationContext authenticationContext;
     private final FlashcardRepository flashcardRepository;
+    private final NoteRepository noteRepository;
     private final UserService userService;
     private final SetService setService;
     private final FlashcardMapper flashcardMapper;
     private final AssetService assetService;
     private final CardItemMapper cardItemMapper;
+
+    private final FileService fileService;
+    private final AIFlashcardService aiFlashcardService;
 
     @Override
     public Page<FlashcardResponseDto> getAllFlashcard(Long setId, Pageable pageable) {
@@ -56,7 +67,7 @@ public class FlashcardServiceImpl implements FlashcardService {
         Long userId = authenticationContext.getCurrentUserId();
 
         Flashcard flashcard = flashcardRepository.findByIdAndSetIdAndUserId(flashcardId, setId, userId)
-                                .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id: " + flashcardId + " not found!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id: " + flashcardId + " not found!"));
 
         return flashcardMapper.toDetailFlashcardResponseDto(flashcard);
     }
@@ -132,10 +143,10 @@ public class FlashcardServiceImpl implements FlashcardService {
     @Override
     public FlashcardResponseDto updateFlashcard(Long setId, Long flashcardId, FlashcardUpdatingRequestDto flashcardUpdatingRequestDto) throws BadRequestException {
         Flashcard flashcard = flashcardRepository.getFlashcardByIdAndSetIdAndSetUserId(
-                flashcardId,
-                setId,
-                authenticationContext.getCurrentUserId()
-        )
+                        flashcardId,
+                        setId,
+                        authenticationContext.getCurrentUserId()
+                )
                 .orElseThrow(() -> new BadRequestException("Flashcard not found or access denied."));
 
         flashcardMapper.updateFlashcardFromDto(flashcardUpdatingRequestDto, flashcard);
@@ -147,6 +158,58 @@ public class FlashcardServiceImpl implements FlashcardService {
     @Override
     public DetailFlashcardResponseDto updateFlashcard(Flashcard newFlashcard) {
         return flashcardMapper.toDetailFlashcardResponseDto(flashcardRepository.save(newFlashcard));
+    }
+
+    @Override
+    public GenerateFlashcardByAIResponseDto generateFlashcardByFiles(GenerateFlashcardByFileRequestDto request) {
+        List<MultipartFile> files = request.getFiles();
+
+        StringBuilder allContent = new StringBuilder();
+
+        for (MultipartFile file : files) {
+            try {
+                String fileName = file.getOriginalFilename();
+
+                // Log thông tin file
+                System.out.println("Processing file: " + fileName + " - Size: " + file.getSize());
+
+                // Đọc nội dung file
+                String content = fileService.readFile(file);
+
+                // Thêm separator giữa các file
+                allContent.append("=== Content from: ").append(fileName).append(" ===\n");
+                allContent.append(content);
+                allContent.append("\n\n");
+
+            } catch (Exception e) {
+                throw new RuntimeException("Error processing file: " + file.getOriginalFilename() + " - " + e.getMessage());
+            }
+        }
+
+        String finalContent = allContent.toString();
+        return aiFlashcardService.generateFlashcard(finalContent, "file");
+    }
+
+    @Override
+    public GenerateFlashcardByAIResponseDto generateFlashcardByNotes(GenerateFlashcardByNoteRequestDto request) {
+        List<Long> noteIds = request.getNoteIds();
+
+        List<Note> notes = noteRepository.findAllById(noteIds);
+
+        if (notes.isEmpty()) {
+            throw new RuntimeException("No notes found with provided IDs");
+        }
+
+        StringBuilder allContent = new StringBuilder();
+        for(Note note: notes){
+            allContent.append("=== Note: ").append(note.getTitle()).append(" ===\n");
+            allContent.append(note.getContent()).append("\n\n");
+        }
+
+        String finalContent = allContent.toString();
+        System.out.println("Final content: " + finalContent);
+
+        return aiFlashcardService.generateFlashcard(finalContent, "note");
     }
 
     @Override
