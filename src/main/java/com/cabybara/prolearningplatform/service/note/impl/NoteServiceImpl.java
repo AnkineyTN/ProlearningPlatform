@@ -66,7 +66,6 @@ public class NoteServiceImpl implements NoteService {
         log.info("🐳 Save note '{}'", noteId);
     }
 
-    // TODO: Added API save doc in note
     // [POST]: /api/note/save-doc
     @Override
     public void saveDocInNote(SaveDocInNoteRequestDto request) {
@@ -93,7 +92,6 @@ public class NoteServiceImpl implements NoteService {
         log.info("🐳️ Delete doc in note with noteId {} and assetId {}", request.getNoteId(), request.getAssetId());
     }
 
-    // TODO: Added API save img in note
     // [POST]: /api/note/save-img
     @Override
     public void saveImgInNote(SaveImgInNoteRequestDto request) {
@@ -152,7 +150,6 @@ public class NoteServiceImpl implements NoteService {
                 .build();
     }
 
-    // TODO: Fixed return field of doc in note
     // [GET]: /api/note/{noteId}
     @Override
     public GetDetailNoteResponseDTO getDetailNote(Long noteId) {

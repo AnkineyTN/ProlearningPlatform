@@ -5,7 +5,7 @@ import com.cabybara.prolearningplatform.dto.request.note.ExplainNoteRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.note.SummarizeFileRequestDTO;
 import com.cabybara.prolearningplatform.dto.response.note.ExplainNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.SummarizeFileResponseDTO;
-import com.cabybara.prolearningplatform.service.ai.AIService;
+import com.cabybara.prolearningplatform.service.ai.AINoteService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ import org.springframework.http.*;
 
 @Service
 @Slf4j
-public class AIServiceImpl implements AIService {
+public class AINoteServiceImpl implements AINoteService {
     private static final String CONVERT_FILE_TO_VECTOR = "https://prolearning-aiservice.onrender.com/files-loader/all";
     private static final String EXPLAIN_NOTE = "https://prolearning-aiservice.onrender.com/note/explain";
     private static final String SUMMARY_FILE = "https://prolearning-aiservice.onrender.com/note/summarize";
