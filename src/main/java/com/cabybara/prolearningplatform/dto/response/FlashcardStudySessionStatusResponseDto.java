@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.dto.response;
 
 import com.cabybara.prolearningplatform.enums.FlashcardStudySessionStatus;
+import com.cabybara.prolearningplatform.enums.StudyMode;
 import lombok.Builder;
 import lombok.Data;
 
@@ -9,6 +10,7 @@ import lombok.Data;
 public class FlashcardStudySessionStatusResponseDto {
     private Long id;
     private FlashcardStudySessionStatus status;
+    private StudyMode studyMode;
     private Long totalCards;
     private Long completedCount;
     private Long remainingCount;

@@ -32,7 +32,8 @@ public class CardItem extends AbstractEntity {
     private CardStatus cardStatus = CardStatus.NEW;
 
     @Column(name = "next_review_at", nullable = true)
-    private OffsetDateTime nextReviewAt;
+    @Builder.Default
+    private OffsetDateTime nextReviewAt = OffsetDateTime.now();
 
     @Column(name = "interval_days")
     @Builder.Default

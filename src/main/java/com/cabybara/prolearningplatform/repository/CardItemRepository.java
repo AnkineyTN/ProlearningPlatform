@@ -46,7 +46,7 @@ public interface CardItemRepository extends JpaRepository<CardItem, Long> {
                                 Pageable pageable);
 
     @Query("SELECT c FROM CardItem c WHERE c.flashcard.id = :flashcardId " +
-            "AND c.repetitions = 0 " +
+            "AND c.repetitions = 0" +
             "ORDER BY c.id ASC")
     List<CardItem> findNewCards(@Param("flashcardId") Long flashcardId, Pageable pageable);
 
@@ -55,4 +55,13 @@ public interface CardItemRepository extends JpaRepository<CardItem, Long> {
             "WHERE c.nextReviewAt <= :now " +
             "GROUP BY c.flashcard.user.id")
     List<UserDueStatDto> findUsersWithDueCards(@Param("now") LocalDateTime now);
+
+    @Query("SELECT c FROM CardItem c WHERE c.flashcard.id = :flashcardId ORDER BY c.id ASC")
+    List<CardItem> findAllByFlashcardId(@Param("flashcardId") Long flashcardId);
+
+    @Query("SELECT c FROM CardItem c WHERE c.flashcard.id = :flashcardId ORDER BY RANDOM()")
+    List<CardItem> findAllByFlashcardIdRandomOrder(@Param("flashcardId") Long flashcardId, Pageable pageable);
+
+    @Query("SELECT COUNT(c) FROM CardItem c WHERE c.flashcard.id = :flashcardId")
+    long countByFlashcardId(@Param("flashcardId") Long flashcardId);
 }

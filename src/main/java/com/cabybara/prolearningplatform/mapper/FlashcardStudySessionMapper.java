@@ -1,10 +1,12 @@
 package com.cabybara.prolearningplatform.mapper;
 
+import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionLogItemResponseDto;
 import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionResultResponseDto;
 import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStartResponseDto;
 import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStatusResponseDto;
 import com.cabybara.prolearningplatform.model.CardItem;
 import com.cabybara.prolearningplatform.model.flashcard_study_session.FlashcardStudySession;
+import com.cabybara.prolearningplatform.model.flashcard_study_session.FlashcardStudySessionLogItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -23,9 +25,18 @@ public interface FlashcardStudySessionMapper {
     @Mapping(target = "progressPercent", expression = "java(calculateProgressPercent(flashcardStudySession))")
     FlashcardStudySessionStatusResponseDto toFlashcardStudySessionStatusResponse(FlashcardStudySession flashcardStudySession);
 
-    FlashcardStudySessionStartResponseDto toFlashcardStudySessionStartResponse(FlashcardStudySession flashcardStudySession, List<CardItem> cards);
+    @Mapping(source = "flashcardStudySession.id", target = "id")
+    @Mapping(source = "flashcardStudySession.studyMode", target = "studyMode")
+    @Mapping(source = "message", target = "message")
+    @Mapping(source = "cards", target = "cards")
+    FlashcardStudySessionStartResponseDto toFlashcardStudySessionStartResponse(FlashcardStudySession flashcardStudySession, List<CardItem> cards, String message);
 
+    @Mapping(source = "id", target = "sessionId")
+    @Mapping(source = "lastInteractionAt", target = "finishedAt")
+    @Mapping(source = "reviewLog", target = "logs")
     FlashcardStudySessionResultResponseDto toFlashcardStudySessionResultResponse(FlashcardStudySession flashcardStudySession);
+
+    FlashcardStudySessionLogItemResponseDto toFlashcardStudySessionLogItemResponse(FlashcardStudySessionLogItem flashcardStudySessionLogItem);
 
     default Long mapListToCount(List<?> list) {
         return list != null ? (long) list.size() : 0L;
@@ -40,5 +51,9 @@ public interface FlashcardStudySessionMapper {
         }
 
         return Math.round((completedCount * 100.0) / totalCards);
+    }
+
+    default List<FlashcardStudySessionLogItemResponseDto> sessionLogToDto(List<FlashcardStudySessionLogItem> sessionLogItems) {
+        return sessionLogItems.stream().map(this::toFlashcardStudySessionLogItemResponse).toList();
     }
 }

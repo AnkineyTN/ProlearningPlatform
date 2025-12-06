@@ -13,11 +13,9 @@ import com.cabybara.prolearningplatform.repository.FlashcardRepository;
 import com.cabybara.prolearningplatform.service.flashcard.CardItemService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardReviewService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -90,7 +88,7 @@ public class FlashcardReviewServiceImpl implements FlashcardReviewService {
             double newEase = Math.max(1.3, card.getEaseFactor() - 0.2);
             card.setEaseFactor((float) newEase);
 
-            card.setCardStatus(CardStatus.UNKNOW);
+            card.setCardStatus(CardStatus.UNKNOWN);
         }
 
         calculateDueDate(card);

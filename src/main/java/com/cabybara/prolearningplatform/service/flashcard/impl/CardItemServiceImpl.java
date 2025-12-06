@@ -149,7 +149,18 @@ public class CardItemServiceImpl implements CardItemService {
             finalQueue.addAll(newCards);
         }
 
-        return finalQueue;
+        return finalQueue.stream().distinct().toList();
+    }
+
+    @Override
+    public List<CardItem> getAllCardsForReview(Long setId, Long flashcardId, int limit) {
+        Long userId = authenticationContext.getCurrentUserId();
+        if (!flashcardRepository.existsBySetIdAndIdAndUserId(setId, flashcardId, userId)) {
+            throw new ResourceNotFoundException("Flashcard not found or invalid");
+        }
+
+        // Return all cards in random order for review mode
+        return cardItemRepository.findAllByFlashcardIdRandomOrder(flashcardId, PageRequest.of(0, limit));
     }
 
     @Override

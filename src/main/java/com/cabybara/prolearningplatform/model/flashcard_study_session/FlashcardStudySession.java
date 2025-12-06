@@ -1,7 +1,9 @@
 package com.cabybara.prolearningplatform.model.flashcard_study_session;
 
 import com.cabybara.prolearningplatform.enums.FlashcardStudySessionStatus;
+import com.cabybara.prolearningplatform.enums.StudyMode;
 import com.cabybara.prolearningplatform.model.Flashcard;
+import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -27,12 +29,17 @@ public class FlashcardStudySession {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Size(max = 20)
     @ColumnDefault("'IN_PROGRESS'")
     @Column(name = "status", length = 20)
     @Enumerated(EnumType.STRING)
     @Builder.Default
     private FlashcardStudySessionStatus status = FlashcardStudySessionStatus.IN_PROGRESS;
+
+    @ColumnDefault("'SPACED_REPETITION'")
+    @Column(name = "study_mode", length = 20)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private StudyMode studyMode = StudyMode.SPACED_REPETITION;
 
     @Column(name = "initial_card_ids")
     @JdbcTypeCode(SqlTypes.JSON)
@@ -63,6 +70,11 @@ public class FlashcardStudySession {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "set_id", nullable = false)
+    private Set set;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

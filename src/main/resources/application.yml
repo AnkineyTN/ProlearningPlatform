@@ -1,6 +1,15 @@
 firebase:
   googleCredentials: prolearningplatform-bc37d-firebase-adminsdk-fbsvc-00eb825965.json
 
+notification:
+  due-card-reminder:
+    cron: "0 0 8 * * *"
+  evening-reminder:
+    cron: "0 0 19 * * *"
+  cleanup:
+    cron: "0 0 2 * * SUN"
+    days-old: 30
+
 server:
   forward-headers-strategy: framework
   frontend_host_dev: ${FRONTEND_HOST_DEV:http://localhost:3000}

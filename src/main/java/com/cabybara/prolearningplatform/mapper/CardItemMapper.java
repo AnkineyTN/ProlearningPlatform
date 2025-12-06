@@ -12,6 +12,7 @@ import java.util.List;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CardItemMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "nextReviewAt", expression = "java(java.time.OffsetDateTime.now())")
     CardItem toCardItem(CardItemCreateRequestDto dto);
 
     List<CardItem> toCardItemList(List<CardItemCreateRequestDto> dtos);

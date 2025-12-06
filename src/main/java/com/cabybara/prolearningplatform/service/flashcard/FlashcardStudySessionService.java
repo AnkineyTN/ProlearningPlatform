@@ -6,12 +6,16 @@ import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStartR
 import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStatusResponseDto;
 import org.apache.coyote.BadRequestException;
 
+import java.util.List;
+
 public interface FlashcardStudySessionService {
-    FlashcardStudySessionStatusResponseDto checkStudySessionStatus(Long flashcardId);
+    List<FlashcardStudySessionStatusResponseDto> checkStudySessionStatus(Long setId, Long flashcardId);
 
     FlashcardStudySessionStartResponseDto startOrResumeSession(Long setId, Long flashcardId) throws BadRequestException;
 
     FlashcardStudySessionResultResponseDto getSessionResult(Long sessionId) throws BadRequestException;
 
-    void syncSessionProgress(Long sessionId, FlashcardStudySessionSyncRequestDto syncRequestDto) throws BadRequestException;
+    FlashcardStudySessionStatusResponseDto syncSessionProgress(Long sessionId, FlashcardStudySessionSyncRequestDto syncRequestDto) throws BadRequestException;
+
+    void cancelSession(Long sessionId) throws BadRequestException;
 }

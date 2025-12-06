@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
 
+import java.time.OffsetDateTime;
+
 @Data
 @SuperBuilder
 public class CardItemResponseDto {
@@ -13,4 +15,5 @@ public class CardItemResponseDto {
     private String backCard;
     private String imageUrl;
     private CardStatus cardStatus;
+    private OffsetDateTime nextReviewAt;
 }

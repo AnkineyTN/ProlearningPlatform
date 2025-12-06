@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.service.scheduling;
+package com.cabybara.prolearningplatform.service.scheduler;
 
 public interface AssetCleanupService {
     void cleanupAssets();

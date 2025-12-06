@@ -7,17 +7,17 @@ import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionResult
 import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStartResponseDto;
 import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStatusResponseDto;
 import com.cabybara.prolearningplatform.enums.FlashcardStudySessionStatus;
+import com.cabybara.prolearningplatform.enums.StudyMode;
+import com.cabybara.prolearningplatform.exception.FlashcardStudySessionException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.FlashcardStudySessionMapper;
 import com.cabybara.prolearningplatform.model.CardItem;
 import com.cabybara.prolearningplatform.model.Flashcard;
+import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.model.flashcard_study_session.FlashcardStudySession;
 import com.cabybara.prolearningplatform.model.flashcard_study_session.FlashcardStudySessionLogItem;
-import com.cabybara.prolearningplatform.repository.CardItemRepository;
-import com.cabybara.prolearningplatform.repository.FlashcardRepository;
-import com.cabybara.prolearningplatform.repository.FlashcardStudySessionRepository;
-import com.cabybara.prolearningplatform.repository.UserRepository;
+import com.cabybara.prolearningplatform.repository.*;
 import com.cabybara.prolearningplatform.service.flashcard.CardItemService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardReviewService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardStudySessionService;
@@ -30,13 +30,12 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toList;
 
 @Service
 @RequiredArgsConstructor
@@ -49,20 +48,20 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
     private final UserRepository userRepository;
     private final CardItemService cardItemService;
     private final FlashcardReviewService flashcardReviewService;
+    private final SetRepository setRepository;
 
     @Override
-    public FlashcardStudySessionStatusResponseDto checkStudySessionStatus(Long flashcardId) {
+    public List<FlashcardStudySessionStatusResponseDto> checkStudySessionStatus(Long setId, Long flashcardId) {
         Long userId = authenticationContext.getCurrentUserId();
 
-        FlashcardStudySession inProgressStudySession =
-                flashcardStudySessionRepository.findByUserIdAndFlashcardIdAndStatus(userId, flashcardId, FlashcardStudySessionStatus.IN_PROGRESS)
-                        .orElse(null);
+        List<FlashcardStudySession> inProgressStudySessions =
+                flashcardStudySessionRepository.findByUserIdAndSetId(userId, setId);
 
-        if (inProgressStudySession == null) {
-            return null;
+        if (inProgressStudySessions.isEmpty()) {
+            return Collections.emptyList();
         }
 
-        return flashcardStudySessionMapper.toFlashcardStudySessionStatusResponse(inProgressStudySession);
+        return inProgressStudySessions.stream().map(flashcardStudySessionMapper::toFlashcardStudySessionStatusResponse).toList();
     }
 
     @Override
@@ -70,32 +69,49 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
         Long userId = authenticationContext.getCurrentUserId();
         User user = userRepository.getReferenceById(userId);
 
-        Optional<FlashcardStudySession> existingSession = flashcardStudySessionRepository
+        Optional<FlashcardStudySession> existingInProgressSession = flashcardStudySessionRepository
                 .findByUserIdAndFlashcardIdAndStatus(userId, flashcardId, FlashcardStudySessionStatus.IN_PROGRESS);
 
-        if (existingSession.isPresent()) {
-            FlashcardStudySession session = existingSession.get();
+        if (existingInProgressSession.isPresent()) {
+            FlashcardStudySession session = existingInProgressSession.get();
             List<Long> remainingIds = session.getRemainingCardIds();
 
             List<CardItem> cardsToLearn = cardItemRepository.findAllByIdIn(remainingIds);
 
-            return flashcardStudySessionMapper.toFlashcardStudySessionStartResponse(session, cardsToLearn);
+            String message = session.getStudyMode() == StudyMode.SPACED_REPETITION
+                ? "Resuming spaced repetition session"
+                : "Resuming review session";
+
+            return flashcardStudySessionMapper.toFlashcardStudySessionStartResponse(session, cardsToLearn, message);
         }
 
+        // Try to get cards based on spaced repetition first
         List<CardItem> cardsToLearn = cardItemService.getCardsForReview(setId, flashcardId, 20);
+        StudyMode studyMode = StudyMode.SPACED_REPETITION;
+        String message = "Starting spaced repetition session";
 
+        // If no SR cards available, fallback to review mode with all cards
         if (cardsToLearn.isEmpty()) {
-            throw new BadRequestException("Nothing card to learn");
+            cardsToLearn = cardItemService.getAllCardsForReview(setId, flashcardId, 20);
+            studyMode = StudyMode.REVIEW;
+            message = "No cards due for review. Starting review mode with all cards.";
+
+            if (cardsToLearn.isEmpty()) {
+                throw new FlashcardStudySessionException("This flashcard has no cards to study. Please add some cards first.");
+            }
         }
 
         List<Long> cardIds = cardsToLearn.stream().map(CardItem::getId).toList();
 
+        Set set = setRepository.getReferenceById(setId);
         Flashcard flashcardSet = flashcardRepository.getReferenceById(flashcardId);
 
         FlashcardStudySession newSession = FlashcardStudySession.builder()
                 .user(user)
+                .set(set)
                 .flashcard(flashcardSet)
                 .status(FlashcardStudySessionStatus.IN_PROGRESS)
+                .studyMode(studyMode)
                 .initialCardIds(cardIds)
                 .remainingCardIds(new ArrayList<>(cardIds))
                 .reviewLog(new ArrayList<>())
@@ -106,7 +122,7 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
 
         newSession = flashcardStudySessionRepository.save(newSession);
 
-        return flashcardStudySessionMapper.toFlashcardStudySessionStartResponse(newSession, cardsToLearn);
+        return flashcardStudySessionMapper.toFlashcardStudySessionStartResponse(newSession, cardsToLearn, message);
     }
 
     @Override
@@ -115,7 +131,7 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
                 .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
 
         if (session.getStatus() != FlashcardStudySessionStatus.COMPLETED) {
-            throw new BadRequestException("Session has not completed");
+            throw new FlashcardStudySessionException("Session has not completed");
         }
 
         return flashcardStudySessionMapper.toFlashcardStudySessionResultResponse(session);
@@ -123,7 +139,7 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
 
     @Override
     @Transactional
-    public void syncSessionProgress(Long sessionId, FlashcardStudySessionSyncRequestDto request) throws BadRequestException {
+    public FlashcardStudySessionStatusResponseDto syncSessionProgress(Long sessionId, FlashcardStudySessionSyncRequestDto request) throws BadRequestException {
         Long userId = authenticationContext.getCurrentUserId();
 
         FlashcardStudySession session = flashcardStudySessionRepository.findById(sessionId)
@@ -134,7 +150,7 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
         }
 
         if (session.getStatus() != FlashcardStudySessionStatus.IN_PROGRESS) {
-            throw new BadRequestException("Session has ended");
+            throw new FlashcardStudySessionException("Session has ended");
         }
 
         List<Long> remainingIds = session.getRemainingCardIds();
@@ -149,11 +165,15 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
         Map<Long, CardItem> cardMap = cards.stream()
                 .collect(Collectors.toMap(CardItem::getId, Function.identity()));
 
+        boolean shouldUpdateSR = session.getStudyMode() == StudyMode.SPACED_REPETITION;
+
         for (CardItemReviewRequestDto reviewItem : request.getCardItemReviews()) {
             CardItem card = cardMap.get(reviewItem.getCardId());
 
             if (card != null) {
-                flashcardReviewService.calculateSpacedRepetition(card, reviewItem.isKnown());
+                if (shouldUpdateSR) {
+                    flashcardReviewService.calculateSpacedRepetition(card, reviewItem.isKnown());
+                }
 
                 FlashcardStudySessionLogItem logItem = FlashcardStudySessionLogItem.builder()
                         .cardId(reviewItem.getCardId())
@@ -172,7 +192,9 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
             }
         }
 
-        cardItemRepository.saveAll(cards);
+        if (shouldUpdateSR) {
+            cardItemRepository.saveAll(cards);
+        }
 
         session.setLastInteractionAt(Instant.now());
         if (remainingIds.isEmpty()) {
@@ -181,6 +203,29 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
 
         session.setRemainingCardIds(remainingIds);
         session.setReviewLog(logs);
+
+        flashcardStudySessionRepository.save(session);
+
+        return flashcardStudySessionMapper.toFlashcardStudySessionStatusResponse(session);
+    }
+
+    @Override
+    public void cancelSession(Long sessionId) throws BadRequestException {
+        Long userId = authenticationContext.getCurrentUserId();
+
+        FlashcardStudySession session = flashcardStudySessionRepository.findById(sessionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
+
+        if (!session.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("Invalid session owner");
+        }
+
+        if (session.getStatus() != FlashcardStudySessionStatus.IN_PROGRESS) {
+            throw new FlashcardStudySessionException("Session is not in progress");
+        }
+
+        session.setStatus(FlashcardStudySessionStatus.CANCELLED);
+        session.setLastInteractionAt(Instant.now());
 
         flashcardStudySessionRepository.save(session);
     }
