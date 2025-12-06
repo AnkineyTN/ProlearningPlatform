@@ -88,6 +88,15 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
+    @ExceptionHandler(FlashcardStudySessionException.class)
+    public ResponseEntity<ApiResponse<Object>> handleFlashcardStudySessionException(
+            FlashcardStudySessionException ex, WebRequest request) {
+        ApiResponse<Object> response = ResponseUtil.error("Error: " + ex.getMessage(),null, "path: " + request.getDescription(false).replace("uri=", ""));
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ApiResponse<Object>> handleIllegalStateException(
             IllegalStateException ex, WebRequest request

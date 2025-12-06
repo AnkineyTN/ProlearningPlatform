@@ -23,19 +23,20 @@
     </appender>
 
     <appender name="SCHEDULE_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/schedule.log</file> <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-        <fileNamePattern>logs/archived/schedule-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-        <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-            <maxFileSize>10MB</maxFileSize> </timeBasedFileNamingAndTriggeringPolicy>
-        <maxHistory>30</maxHistory>
-    </rollingPolicy>
+        <file>logs/schedule.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/archived/schedule-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize> </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
         <encoder>
             <pattern>${FILE_LOG_PATTERN}</pattern>
             <charset>utf8</charset>
         </encoder>
     </appender>
 
-    <logger name="com.cabybara.prolearningplatform.service.scheduling" level="INFO" additivity="false">
+    <logger name="com.cabybara.prolearningplatform.service.scheduler" level="INFO" additivity="false">
         <appender-ref ref="SCHEDULE_FILE"/>
         <appender-ref ref="CONSOLE"/>
     </logger>

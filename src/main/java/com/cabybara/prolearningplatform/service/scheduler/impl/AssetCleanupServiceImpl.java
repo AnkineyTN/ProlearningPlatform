@@ -1,10 +1,10 @@
-package com.cabybara.prolearningplatform.service.scheduling.impl;
+package com.cabybara.prolearningplatform.service.scheduler.impl;
 
 import com.cabybara.prolearningplatform.dto.helper.AssetToDeleteDto;
 import com.cabybara.prolearningplatform.mapper.AssetMapper;
 import com.cabybara.prolearningplatform.model.Asset;
 import com.cabybara.prolearningplatform.service.cloudinary.CloudinaryService;
-import com.cabybara.prolearningplatform.service.scheduling.AssetCleanupService;
+import com.cabybara.prolearningplatform.service.scheduler.AssetCleanupService;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
