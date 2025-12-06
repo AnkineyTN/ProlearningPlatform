@@ -2,9 +2,10 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.FlashcardCreateRequestDto;
 import com.cabybara.prolearningplatform.dto.request.FlashcardUpdatingRequestDto;
-import com.cabybara.prolearningplatform.dto.response.DetailFlashcardResponseDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardResponseDto;
-import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByNoteRequestDto;
+import com.cabybara.prolearningplatform.dto.response.*;
+import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -13,12 +14,14 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -26,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/sets/{setId}/flashcards")
 @RequiredArgsConstructor
@@ -33,6 +37,8 @@ import java.util.List;
 @Tag(name = "Flashcard")
 public class FlashcardController {
     private final FlashcardService flashcardService;
+
+    private static final String ERROR_MESSAGE = "errorMessage={}";
 
     @Operation(
             summary = "Get All Flashcards in a Set (Paginated)",
@@ -151,4 +157,32 @@ public class FlashcardController {
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Delete flashcard successfully", null, null));
     }
+
+    // API AI
+    @Operation(method = "POST", summary = "Generate flashcard by files with AI", description = "Generate flashcard by file with AI")
+    @PostMapping(value = "/ai-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByFile(@Valid @ModelAttribute GenerateFlashcardByFileRequestDto request) {
+        log.info("Generate flashcard by files with AI");
+        try {
+            GenerateFlashcardByAIResponseDto response = flashcardService.generateFlashcardByFiles(request);
+            return new ResponseData<>(HttpStatus.OK.value(), "Generate flashcard by files with AI successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate flashcard by files with AI fail");
+        }
+    }
+
+    @Operation(method = "POST", summary = "Generate flashcard by notes with AI", description = "Generate flashcard by note with AI")
+    @PostMapping(value = "/ai-note")
+    public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByNote(@Valid @RequestBody GenerateFlashcardByNoteRequestDto request) {
+        log.info("Generate flashcard by notes with AI");
+        try {
+            GenerateFlashcardByAIResponseDto response = flashcardService.generateFlashcardByNotes(request);
+            return new ResponseData<>(HttpStatus.OK.value(), "Generate flashcard by notes with AI successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate flashcard by notes with AI fail");
+        }
+    }
+
 }
