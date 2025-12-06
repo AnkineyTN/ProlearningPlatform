@@ -10,9 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 @Configuration
 @RequiredArgsConstructor
@@ -20,15 +18,28 @@ public class FCMConfig {
     @Value("${firebase.googleCredentials}")
     private String firebaseConfigPath;
 
+
+
     @Bean
     FirebaseMessaging firebaseMessaging() throws IOException {
-        ClassPathResource resource = new ClassPathResource(firebaseConfigPath);
+        InputStream serviceAccount = null;
 
-        if (!resource.exists()) {
-            throw new FileNotFoundException("Cannot find the file with path: " + firebaseConfigPath);
-        }
+        try {
+            File file = new File(firebaseConfigPath);
+            if (file.exists() && file.isFile()) {
+                serviceAccount = new FileInputStream(file);
+            }
+            else {
+                ClassPathResource resource = new ClassPathResource(firebaseConfigPath);
+                if (resource.exists()) {
+                    serviceAccount = resource.getInputStream();
+                }
+            }
 
-        try (InputStream serviceAccount = resource.getInputStream()) {
+            if (serviceAccount == null) {
+                throw new FileNotFoundException("Cannot find Firebase credentials at: " + firebaseConfigPath);
+            }
+
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                     .build();
@@ -38,6 +49,11 @@ public class FCMConfig {
             }
 
             return FirebaseMessaging.getInstance();
+
+        } finally {
+            if (serviceAccount != null) {
+                serviceAccount.close();
+            }
         }
     }
 }
