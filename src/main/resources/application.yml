@@ -1,5 +1,5 @@
 firebase:
-  googleCredentials: prolearningplatform-bc37d-firebase-adminsdk-fbsvc-00eb825965.json
+  googleCredentials: ${FIREBASE_CONFIG_PATH:prolearningplatform-bc37d-firebase-adminsdk-fbsvc-5dfd0cf044.json}
 
 notification:
   due-card-reminder:
