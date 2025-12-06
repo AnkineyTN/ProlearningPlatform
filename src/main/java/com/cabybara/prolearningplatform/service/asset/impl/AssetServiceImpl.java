@@ -1,6 +1,5 @@
 package com.cabybara.prolearningplatform.service.asset.impl;
 
-import com.cabybara.prolearningplatform.bean.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.request.AssetUrlUploadRequestDto;
 import com.cabybara.prolearningplatform.dto.request.UpdateUploadedAssetRequestDto;
 import com.cabybara.prolearningplatform.dto.response.AssetSignatureResponseDto;
@@ -14,6 +13,7 @@ import com.cabybara.prolearningplatform.repository.AssetRepository;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
 import com.cabybara.prolearningplatform.service.cloudinary.CloudinaryService;
 import com.cabybara.prolearningplatform.service.user.UserService;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,5 @@
 package com.cabybara.prolearningplatform.service.notification.impl;
 
-import com.cabybara.prolearningplatform.bean.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
 import com.cabybara.prolearningplatform.dto.response.NotificationListResponseDto;
 import com.cabybara.prolearningplatform.dto.response.NotificationResponseDto;
@@ -10,6 +9,7 @@ import com.cabybara.prolearningplatform.model.Notification;
 import com.cabybara.prolearningplatform.repository.NotificationRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.notification.NotificationService;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

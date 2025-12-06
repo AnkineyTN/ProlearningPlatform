@@ -1,6 +1,5 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
-import com.cabybara.prolearningplatform.bean.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.request.CardItemReviewRequestDto;
 import com.cabybara.prolearningplatform.dto.request.FlashcardStudySessionSyncRequestDto;
 import com.cabybara.prolearningplatform.dto.response.CardLearnResponseDto;
@@ -12,6 +11,7 @@ import com.cabybara.prolearningplatform.repository.CardItemRepository;
 import com.cabybara.prolearningplatform.repository.FlashcardRepository;
 import com.cabybara.prolearningplatform.service.flashcard.CardItemService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardReviewService;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

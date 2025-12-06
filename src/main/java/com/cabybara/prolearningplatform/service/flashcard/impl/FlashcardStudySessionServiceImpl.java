@@ -1,6 +1,5 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
-import com.cabybara.prolearningplatform.bean.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.request.CardItemReviewRequestDto;
 import com.cabybara.prolearningplatform.dto.request.FlashcardStudySessionSyncRequestDto;
 import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionResultResponseDto;
@@ -21,6 +20,7 @@ import com.cabybara.prolearningplatform.repository.*;
 import com.cabybara.prolearningplatform.service.flashcard.CardItemService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardReviewService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardStudySessionService;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
@@ -55,7 +55,7 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
         Long userId = authenticationContext.getCurrentUserId();
 
         List<FlashcardStudySession> inProgressStudySessions =
-                flashcardStudySessionRepository.findByUserIdAndSetIdAndFlashcardIdOrderById(userId, setId, flashcardId);
+                flashcardStudySessionRepository.findByUserIdAndSetIdAndFlashcardIdAndStatus(userId, setId, flashcardId, FlashcardStudySessionStatus.IN_PROGRESS);
 
         if (inProgressStudySessions.isEmpty()) {
             return Collections.emptyList();

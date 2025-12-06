@@ -1,11 +1,11 @@
 package com.cabybara.prolearningplatform.service.fcm.impl;
 
-import com.cabybara.prolearningplatform.bean.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.request.DeviceTokenRegistrationDto;
 import com.cabybara.prolearningplatform.model.fcm.DeviceToken;
 import com.cabybara.prolearningplatform.repository.DeviceTokenRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.fcm.DeviceTokenService;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
