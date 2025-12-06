@@ -1,10 +1,8 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
-import com.cabybara.prolearningplatform.bean.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.request.CardItemCreateRequestDto;
 import com.cabybara.prolearningplatform.dto.request.CardItemUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.CardItemResponseDto;
-import com.cabybara.prolearningplatform.dto.response.CardLearnResponseDto;
 import com.cabybara.prolearningplatform.dto.response.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.CardItemMapper;
@@ -16,6 +14,7 @@ import com.cabybara.prolearningplatform.repository.FlashcardRepository;
 import com.cabybara.prolearningplatform.service.flashcard.CardItemService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;

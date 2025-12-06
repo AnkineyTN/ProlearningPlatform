@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
-import com.cabybara.prolearningplatform.bean.AuthenticationContext;
+import com.cabybara.prolearningplatform.event.model.ChildEntityUpdatedEvent;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.request.CardItemCreateRequestDto;
 import com.cabybara.prolearningplatform.dto.request.FlashcardCreateRequestDto;
 import com.cabybara.prolearningplatform.dto.request.FlashcardUpdatingRequestDto;
@@ -26,6 +27,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -49,6 +51,7 @@ public class FlashcardServiceImpl implements FlashcardService {
     private final FlashcardMapper flashcardMapper;
     private final AssetService assetService;
     private final CardItemMapper cardItemMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     private final FileService fileService;
     private final AIFlashcardService aiFlashcardService;
@@ -97,7 +100,10 @@ public class FlashcardServiceImpl implements FlashcardService {
         flashcard.setUser(userFlashcard);
         flashcard.setSet(setFlashcard);
 
-        return flashcardMapper.toFlashcardResponseDto(flashcardRepository.save(flashcard));
+        Flashcard savedFlashcard = flashcardRepository.save(flashcard);
+
+        eventPublisher.publishEvent(new ChildEntityUpdatedEvent(savedFlashcard));
+        return flashcardMapper.toFlashcardResponseDto(savedFlashcard);
     }
 
     private Map<Long, Asset> activateCardImages(List<CardItemCreateRequestDto> cardDtos, Long userId) {
@@ -133,14 +139,18 @@ public class FlashcardServiceImpl implements FlashcardService {
     @Transactional
     public void deleteFlashcard(Long setId, Long flashcardId) throws BadRequestException {
         Long userId = authenticationContext.getCurrentUserId();
+        Flashcard deletedFlashcard = flashcardRepository.findById(flashcardId)
+                .orElseThrow(() -> new  ResourceNotFoundException("Flashcard with id: " + flashcardId + "not found!"));
         int deletedCount = flashcardRepository.deleteByIdAndSetIdAndSetUserId(flashcardId, setId, userId);
 
         if (deletedCount == 0) {
             throw new BadRequestException("Flashcard not found or access denied.");
         }
+        eventPublisher.publishEvent(new ChildEntityUpdatedEvent(deletedFlashcard));
     }
 
     @Override
+    @Transactional
     public FlashcardResponseDto updateFlashcard(Long setId, Long flashcardId, FlashcardUpdatingRequestDto flashcardUpdatingRequestDto) throws BadRequestException {
         Flashcard flashcard = flashcardRepository.getFlashcardByIdAndSetIdAndSetUserId(
                         flashcardId,
@@ -152,12 +162,16 @@ public class FlashcardServiceImpl implements FlashcardService {
         flashcardMapper.updateFlashcardFromDto(flashcardUpdatingRequestDto, flashcard);
         Flashcard updatedFlashcard = flashcardRepository.save(flashcard);
 
+        eventPublisher.publishEvent(new ChildEntityUpdatedEvent(updatedFlashcard));
         return flashcardMapper.toFlashcardResponseDto(updatedFlashcard);
     }
 
     @Override
     public DetailFlashcardResponseDto updateFlashcard(Flashcard newFlashcard) {
-        return flashcardMapper.toDetailFlashcardResponseDto(flashcardRepository.save(newFlashcard));
+        Flashcard savedFlashcard = flashcardRepository.save(newFlashcard);
+
+        eventPublisher.publishEvent(new ChildEntityUpdatedEvent(savedFlashcard));
+        return flashcardMapper.toDetailFlashcardResponseDto(savedFlashcard);
     }
 
     @Override

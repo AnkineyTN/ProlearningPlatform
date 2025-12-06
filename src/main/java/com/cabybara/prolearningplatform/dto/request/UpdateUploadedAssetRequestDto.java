@@ -11,3 +11,4 @@ public class UpdateUploadedAssetRequestDto {
     private String url;
     private String fileName; // Get from original_filename field
 }
+

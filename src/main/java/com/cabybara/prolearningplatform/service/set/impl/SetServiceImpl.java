@@ -44,6 +44,14 @@ public class SetServiceImpl implements SetService {
     }
 
     @Override
+    public SetResponseDto getSet(Long setId) {
+        Set set = setRepository.findById(setId)
+                .orElseThrow(() -> new ResourceNotFoundException("Set with id " + setId + " not found"));
+
+        return setMapper.toSetResponseDto(set);
+    }
+
+    @Override
     @Transactional
     public SetResponseDto createSet(Long userId, SetCreationRequestDto setCreationRequestDto) {
         if (setRepository.existsByTitle(setCreationRequestDto.getTitle())) {

@@ -18,4 +18,6 @@ public interface SetService {
     void deleteSet(Long setId, Long userId);
 
     Set getSetById(Long setId);
+
+    SetResponseDto getSet(Long setId);
 }
