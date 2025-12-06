@@ -55,7 +55,7 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
         Long userId = authenticationContext.getCurrentUserId();
 
         List<FlashcardStudySession> inProgressStudySessions =
-                flashcardStudySessionRepository.findByUserIdAndSetId(userId, setId);
+                flashcardStudySessionRepository.findByUserIdAndSetIdAndFlashcardIdOrderById(userId, setId, flashcardId);
 
         if (inProgressStudySessions.isEmpty()) {
             return Collections.emptyList();

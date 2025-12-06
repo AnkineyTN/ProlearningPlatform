@@ -13,9 +13,10 @@ import java.util.Optional;
 public interface FlashcardStudySessionRepository extends JpaRepository<FlashcardStudySession, Long> {
     Optional<FlashcardStudySession> findByUserIdAndFlashcardIdAndStatus(Long userId, Long flashcardId, FlashcardStudySessionStatus status);
 
-    List<FlashcardStudySession> findByUserIdAndSetId(
+    List<FlashcardStudySession> findByUserIdAndSetIdAndFlashcardIdOrderById (
             Long userId,
-            Long setId
+            Long setId,
+            Long flashcardId
     );
 
     Long user(User user);
