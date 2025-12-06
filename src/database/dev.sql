@@ -162,7 +162,7 @@ CREATE TABLE image_asset
 );
 
 CREATE TABLE device_token (
-                            id bigserial PK NOT NULL,
+                            id bigserial PRIMARY KEY NOT NULL,
                             user_id bigint NOT NULL,
                             fcm_token text NOT NULL UNIQUE,
                             platform character varying(20) NULL,
