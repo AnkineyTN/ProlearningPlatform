@@ -1,8 +1,8 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
-import com.cabybara.prolearningplatform.dto.request.CardItemReviewRequestDto;
-import com.cabybara.prolearningplatform.dto.request.FlashcardStudySessionSyncRequestDto;
-import com.cabybara.prolearningplatform.dto.response.CardLearnResponseDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemReviewRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardStudySessionSyncRequestDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.CardLearnResponseDto;
 import com.cabybara.prolearningplatform.enums.CardStatus;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.CardItemMapper;

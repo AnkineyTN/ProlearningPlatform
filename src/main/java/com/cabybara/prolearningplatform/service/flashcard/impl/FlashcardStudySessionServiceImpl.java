@@ -1,10 +1,10 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
-import com.cabybara.prolearningplatform.dto.request.CardItemReviewRequestDto;
-import com.cabybara.prolearningplatform.dto.request.FlashcardStudySessionSyncRequestDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionResultResponseDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStartResponseDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStatusResponseDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemReviewRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardStudySessionSyncRequestDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionResultResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStartResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStatusResponseDto;
 import com.cabybara.prolearningplatform.enums.FlashcardStudySessionStatus;
 import com.cabybara.prolearningplatform.enums.StudyMode;
 import com.cabybara.prolearningplatform.exception.FlashcardStudySessionException;

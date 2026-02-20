@@ -1,9 +1,9 @@
 package com.cabybara.prolearningplatform.service.flashcard;
 
-import com.cabybara.prolearningplatform.dto.request.CardItemCreateRequestDto;
-import com.cabybara.prolearningplatform.dto.request.CardItemUpdatingRequestDto;
-import com.cabybara.prolearningplatform.dto.response.CardItemResponseDto;
-import com.cabybara.prolearningplatform.dto.response.DetailFlashcardResponseDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemCreateRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemUpdatingRequestDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.CardItemResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.model.CardItem;
 import org.apache.coyote.BadRequestException;
 

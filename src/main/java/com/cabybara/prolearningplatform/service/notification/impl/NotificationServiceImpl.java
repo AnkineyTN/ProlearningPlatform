@@ -1,8 +1,8 @@
 package com.cabybara.prolearningplatform.service.notification.impl;
 
 import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
-import com.cabybara.prolearningplatform.dto.response.NotificationListResponseDto;
-import com.cabybara.prolearningplatform.dto.response.NotificationResponseDto;
+import com.cabybara.prolearningplatform.dto.response.notification.NotificationListResponseDto;
+import com.cabybara.prolearningplatform.dto.response.notification.NotificationResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.NotificationMapper;
 import com.cabybara.prolearningplatform.model.Notification;

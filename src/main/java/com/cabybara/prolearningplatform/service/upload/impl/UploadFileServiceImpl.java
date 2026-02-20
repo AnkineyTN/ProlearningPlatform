@@ -1,8 +1,8 @@
 //package com.cabybara.prolearningplatform.service.upload.impl;
 //
 //
-//import com.cabybara.prolearningplatform.dto.response.CloudinaryResponseDTO;
-//import com.cabybara.prolearningplatform.dto.response.UploadFileResponseDTO;
+//import com.cabybara.prolearningplatform.dto.response.common.CloudinaryResponseDTO;
+//import com.cabybara.prolearningplatform.dto.response.common.UploadFileResponseDTO;
 //import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 //import com.cabybara.prolearningplatform.model.Note;
 //import com.cabybara.prolearningplatform.model.NoteDocs;

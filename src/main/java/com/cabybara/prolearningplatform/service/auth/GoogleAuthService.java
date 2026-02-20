@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.service.auth;
 
-import com.cabybara.prolearningplatform.dto.response.GoogleAuthUrlResponseDto;
-import com.cabybara.prolearningplatform.dto.response.LoginResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.GoogleAuthUrlResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.LoginResponseDto;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;

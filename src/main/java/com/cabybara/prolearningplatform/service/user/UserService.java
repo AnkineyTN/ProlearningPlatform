@@ -1,10 +1,10 @@
 package com.cabybara.prolearningplatform.service.user;
 
-import com.cabybara.prolearningplatform.dto.request.ChangePasswordRequestDto;
+import com.cabybara.prolearningplatform.dto.request.user.ChangePasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.helper.GoogleUserInfoDto;
-import com.cabybara.prolearningplatform.dto.request.RegisterRequestDto;
-import com.cabybara.prolearningplatform.dto.request.UserUpdatingRequestDto;
-import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
+import com.cabybara.prolearningplatform.dto.request.user.RegisterRequestDto;
+import com.cabybara.prolearningplatform.dto.request.user.UserUpdatingRequestDto;
+import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.model.User;
 import com.google.api.services.oauth2.model.Userinfo;

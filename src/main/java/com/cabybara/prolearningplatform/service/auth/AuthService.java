@@ -1,8 +1,8 @@
 package com.cabybara.prolearningplatform.service.auth;
 
-import com.cabybara.prolearningplatform.dto.response.LoginResponseDto;
-import com.cabybara.prolearningplatform.dto.request.RegisterRequestDto;
-import com.cabybara.prolearningplatform.dto.response.RegisterResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.LoginResponseDto;
+import com.cabybara.prolearningplatform.dto.request.user.RegisterRequestDto;
+import com.cabybara.prolearningplatform.dto.response.user.RegisterResponseDto;
 
 public interface AuthService {
     LoginResponseDto authenticateAndGenerateToken(String email, String password);

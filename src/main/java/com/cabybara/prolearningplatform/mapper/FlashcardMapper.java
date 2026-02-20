@@ -1,9 +1,9 @@
 package com.cabybara.prolearningplatform.mapper;
 
-import com.cabybara.prolearningplatform.dto.request.FlashcardCreateRequestDto;
-import com.cabybara.prolearningplatform.dto.request.FlashcardUpdatingRequestDto;
-import com.cabybara.prolearningplatform.dto.response.DetailFlashcardResponseDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardResponseDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardCreateRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardUpdatingRequestDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.model.Flashcard;
 import org.mapstruct.*;
 

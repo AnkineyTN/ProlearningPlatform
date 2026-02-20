@@ -1,10 +1,10 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.request.CardItemCreateRequestDto;
-import com.cabybara.prolearningplatform.dto.request.CardItemUpdatingRequestDto;
-import com.cabybara.prolearningplatform.dto.request.CardItemsDeletionRequestDto;
-import com.cabybara.prolearningplatform.dto.response.CardItemResponseDto;
-import com.cabybara.prolearningplatform.dto.response.DetailFlashcardResponseDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemCreateRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemUpdatingRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemsDeletionRequestDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.CardItemResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.service.flashcard.CardItemService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;

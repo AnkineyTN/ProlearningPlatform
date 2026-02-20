@@ -1,17 +1,13 @@
 package com.cabybara.prolearningplatform.service.user.impl;
 
-import com.cabybara.prolearningplatform.dto.request.UserUpdatingRequestDto;
+import com.cabybara.prolearningplatform.dto.request.user.UserUpdatingRequestDto;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 
-import com.cabybara.prolearningplatform.dto.request.ChangePasswordRequestDto;
+import com.cabybara.prolearningplatform.dto.request.user.ChangePasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.helper.GoogleUserInfoDto;
-import com.cabybara.prolearningplatform.dto.request.RegisterRequestDto;
-import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
-import com.cabybara.prolearningplatform.enums.AccountType;
+import com.cabybara.prolearningplatform.dto.request.user.RegisterRequestDto;
+import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
-import com.cabybara.prolearningplatform.enums.UserEducation;
-import com.cabybara.prolearningplatform.enums.UserHearAppFrom;
-import com.cabybara.prolearningplatform.enums.UserLanguage;
 import com.cabybara.prolearningplatform.exception.AuthException;
 import com.cabybara.prolearningplatform.mapper.UserMapper;
 import com.cabybara.prolearningplatform.model.Authority;

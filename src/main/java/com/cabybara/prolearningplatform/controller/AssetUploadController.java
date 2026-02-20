@@ -1,9 +1,9 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.request.AssetUrlUploadRequestDto;
-import com.cabybara.prolearningplatform.dto.request.UpdateUploadedAssetRequestDto;
-import com.cabybara.prolearningplatform.dto.response.AssetSignatureResponseDto;
-import com.cabybara.prolearningplatform.dto.response.AssetUrlUploadResponseDto;
+import com.cabybara.prolearningplatform.dto.request.common.AssetUrlUploadRequestDto;
+import com.cabybara.prolearningplatform.dto.request.notification.UpdateUploadedAssetRequestDto;
+import com.cabybara.prolearningplatform.dto.response.common.AssetSignatureResponseDto;
+import com.cabybara.prolearningplatform.dto.response.common.AssetUrlUploadResponseDto;
 import com.cabybara.prolearningplatform.enums.AssetType;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;

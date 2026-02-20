@@ -1,10 +1,12 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.request.FlashcardCreateRequestDto;
-import com.cabybara.prolearningplatform.dto.request.FlashcardUpdatingRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardCreateRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.response.*;
+import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
