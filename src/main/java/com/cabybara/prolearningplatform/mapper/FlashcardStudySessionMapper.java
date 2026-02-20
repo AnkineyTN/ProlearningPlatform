@@ -4,7 +4,7 @@ import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySes
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionResultResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStartResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStatusResponseDto;
-import com.cabybara.prolearningplatform.model.CardItem;
+import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import com.cabybara.prolearningplatform.model.flashcard_study_session.FlashcardStudySession;
 import com.cabybara.prolearningplatform.model.flashcard_study_session.FlashcardStudySessionLogItem;
 import org.mapstruct.Mapper;

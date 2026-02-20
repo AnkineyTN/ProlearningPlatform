@@ -7,7 +7,7 @@ import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardB
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
-import com.cabybara.prolearningplatform.model.Flashcard;
+import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

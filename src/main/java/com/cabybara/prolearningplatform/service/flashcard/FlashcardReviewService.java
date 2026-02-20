@@ -2,7 +2,7 @@ package com.cabybara.prolearningplatform.service.flashcard;
 
 import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardStudySessionSyncRequestDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.CardLearnResponseDto;
-import com.cabybara.prolearningplatform.model.CardItem;
+import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 
 import java.util.List;
 

@@ -1,12 +1,13 @@
-package com.cabybara.prolearningplatform.model;
+package com.cabybara.prolearningplatform.model.note;
 
 import com.cabybara.prolearningplatform.enums.Privacy;
+import com.cabybara.prolearningplatform.model.AbstractEntity;
+import com.cabybara.prolearningplatform.model.Set;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 
 @Getter

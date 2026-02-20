@@ -4,8 +4,8 @@ import com.cabybara.prolearningplatform.dto.request.set.SetUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.set.SetCreationRequestDto;
 import com.cabybara.prolearningplatform.dto.response.set.SetResponseDto;
 import com.cabybara.prolearningplatform.mapper.helpers.DateTimeMapper;
-import com.cabybara.prolearningplatform.model.Flashcard;
-import com.cabybara.prolearningplatform.model.Note;
+import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
+import com.cabybara.prolearningplatform.model.note.Note;
 import org.mapstruct.*;
 
 import com.cabybara.prolearningplatform.model.Set;

@@ -1,6 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
-import com.cabybara.prolearningplatform.model.Note;
+import com.cabybara.prolearningplatform.model.note.Note;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

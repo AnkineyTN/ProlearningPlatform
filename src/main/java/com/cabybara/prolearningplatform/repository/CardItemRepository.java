@@ -1,9 +1,7 @@
 package com.cabybara.prolearningplatform.repository;
 
 import com.cabybara.prolearningplatform.dto.helper.UserDueStatDto;
-import com.cabybara.prolearningplatform.model.CardItem;
-import com.cabybara.prolearningplatform.model.Flashcard;
-import org.springframework.data.domain.PageRequest;
+import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;

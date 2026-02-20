@@ -4,7 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemCreateRequ
 import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.CardItemResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
-import com.cabybara.prolearningplatform.model.CardItem;
+import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import org.apache.coyote.BadRequestException;
 
 import java.util.List;

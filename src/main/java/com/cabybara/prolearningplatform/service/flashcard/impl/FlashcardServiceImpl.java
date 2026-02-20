@@ -1,6 +1,9 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
 import com.cabybara.prolearningplatform.event.model.ChildEntityUpdatedEvent;
+import com.cabybara.prolearningplatform.model.flashcard.CardItem;
+import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
+import com.cabybara.prolearningplatform.model.note.Note;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemCreateRequestDto;
 import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardCreateRequestDto;

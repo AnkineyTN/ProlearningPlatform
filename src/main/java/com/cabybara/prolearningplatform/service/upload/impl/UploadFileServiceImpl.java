@@ -4,9 +4,9 @@
 //import com.cabybara.prolearningplatform.dto.response.common.CloudinaryResponseDTO;
 //import com.cabybara.prolearningplatform.dto.response.common.UploadFileResponseDTO;
 //import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
-//import com.cabybara.prolearningplatform.model.Note;
-//import com.cabybara.prolearningplatform.model.NoteDocs;
-//import com.cabybara.prolearningplatform.model.NoteImgs;
+//import com.cabybara.prolearningplatform.model.note.Note;
+//import com.cabybara.prolearningplatform.model.note.NoteDocs;
+//import com.cabybara.prolearningplatform.model.note.NoteImgs;
 //import com.cabybara.prolearningplatform.repository.NoteDocsRepository;
 //import com.cabybara.prolearningplatform.repository.NoteImgsRepository;
 //import com.cabybara.prolearningplatform.repository.NoteRepository;

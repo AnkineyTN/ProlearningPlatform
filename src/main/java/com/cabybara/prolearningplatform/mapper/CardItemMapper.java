@@ -4,7 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemCreateRequ
 import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.CardItemResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.CardLearnResponseDto;
-import com.cabybara.prolearningplatform.model.CardItem;
+import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import org.mapstruct.*;
 
 import java.util.List;

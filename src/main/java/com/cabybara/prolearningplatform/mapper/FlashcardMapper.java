@@ -4,7 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardCreateReq
 import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
-import com.cabybara.prolearningplatform.model.Flashcard;
+import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring",unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {CardItemMapper.class})

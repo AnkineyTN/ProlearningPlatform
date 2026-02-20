@@ -2,12 +2,11 @@ package com.cabybara.prolearningplatform.model.flashcard_study_session;
 
 import com.cabybara.prolearningplatform.enums.FlashcardStudySessionStatus;
 import com.cabybara.prolearningplatform.enums.StudyMode;
-import com.cabybara.prolearningplatform.model.Flashcard;
+import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.JdbcTypeCode;

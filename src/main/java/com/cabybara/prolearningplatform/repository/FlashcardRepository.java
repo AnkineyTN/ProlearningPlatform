@@ -1,6 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
-import com.cabybara.prolearningplatform.model.Flashcard;
+import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;

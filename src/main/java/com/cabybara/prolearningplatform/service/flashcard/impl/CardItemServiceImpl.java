@@ -6,8 +6,8 @@ import com.cabybara.prolearningplatform.dto.response.flashcard.CardItemResponseD
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.CardItemMapper;
-import com.cabybara.prolearningplatform.model.CardItem;
-import com.cabybara.prolearningplatform.model.Flashcard;
+import com.cabybara.prolearningplatform.model.flashcard.CardItem;
+import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import com.cabybara.prolearningplatform.model.Asset;
 import com.cabybara.prolearningplatform.repository.CardItemRepository;
 import com.cabybara.prolearningplatform.repository.FlashcardRepository;
