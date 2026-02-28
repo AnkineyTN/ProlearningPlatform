@@ -64,6 +64,7 @@ public class SetServiceImpl implements SetService {
         Set newSet = setMapper.fromSetCreationRequestDto(setCreationRequestDto);
         newSet.setUser(user);
         newSet.setNotes(new ArrayList<>());
+        newSet.setFlashcards(new ArrayList<>());
 
         Set savedSet = setRepository.save(newSet);
         return setMapper.toSetResponseDto(savedSet);
