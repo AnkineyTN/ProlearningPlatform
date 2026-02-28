@@ -19,14 +19,17 @@ server:
     context-path: /api
     application-display-name: ${spring.application.name}
 
+cloud:
+  cloudinary:
+    name: ${CLOUD_CLOUDINARY_NAME}
+    apiKey: ${CLOUD_CLOUDINARY_API_KEY}
+    apiSecret: ${CLOUD_CLOUDINARY_API_SECRET}
+    image_preset: ${CLOUD_CLOUDINARY_IMAGE_PRESET}
+    document_preset: ${CLOUD_CLOUDINARY_DOCUMENT_PRESET}
+
 spring:
   profiles:
     active: ${PROFILE:dev}
----
-spring:
-  config:
-    activate:
-      on-profile: dev
 
   application:
     name: Prolearning Platform
@@ -47,13 +50,13 @@ spring:
         order_updates: true
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-#    show-sql: true
+  #    show-sql: true
 
   data:
     redis:
       host: ${REDIS_HOST}
       port: ${REDIS_PORT}
-      ttl-ms: ${REDIS_TTL-MS}
+      ttl-ms: ${REDIS_TTL_MS}
 
   security:
     jwt:
@@ -77,17 +80,14 @@ spring:
             redirect-uri: ${GOOGLE_REDIRECT_URI}
             scope: "email,profile,openid"
 
-cloud:
-  cloudinary:
-    name: ${CLOUD_CLOUDINARY_NAME}
-    apiKey: ${CLOUD_CLOUDINARY_API_KEY}
-    apiSecret: ${CLOUD_CLOUDINARY_API_SECRET}
-    image_preset: ${CLOUD_CLOUDINARY_IMAGE_PRESET}
-    document_preset: ${CLOUD_CLOUDINARY_DOCUMENT_PRESET}
-
-springdoc:
-  swagger-ui:
-    path: api-docs
+  springdoc:
+    swagger-ui:
+      path: api-docs
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
 
 logging:
   level:
