@@ -93,7 +93,7 @@ logging:
   level:
     root: INFO
     com.cabybara.prolearningplatform.service: DEBUG
-    org.springframework.security: TRACE
+#    org.springframework.security: TRACE
 
 ---
 spring:
