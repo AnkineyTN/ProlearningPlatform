@@ -1,8 +1,8 @@
 package com.cabybara.prolearningplatform.service.set.impl;
 
-import com.cabybara.prolearningplatform.dto.request.SetUpdatingRequestDto;
-import com.cabybara.prolearningplatform.dto.request.SetCreationRequestDto;
-import com.cabybara.prolearningplatform.dto.response.SetResponseDto;
+import com.cabybara.prolearningplatform.dto.request.set.SetUpdatingRequestDto;
+import com.cabybara.prolearningplatform.dto.request.set.SetCreationRequestDto;
+import com.cabybara.prolearningplatform.dto.response.set.SetResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -64,6 +64,7 @@ public class SetServiceImpl implements SetService {
         Set newSet = setMapper.fromSetCreationRequestDto(setCreationRequestDto);
         newSet.setUser(user);
         newSet.setNotes(new ArrayList<>());
+        newSet.setFlashcards(new ArrayList<>());
 
         Set savedSet = setRepository.save(newSet);
         return setMapper.toSetResponseDto(savedSet);

@@ -1,10 +1,10 @@
 package com.cabybara.prolearningplatform.mapper;
 
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionLogItemResponseDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionResultResponseDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStartResponseDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStatusResponseDto;
-import com.cabybara.prolearningplatform.model.CardItem;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionLogItemResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionResultResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStartResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStatusResponseDto;
+import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import com.cabybara.prolearningplatform.model.flashcard_study_session.FlashcardStudySession;
 import com.cabybara.prolearningplatform.model.flashcard_study_session.FlashcardStudySessionLogItem;
 import org.mapstruct.Mapper;

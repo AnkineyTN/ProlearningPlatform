@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.enums.AccountType;
 import com.cabybara.prolearningplatform.enums.UserEducation;
 import com.cabybara.prolearningplatform.enums.UserHearAppFrom;
 import com.cabybara.prolearningplatform.enums.UserLanguage;
+import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;

@@ -1,14 +1,17 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
 import com.cabybara.prolearningplatform.event.model.ChildEntityUpdatedEvent;
+import com.cabybara.prolearningplatform.model.flashcard.CardItem;
+import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
+import com.cabybara.prolearningplatform.model.note.Note;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
-import com.cabybara.prolearningplatform.dto.request.CardItemCreateRequestDto;
-import com.cabybara.prolearningplatform.dto.request.FlashcardCreateRequestDto;
-import com.cabybara.prolearningplatform.dto.request.FlashcardUpdatingRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemCreateRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardCreateRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByNoteRequestDto;
-import com.cabybara.prolearningplatform.dto.response.DetailFlashcardResponseDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceAlreadyExistsException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;

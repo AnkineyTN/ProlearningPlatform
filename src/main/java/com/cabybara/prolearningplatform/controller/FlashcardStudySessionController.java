@@ -1,9 +1,9 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.request.FlashcardStudySessionSyncRequestDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionResultResponseDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStartResponseDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStatusResponseDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardStudySessionSyncRequestDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionResultResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStartResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStatusResponseDto;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardStudySessionService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;

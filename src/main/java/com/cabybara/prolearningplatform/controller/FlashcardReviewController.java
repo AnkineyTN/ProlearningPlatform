@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.request.FlashcardStudySessionSyncRequestDto;
-import com.cabybara.prolearningplatform.dto.response.CardLearnResponseDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardStudySessionSyncRequestDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.CardLearnResponseDto;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardReviewService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;

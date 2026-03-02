@@ -1,9 +1,9 @@
 package com.cabybara.prolearningplatform.service.auth.impl;
 
-import com.cabybara.prolearningplatform.dto.request.RegisterRequestDto;
-import com.cabybara.prolearningplatform.dto.response.LoginResponseDto;
-import com.cabybara.prolearningplatform.dto.response.RegisterResponseDto;
-import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
+import com.cabybara.prolearningplatform.dto.request.user.RegisterRequestDto;
+import com.cabybara.prolearningplatform.dto.response.user.LoginResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.RegisterResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.exception.AuthException;
 import com.cabybara.prolearningplatform.mapper.GoogleAuthItemMapper;

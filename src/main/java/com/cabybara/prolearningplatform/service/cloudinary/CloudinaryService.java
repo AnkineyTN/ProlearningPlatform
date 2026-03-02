@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.service.cloudinary;
 
 import com.cabybara.prolearningplatform.dto.helper.AssetToDeleteDto;
-import com.cabybara.prolearningplatform.dto.response.CloudinaryResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.common.CloudinaryResponseDTO;
 import com.cabybara.prolearningplatform.enums.AssetType;
 import com.cloudinary.Configuration;
 import org.springframework.web.multipart.MultipartFile;

@@ -1,17 +1,17 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
-import com.cabybara.prolearningplatform.dto.request.CardItemReviewRequestDto;
-import com.cabybara.prolearningplatform.dto.request.FlashcardStudySessionSyncRequestDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionResultResponseDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStartResponseDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStatusResponseDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemReviewRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardStudySessionSyncRequestDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionResultResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStartResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStatusResponseDto;
 import com.cabybara.prolearningplatform.enums.FlashcardStudySessionStatus;
 import com.cabybara.prolearningplatform.enums.StudyMode;
 import com.cabybara.prolearningplatform.exception.FlashcardStudySessionException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.FlashcardStudySessionMapper;
-import com.cabybara.prolearningplatform.model.CardItem;
-import com.cabybara.prolearningplatform.model.Flashcard;
+import com.cabybara.prolearningplatform.model.flashcard.CardItem;
+import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.model.flashcard_study_session.FlashcardStudySession;

@@ -1,9 +1,9 @@
 package com.cabybara.prolearningplatform.service.flashcard;
 
-import com.cabybara.prolearningplatform.dto.request.FlashcardStudySessionSyncRequestDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionResultResponseDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStartResponseDto;
-import com.cabybara.prolearningplatform.dto.response.FlashcardStudySessionStatusResponseDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardStudySessionSyncRequestDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionResultResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStartResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStatusResponseDto;
 import org.apache.coyote.BadRequestException;
 
 import java.util.List;

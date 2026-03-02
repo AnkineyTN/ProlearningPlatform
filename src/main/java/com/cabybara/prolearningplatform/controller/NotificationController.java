@@ -1,10 +1,10 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.internal.FCMMessage;
-import com.cabybara.prolearningplatform.dto.request.DeviceTokenRegistrationDto;
-import com.cabybara.prolearningplatform.dto.request.MarkNotificationsReadRequestDto;
-import com.cabybara.prolearningplatform.dto.response.NotificationListResponseDto;
-import com.cabybara.prolearningplatform.dto.response.NotificationResponseDto;
+import com.cabybara.prolearningplatform.dto.request.user.DeviceTokenRegistrationDto;
+import com.cabybara.prolearningplatform.dto.request.notification.MarkNotificationsReadRequestDto;
+import com.cabybara.prolearningplatform.dto.response.notification.NotificationListResponseDto;
+import com.cabybara.prolearningplatform.dto.response.notification.NotificationResponseDto;
 import com.cabybara.prolearningplatform.service.fcm.DeviceTokenService;
 import com.cabybara.prolearningplatform.service.fcm.FCMService;
 import com.cabybara.prolearningplatform.service.notification.NotificationService;

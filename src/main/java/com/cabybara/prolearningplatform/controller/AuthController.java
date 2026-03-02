@@ -1,10 +1,10 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.request.LoginRequestDto;
-import com.cabybara.prolearningplatform.dto.request.RegisterRequestDto;
-import com.cabybara.prolearningplatform.dto.response.GoogleAuthUrlResponseDto;
-import com.cabybara.prolearningplatform.dto.response.LoginResponseDto;
-import com.cabybara.prolearningplatform.dto.response.RegisterResponseDto;
+import com.cabybara.prolearningplatform.dto.request.user.LoginRequestDto;
+import com.cabybara.prolearningplatform.dto.request.user.RegisterRequestDto;
+import com.cabybara.prolearningplatform.dto.response.user.GoogleAuthUrlResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.LoginResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.RegisterResponseDto;
 import com.cabybara.prolearningplatform.service.auth.AuthService;
 import com.cabybara.prolearningplatform.service.auth.GoogleAuthService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;

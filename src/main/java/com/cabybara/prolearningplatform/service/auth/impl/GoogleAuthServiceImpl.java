@@ -1,10 +1,10 @@
 package com.cabybara.prolearningplatform.service.auth.impl;
 
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.cabybara.prolearningplatform.dto.response.GoogleAuthUrlResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.GoogleAuthUrlResponseDto;
 import com.cabybara.prolearningplatform.dto.helper.GoogleUserInfoDto;
-import com.cabybara.prolearningplatform.dto.response.LoginResponseDto;
-import com.cabybara.prolearningplatform.dto.response.UserResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.LoginResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
 import com.cabybara.prolearningplatform.exception.GoogleAuthException;
 import com.cabybara.prolearningplatform.mapper.UserMapper;
 import com.cabybara.prolearningplatform.model.User;

@@ -1,6 +1,6 @@
 package com.cabybara.prolearningplatform.service.upload;
 
-import com.cabybara.prolearningplatform.dto.response.UploadFileResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.common.UploadFileResponseDTO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;

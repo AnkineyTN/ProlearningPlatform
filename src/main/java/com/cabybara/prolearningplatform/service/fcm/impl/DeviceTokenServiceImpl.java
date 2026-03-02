@@ -1,6 +1,6 @@
 package com.cabybara.prolearningplatform.service.fcm.impl;
 
-import com.cabybara.prolearningplatform.dto.request.DeviceTokenRegistrationDto;
+import com.cabybara.prolearningplatform.dto.request.user.DeviceTokenRegistrationDto;
 import com.cabybara.prolearningplatform.model.fcm.DeviceToken;
 import com.cabybara.prolearningplatform.repository.DeviceTokenRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
