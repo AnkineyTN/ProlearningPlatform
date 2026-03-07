@@ -36,7 +36,7 @@ build/
 ### Differences ###
 *.mdj
 .env
-.env
+/docs
 docker-compose-*.yml
 
 prolearningplatform-*-firebase-adminsdk-*.json

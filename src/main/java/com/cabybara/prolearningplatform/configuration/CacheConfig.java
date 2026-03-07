@@ -35,12 +35,6 @@ public class CacheConfig {
                 .build();
     }
 
-    private RedisCacheConfiguration defaultCacheConfiguration() {
-        return RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofMinutes(3))
-                .disableCachingNullValues();
-    }
-
     @Bean
     public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<Object, Object> template = new RedisTemplate<>();
