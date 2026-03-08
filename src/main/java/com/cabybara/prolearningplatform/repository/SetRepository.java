@@ -26,4 +26,6 @@ public interface SetRepository extends JpaRepository<Set, Long> {
     @Modifying
     @Query("UPDATE Set s SET s.updatedAt = :now WHERE s.id = :id")
     void updateLastModifiedDate(@Param("id") Long id, @Param("now") OffsetDateTime now);
+
+
 }

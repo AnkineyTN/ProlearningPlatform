@@ -214,9 +214,67 @@ CREATE TABLE notification
 );
 
 
+-- exam
+CREATE TYPE question_type AS ENUM (
+    'MULTIPLE_CHOICE',
+    'TRUE_FALSE',
+    'ESSAY'
+    );
 
+CREATE TABLE quizzes (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    privacy VARCHAR(20) DEFAULT 'PUBLIC',
+    created_by INTEGER NOT NULL,
+    set_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+    CONSTRAINT fk_quiz_set
+        FOREIGN KEY (set_id)
+            REFERENCES set(id)
+            ON DELETE CASCADE
+);
 
+CREATE INDEX idx_quizzes_created_by ON quizzes(created_by);
+CREATE INDEX idx_quiz_set ON quizzes(set_id);
 
+CREATE TABLE questions (
+    id BIGSERIAL PRIMARY KEY,
+    content TEXT NOT NULL,
+    type question_type NOT NULL,
+    created_by INTEGER NOT NULL ,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
+CREATE INDEX idx_questions_type ON questions(type);
 
+CREATE TABLE question_options (
+    id BIGSERIAL PRIMARY KEY,
+    question_id BIGINT NOT NULL,
+    option_text TEXT NOT NULL,
+    is_correct BOOLEAN DEFAULT FALSE,
+
+    CONSTRAINT fk_question_option_question FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_options_question_id
+    ON question_options(question_id);
+
+CREATE TABLE quiz_questions (
+    id BIGSERIAL PRIMARY KEY,
+    quiz_id BIGINT NOT NULL,
+    question_id BIGINT NOT NULL,
+    order_index INT,
+    points INT DEFAULT 1,
+
+    CONSTRAINT fk_quiz_questions_quiz FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
+    CONSTRAINT fk_quiz_questions_question FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_quiz_questions_quiz_id
+    ON quiz_questions(quiz_id);
+
+CREATE INDEX idx_quiz_questions_question_id
+    ON quiz_questions(question_id);

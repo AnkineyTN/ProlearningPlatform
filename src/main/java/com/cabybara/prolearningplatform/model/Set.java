@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.model;
 
 import com.cabybara.prolearningplatform.enums.Privacy;
+import com.cabybara.prolearningplatform.model.exam.Quiz;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import com.cabybara.prolearningplatform.model.note.Note;
 import jakarta.persistence.Entity;
@@ -9,6 +10,7 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -39,4 +41,7 @@ public class Set extends AbstractEntity {
 
     @OneToMany(mappedBy = "set", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Flashcard> flashcards;
+
+    @OneToMany(mappedBy = "set", cascade = CascadeType.ALL)
+    private List<Quiz> quizzes = new ArrayList<>();
 }
