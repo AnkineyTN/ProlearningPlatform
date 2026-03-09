@@ -38,5 +38,6 @@ build/
 .env
 /docs
 docker-compose-*.yml
+.notes
 
 prolearningplatform-*-firebase-adminsdk-*.json

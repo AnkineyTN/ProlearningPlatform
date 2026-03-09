@@ -6,8 +6,11 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.RecordComponent;
+import java.util.Arrays;
 
 @Aspect
 @Component
@@ -20,28 +23,55 @@ public class NormalizeDtoAspect {
     public Object trimDtoParameters(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
 
-        for (Object arg : args) {
+        for (int i = 0; i < args.length; i++) {
+            Object arg = args[i];
             if (arg != null && !arg.getClass().isPrimitive() && !(arg instanceof String)) {
-                normalizeObject(arg);
+                Object normalized = normalizeObject(arg);
+                args[i] = normalized;
             }
         }
 
-        return joinPoint.proceed();
+        return joinPoint.proceed(args);
     }
 
-    private void normalizeObject(Object target) throws IllegalAccessException, InvocationTargetException {
-        for (Field field : target.getClass().getDeclaredFields()) {
+    private Object normalizeObject(Object target) throws Exception {
+        Class<?> clazz = target.getClass();
 
-            if (field.getType().equals(String.class) && !field.getName().equals("password")) {
+        // Nếu là record
+        if (clazz.isRecord()) {
+            RecordComponent[] components = clazz.getRecordComponents();
+            Object[] args = new Object[components.length];
 
+            for (int i = 0; i < components.length; i++) {
+                Field field = clazz.getDeclaredField(components[i].getName());
                 field.setAccessible(true);
+                Object value = field.get(target);
 
+                if (value instanceof String && !field.getName().equals("password")) {
+                    value = ((String) value).trim();
+                }
+
+                args[i] = value;
+            }
+
+            // Tạo instance record mới với constructor
+            Constructor<?> ctor = clazz.getDeclaredConstructor(Arrays.stream(components)
+                    .map(RecordComponent::getType)
+                    .toArray(Class[]::new));
+            return ctor.newInstance(args);
+        }
+
+        // Nếu không phải record → vẫn dùng reflection set như cũ
+        for (Field field : clazz.getDeclaredFields()) {
+            if (field.getType().equals(String.class) && !field.getName().equals("password")) {
+                field.setAccessible(true);
                 String value = (String) field.get(target);
-
                 if (value != null) {
                     field.set(target, value.trim());
                 }
             }
         }
+
+        return target;
     }
 }
