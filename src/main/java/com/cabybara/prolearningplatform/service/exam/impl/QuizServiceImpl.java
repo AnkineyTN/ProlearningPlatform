@@ -4,7 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.exam.CreateQuizRequestDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuizResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceAlreadyExistsException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
-import com.cabybara.prolearningplatform.mapper.QuizMapper;
+import com.cabybara.prolearningplatform.mapper.ExamMapper;
 import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.exam.Quiz;
 import com.cabybara.prolearningplatform.repository.QuizRepository;
@@ -23,7 +23,7 @@ public class QuizServiceImpl implements QuizService {
     private final AuthenticationContext authenticationContext;
     private final QuizRepository quizRepository;
     private final SetRepository setRepository;
-    private final QuizMapper quizMapper;
+    private final ExamMapper examMapper;
 
     @Override
     public QuizResponseDto createQuiz(Long setId, CreateQuizRequestDto createQuizRequestDto) {
@@ -36,11 +36,11 @@ public class QuizServiceImpl implements QuizService {
             throw new ResourceAlreadyExistsException("Exam has been existed");
         }
 
-        Quiz quiz = quizMapper.toQuiz(createQuizRequestDto);
+        Quiz quiz = examMapper.toQuiz(createQuizRequestDto);
         quiz.setCreatedBy(userId);
         quiz.setSet(set);
 
-        return quizMapper.toQuizResponseDto(quizRepository.save(quiz));
+        return examMapper.toQuizResponseDto(quizRepository.save(quiz));
     }
 
     @Override
@@ -49,7 +49,7 @@ public class QuizServiceImpl implements QuizService {
                 .orElseThrow(() -> new ResourceNotFoundException("set not found"));
 
         return quizRepository.findAllBySet(set, pageable).stream()
-                .map(quizMapper::toQuizResponseDto)
+                .map(examMapper::toQuizResponseDto)
                 .toList();
     }
 }
