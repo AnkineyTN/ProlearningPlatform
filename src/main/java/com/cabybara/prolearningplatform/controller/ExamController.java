@@ -83,11 +83,11 @@ public class ExamController {
     }
 
     @PostMapping("/{quizId}/questions")
-    public ResponseEntity<ApiResponse<QuestionResponseDto>> createQuestion(
+    public ResponseEntity<ApiResponse<List<QuestionResponseDto>>> createQuestion(
             @PathVariable Long quizId,
-            @RequestBody @Valid CreateQuestionRequestDto request
+            @RequestBody @Valid List<CreateQuestionRequestDto> createQuestionRequestDtos
     ) {
-        QuestionResponseDto response = questionService.createQuestion(quizId, request);
+        List<QuestionResponseDto> response = questionService.createQuestion(quizId, createQuestionRequestDtos);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)

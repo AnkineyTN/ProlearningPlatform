@@ -8,7 +8,11 @@ import java.util.List;
 
 public interface QuestionRepository extends JpaRepository<Question, Long> {
 
-    @Query("SELECT q FROM Question q JOIN QuizQuestion qq ON qq.question = q WHERE qq.quiz.id = :quizId ORDER BY qq.orderIndex ASC")
+    @Query("SELECT q FROM Question q " +
+            "JOIN QuizQuestion qq ON qq.question = q " +
+            "LEFT JOIN FETCH q.options " +
+            "WHERE qq.quiz.id = :quizId " +
+            "ORDER BY qq.orderIndex ASC")
     List<Question> findAllByQuizId(Long quizId);
 
     List<Question> findAllByCreatedBy(Long createdBy);

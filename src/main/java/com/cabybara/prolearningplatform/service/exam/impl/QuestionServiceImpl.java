@@ -18,7 +18,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @RequiredArgsConstructor
@@ -32,31 +34,45 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional
-    public QuestionResponseDto createQuestion(Long quizId, CreateQuestionRequestDto dto) {
+    public List<QuestionResponseDto> createQuestion(Long quizId, List<CreateQuestionRequestDto> createQuestionRequestDtos) {
         Long userId = authenticationContext.getCurrentUserId();
 
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
 
-        Question question = examMapper.toQuestion(dto);
-        question.setCreatedBy(userId);
+        List<Question> questions = new ArrayList<>();
 
-        if (dto.options() != null && !dto.options().isEmpty()) {
-            List<QuestionOption> options = examMapper.toQuestionOptionList(dto.options());
-            options.forEach(option -> option.setQuestion(question));
-            question.setOptions(options);
-        }
+        AtomicReference<Integer> currentOrderIndex = new AtomicReference<>(quizQuestionRepository.countByQuizId(quizId));
 
-        Question savedQuestion = questionRepository.save(question);
+        List<QuizQuestion> quizQuestions = createQuestionRequestDtos.stream()
+                .map(dto -> {
+                    Question question = examMapper.toQuestion(dto);
+                    question.setCreatedBy(userId);
 
-        QuizQuestion quizQuestion = new QuizQuestion();
-        quizQuestion.setQuiz(quiz);
-        quizQuestion.setQuestion(savedQuestion);
-        quizQuestion.setOrderIndex(quizQuestionRepository.countByQuizId(quizId) + 1);
-        quizQuestion.setPoints(dto.point());
-        quizQuestionRepository.save(quizQuestion);
+                    if (dto.options() != null && !dto.options().isEmpty()) {
+                        List<QuestionOption> options = examMapper.toQuestionOptionList(dto.options());
+                        options.forEach(option -> option.setQuestion(question));
+                        question.setOptions(options);
+                    }
 
-        return examMapper.toQuestionResponseDto(savedQuestion);
+                    questions.add(question);
+
+                    QuizQuestion quizQuestion = new QuizQuestion();
+                    quizQuestion.setQuiz(quiz);
+                    quizQuestion.setQuestion(question);
+                    quizQuestion.setOrderIndex(currentOrderIndex.getAndSet(currentOrderIndex.get() + 1));
+                    quizQuestion.setPoints(dto.point());
+
+                    return quizQuestion;
+                })
+                .toList();
+
+        questionRepository.saveAll(questions);
+        quizQuestionRepository.saveAll(quizQuestions);
+
+        return questions.stream()
+                .map(examMapper::toQuestionResponseDto)
+                .toList();
     }
 
     @Override

@@ -7,7 +7,7 @@ import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
 import java.util.List;
 
 public interface QuestionService {
-    QuestionResponseDto createQuestion(Long quizId, CreateQuestionRequestDto dto);
+    List<QuestionResponseDto> createQuestion(Long quizId, List<CreateQuestionRequestDto> dto);
 
     List<QuestionResponseDto> getQuestionsByQuizId(Long quizId);
 
