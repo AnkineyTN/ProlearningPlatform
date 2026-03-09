@@ -1,9 +1,6 @@
 package com.cabybara.prolearningplatform.mapper;
 
-import com.cabybara.prolearningplatform.dto.request.exam.CreateQuestionRequestDto;
-import com.cabybara.prolearningplatform.dto.request.exam.CreateQuizRequestDto;
-import com.cabybara.prolearningplatform.dto.request.exam.QuestionOptionDto;
-import com.cabybara.prolearningplatform.dto.request.exam.UpdateQuestionRequestDto;
+import com.cabybara.prolearningplatform.dto.request.exam.*;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuizResponseDto;
 import com.cabybara.prolearningplatform.model.exam.Question;
@@ -21,6 +18,12 @@ public interface ExamMapper {
     Quiz toQuiz(CreateQuizRequestDto createQuizRequestDto);
 
     QuizResponseDto toQuizResponseDto(Quiz quiz);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "set", ignore = true)
+    @Mapping(target = "quizQuestions", ignore = true)
+    void updateQuizFromDto(UpdateQuizRequestDto updateQuizRequestDto, @MappingTarget Quiz quiz);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "options", ignore = true)

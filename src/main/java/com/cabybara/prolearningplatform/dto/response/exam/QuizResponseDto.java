@@ -9,5 +9,6 @@ public record QuizResponseDto(
         String title,
         Privacy privacy,
         String description,
+        Long duration,
         Long createdBy
 ) {}

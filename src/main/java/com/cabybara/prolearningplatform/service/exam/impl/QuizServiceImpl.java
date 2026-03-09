@@ -1,11 +1,14 @@
 package com.cabybara.prolearningplatform.service.exam.impl;
 
 import com.cabybara.prolearningplatform.dto.request.exam.CreateQuizRequestDto;
+import com.cabybara.prolearningplatform.dto.request.exam.UpdateQuizRequestDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuizResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceAlreadyExistsException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.ExamMapper;
 import com.cabybara.prolearningplatform.model.Set;
+import com.cabybara.prolearningplatform.model.exam.Question;
+import com.cabybara.prolearningplatform.model.exam.QuestionOption;
 import com.cabybara.prolearningplatform.model.exam.Quiz;
 import com.cabybara.prolearningplatform.repository.QuizRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
@@ -64,5 +67,19 @@ public class QuizServiceImpl implements QuizService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cannot find quiz with id: " + quizId));
 
         return examMapper.toQuizResponseDto(quiz);
+    }
+
+    @Override
+    public QuizResponseDto updateQuiz(Long setId, Long quizId, UpdateQuizRequestDto updateQuizRequestDto) {
+        if (!quizRepository.existsBySetIdAndId(setId, quizId)) {
+            throw new ResourceNotFoundException("Cannot find quiz with id: " + quizId + " in set with id: " + setId);
+        }
+
+        Quiz quiz = quizRepository.findById(quizId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Cannot find quiz with id: " + quizId));
+
+        examMapper.updateQuizFromDto(updateQuizRequestDto, quiz);
+
+        return examMapper.toQuizResponseDto(quizRepository.save(quiz));
     }
 }

@@ -3,6 +3,7 @@ package com.cabybara.prolearningplatform.controller;
 import com.cabybara.prolearningplatform.dto.request.exam.CreateQuestionRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.CreateQuizRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.UpdateQuestionRequestDto;
+import com.cabybara.prolearningplatform.dto.request.exam.UpdateQuizRequestDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuizResponseDto;
@@ -68,6 +69,19 @@ public class ExamController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ResponseUtil.success("Create exam successfully", quizResponseDto, null));
+    }
+
+    @PutMapping("/{quizId}")
+    public ResponseEntity<ApiResponse<QuizResponseDto>> updateQuiz(
+            @PathVariable Long setId,
+            @PathVariable Long quizId,
+            @RequestBody @Valid UpdateQuizRequestDto updateQuizRequestDto
+            ) {
+        QuizResponseDto response = quizService.updateQuiz(setId, quizId, updateQuizRequestDto);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Update quiz successfully", response, null));
     }
 
     @GetMapping("/{quizId}/questions")

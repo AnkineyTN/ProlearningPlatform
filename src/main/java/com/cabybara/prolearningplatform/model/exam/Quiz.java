@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.model.exam;
 
 import com.cabybara.prolearningplatform.model.Set;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -20,6 +21,8 @@ public class Quiz {
     private String title;
 
     private String description;
+
+    private Long duration;
 
     private String privacy;
 

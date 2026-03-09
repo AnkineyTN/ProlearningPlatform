@@ -226,6 +226,7 @@ CREATE TABLE quizzes (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     privacy VARCHAR(20) DEFAULT 'PUBLIC',
+    duration BIGINT,
     created_by INTEGER NOT NULL,
     set_id INTEGER NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
