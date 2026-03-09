@@ -39,11 +39,23 @@ public class ExamController {
             @PathVariable Long setId,
             @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
             ) {
-        List<QuizResponseDto> quizResponseDtos = quizService.getQuizzes(setId, pageable);
+        List<QuizResponseDto> quizResponseDtos = quizService.getQuiz(setId, pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully", quizResponseDtos, null));
+    }
+
+    @GetMapping("/{quizId}")
+    public ResponseEntity<ApiResponse<QuizResponseDto>> getQuiz(
+            @PathVariable Long setId,
+            @PathVariable Long quizId
+    ) {
+        QuizResponseDto quizResponseDto = quizService.getQuiz(setId, quizId);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Successfully", quizResponseDto, null));
     }
 
     @PostMapping()

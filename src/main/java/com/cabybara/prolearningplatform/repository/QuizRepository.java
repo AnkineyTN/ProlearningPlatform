@@ -11,10 +11,14 @@ import java.util.Optional;
 
 public interface QuizRepository extends JpaRepository<Quiz,Long> {
 
-    Optional<Quiz> findBySetIdAndTitle(Long setId, String title);
-
     @Query("select (count(q) > 0) from Quiz q where q.title = ?1 and q.set = ?2")
     boolean existsByTitleAndSet(String title, Set set);
 
     List<Quiz> findAllBySet(Set set, Pageable pageable);
+
+    @Query(
+            value = "SELECT q FROM quizzes q WHERE q.set_id = :setId AND q.id = :quizId",
+            nativeQuery = true
+    )
+    Optional<Quiz> findBySetIdAndId(Long setId, Long quizId);
 }

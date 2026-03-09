@@ -9,5 +9,7 @@ import java.util.List;
 public interface QuizService {
     QuizResponseDto createQuiz(Long setId, CreateQuizRequestDto createQuizRequestDto);
 
-    List<QuizResponseDto> getQuizzes(Long setId, Pageable pageable);
+    List<QuizResponseDto> getQuiz(Long setId, Pageable pageable);
+
+    QuizResponseDto getQuiz(Long setId, Long quizId);
 }

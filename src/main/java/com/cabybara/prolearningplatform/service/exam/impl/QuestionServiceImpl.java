@@ -38,7 +38,7 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "quiz_questions", key = "'quiz:' + #quizId")
+    @CacheEvict(value = "quiz_questions", allEntries = true)
     public QuestionListResponseDto createQuestion(Long quizId, List<CreateQuestionRequestDto> createQuestionRequestDtos) {
         Long userId = authenticationContext.getCurrentUserId();
 
@@ -96,7 +96,7 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @Transactional
     @CachePut(value = "question", key = "#questionId")
-    @CacheEvict(value = "quiz_questions", key = "'quiz:' + #quizId")
+    @CacheEvict(value = "quiz_questions", allEntries = true)
     public QuestionResponseDto updateQuestion(Long quizId, Long questionId, UpdateQuestionRequestDto dto) {
         validateQuizQuestionRelation(quizId, questionId);
 
