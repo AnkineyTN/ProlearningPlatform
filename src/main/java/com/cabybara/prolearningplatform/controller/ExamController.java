@@ -3,6 +3,7 @@ package com.cabybara.prolearningplatform.controller;
 import com.cabybara.prolearningplatform.dto.request.exam.CreateQuestionRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.CreateQuizRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.UpdateQuestionRequestDto;
+import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuizResponseDto;
 import com.cabybara.prolearningplatform.service.exam.QuestionService;
@@ -58,11 +59,11 @@ public class ExamController {
     }
 
     @GetMapping("/{quizId}/questions")
-    public ResponseEntity<ApiResponse<List<QuestionResponseDto>>> getQuestionsByQuiz(
+    public ResponseEntity<ApiResponse<QuestionListResponseDto>> getQuestionsByQuiz(
             @PathVariable Long setId,
             @PathVariable Long quizId
     ) {
-        List<QuestionResponseDto> questions = questionService.getQuestionsByQuizId(quizId);
+        QuestionListResponseDto questions = questionService.getQuestionsByQuizId(quizId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -83,11 +84,11 @@ public class ExamController {
     }
 
     @PostMapping("/{quizId}/questions")
-    public ResponseEntity<ApiResponse<List<QuestionResponseDto>>> createQuestion(
+    public ResponseEntity<ApiResponse<QuestionListResponseDto>> createQuestion(
             @PathVariable Long quizId,
             @RequestBody @Valid List<CreateQuestionRequestDto> createQuestionRequestDtos
     ) {
-        List<QuestionResponseDto> response = questionService.createQuestion(quizId, createQuestionRequestDtos);
+        QuestionListResponseDto response = questionService.createQuestion(quizId, createQuestionRequestDtos);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
