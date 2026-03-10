@@ -22,5 +22,5 @@ public interface QuizRepository extends JpaRepository<Quiz,Long> {
     )
     Optional<Quiz> findBySetIdAndId(Long setId, Long quizId);
 
-    Boolean existsBySetIdAndId(Long setId, Long quizId);
+    boolean existsBySetIdAndId(Long setId, Long quizId);
 }
