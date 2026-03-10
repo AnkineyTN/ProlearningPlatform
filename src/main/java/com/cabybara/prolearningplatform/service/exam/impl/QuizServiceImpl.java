@@ -31,7 +31,7 @@ public class QuizServiceImpl implements QuizService {
     private final ExamMapper examMapper;
 
     @Override
-    @CacheEvict(value = "set_quízzes", key = "'set' + '#setId'")
+//    @CacheEvict(value = "set_quízzes", key = "'set' + #setId")
     public QuizResponseDto createQuiz(Long setId, CreateQuizRequestDto createQuizRequestDto) {
         Long userId = authenticationContext.getCurrentUserId();
 
@@ -50,7 +50,7 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
-    @Cacheable(value = "set_quízzes", key = "'set' + '#setId'")
+//    @Cacheable(value = "set_quízzes", key = "'set' + #setId")
     public List<QuizResponseDto> getQuiz(Long setId, Pageable pageable) {
         Set set = setRepository.findById(setId)
                 .orElseThrow(() -> new ResourceNotFoundException("set not found"));
@@ -61,7 +61,7 @@ public class QuizServiceImpl implements QuizService {
     }
 
     @Override
-    @Cacheable(value = "quiz", key = "#quizId")
+//    @Cacheable(value = "quiz", key = "#quizId")
     public QuizResponseDto getQuiz(Long setId, Long quizId) {
         Quiz quiz = quizRepository.findBySetIdAndId(setId, quizId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cannot find quiz with id: " + quizId));

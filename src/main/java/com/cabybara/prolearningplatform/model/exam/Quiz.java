@@ -1,8 +1,8 @@
 package com.cabybara.prolearningplatform.model.exam;
 
+import com.cabybara.prolearningplatform.model.AbstractEntity;
 import com.cabybara.prolearningplatform.model.Set;
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,11 +13,7 @@ import java.util.List;
 @Table(name = "quizzes")
 @Getter
 @Setter
-public class Quiz {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
+public class Quiz extends AbstractEntity {
     private String title;
 
     private String description;

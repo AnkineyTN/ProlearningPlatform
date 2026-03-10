@@ -6,14 +6,11 @@ import com.cabybara.prolearningplatform.dto.response.exam.QuizResponseDto;
 import com.cabybara.prolearningplatform.model.exam.Question;
 import com.cabybara.prolearningplatform.model.exam.QuestionOption;
 import com.cabybara.prolearningplatform.model.exam.Quiz;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ExamMapper {
     Quiz toQuiz(CreateQuizRequestDto createQuizRequestDto);
 

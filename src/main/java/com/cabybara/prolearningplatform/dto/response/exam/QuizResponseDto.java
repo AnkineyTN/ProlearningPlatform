@@ -3,6 +3,8 @@ package com.cabybara.prolearningplatform.dto.response.exam;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import lombok.Builder;
 
+import java.time.OffsetDateTime;
+
 @Builder
 public record QuizResponseDto(
         Long id,
@@ -10,5 +12,6 @@ public record QuizResponseDto(
         Privacy privacy,
         String description,
         Long duration,
-        Long createdBy
-) {}
+        Long createdBy,
+        OffsetDateTime createdAt,
+        OffsetDateTime updatedAt) {}
