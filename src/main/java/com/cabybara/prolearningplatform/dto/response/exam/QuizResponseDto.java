@@ -12,6 +12,5 @@ public record QuizResponseDto(
         Privacy privacy,
         String description,
         Long duration,
-        Long createdBy,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt) {}
