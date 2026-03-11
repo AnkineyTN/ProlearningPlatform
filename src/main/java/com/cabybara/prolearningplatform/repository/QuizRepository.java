@@ -17,7 +17,7 @@ public interface QuizRepository extends JpaRepository<Quiz,Long> {
     List<Quiz> findAllBySet(Set set, Pageable pageable);
 
     @Query(
-            value = "SELECT q FROM quizzes q WHERE q.set_id = :setId AND q.id = :quizId",
+            value = "SELECT * FROM quizzes q WHERE q.set_id = :setId AND q.id = :quizId",
             nativeQuery = true
     )
     Optional<Quiz> findBySetIdAndId(Long setId, Long quizId);
