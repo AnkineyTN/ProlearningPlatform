@@ -82,4 +82,12 @@ public class QuizServiceImpl implements QuizService {
 
         return examMapper.toQuizResponseDto(quizRepository.save(quiz));
     }
+
+    @Override
+    public void deleteQuiz(Long setId, Long quizId) {
+        Quiz quiz = quizRepository.findBySetIdAndId(setId, quizId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cannot find quiz with id: " + quizId));
+
+        quizRepository.delete(quiz);
+    }
 }

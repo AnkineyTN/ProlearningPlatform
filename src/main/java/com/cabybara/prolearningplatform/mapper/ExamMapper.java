@@ -6,6 +6,7 @@ import com.cabybara.prolearningplatform.dto.response.exam.QuizResponseDto;
 import com.cabybara.prolearningplatform.model.exam.Question;
 import com.cabybara.prolearningplatform.model.exam.QuestionOption;
 import com.cabybara.prolearningplatform.model.exam.Quiz;
+import com.cabybara.prolearningplatform.model.exam.QuizQuestion;
 import org.mapstruct.*;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.List;
 public interface ExamMapper {
     Quiz toQuiz(CreateQuizRequestDto createQuizRequestDto);
 
+    @Mapping(source = "quizQuestions", target = "numQuestions", qualifiedByName = "calNumQuestion")
     QuizResponseDto toQuizResponseDto(Quiz quiz);
 
     @Mapping(target = "id", ignore = true)
@@ -43,4 +45,9 @@ public interface ExamMapper {
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "options", ignore = true)
     void updateQuestionFromDto(UpdateQuestionRequestDto dto, @MappingTarget Question question);
+
+    @Named("calNumQuestion")
+    default Long calNumQuestion(List<QuizQuestion> quizQuestions) {
+        return (long) quizQuestions.size();
+    }
 }

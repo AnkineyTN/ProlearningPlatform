@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.exam.CreateQuestionRequestDt
 import com.cabybara.prolearningplatform.dto.request.exam.CreateQuizRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.UpdateQuestionRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.UpdateQuizRequestDto;
+import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuizResponseDto;
@@ -84,16 +85,51 @@ public class ExamController {
                 .body(ResponseUtil.success("Update quiz successfully", response, null));
     }
 
-    @GetMapping("/{quizId}/questions")
-    public ResponseEntity<ApiResponse<QuestionListResponseDto>> getQuestionsByQuiz(
+    @DeleteMapping("/{quizId}")
+    public ResponseEntity<ApiResponse<String>> deleteQuiz(
             @PathVariable Long setId,
             @PathVariable Long quizId
     ) {
-        QuestionListResponseDto questions = questionService.getQuestionsByQuizId(quizId);
+        quizService.deleteQuiz(setId, quizId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(ResponseUtil.success("Get questions successfully", questions, null));
+                .body(ResponseUtil.success("Delete quiz successfully", null, null));
+    }
+
+    @GetMapping("/{quizId}/questions")
+    public ResponseEntity<ApiResponse<QuestionListResponseDto>> getAllQuestionsByQuiz(
+            @PathVariable Long setId,
+            @PathVariable Long quizId,
+            @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
+    ) {
+        QuestionListResponseDto question = questionService.getQuestionsByQuizId(quizId);
+
+        List<QuestionResponseDto> allQuestions = question.questions();
+
+        int totalItems = allQuestions.size();
+        int pageSize = pageable.getPageSize();
+        int currentPage = pageable.getPageNumber();
+
+        int start = currentPage * pageSize;
+        int end = Math.min(start + pageSize, totalItems);
+
+        List<QuestionResponseDto> pagedQuestions =
+                start >= totalItems ? List.of() : allQuestions.subList(start, end);
+
+        QuestionListResponseDto pagedResponse = new QuestionListResponseDto(pagedQuestions);
+
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Get questions successfully", pagedResponse, PaginationResponseDto.builder()
+                        .pageSize(pageSize)
+                        .currentPage(currentPage)
+                        .totalItems(totalItems)
+                        .totalPages(totalPages)
+                        .build()
+                ));
     }
 
     @GetMapping("/{quizId}/questions/{questionId}")

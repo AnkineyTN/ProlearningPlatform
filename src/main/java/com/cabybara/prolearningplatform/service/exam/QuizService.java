@@ -16,4 +16,6 @@ public interface QuizService {
     QuizResponseDto getQuiz(Long setId, Long quizId);
 
     QuizResponseDto updateQuiz(Long setId, Long quizId, @Valid UpdateQuizRequestDto updateQuizRequestDto);
+
+    void deleteQuiz(Long setId, Long quizId);
 }
