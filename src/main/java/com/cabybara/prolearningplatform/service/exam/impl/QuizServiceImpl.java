@@ -1,7 +1,10 @@
 package com.cabybara.prolearningplatform.service.exam.impl;
 
 import com.cabybara.prolearningplatform.dto.request.exam.CreateQuizRequestDto;
+import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByFileRequestDto;
+import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.UpdateQuizRequestDto;
+import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuizResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceAlreadyExistsException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
@@ -12,15 +15,20 @@ import com.cabybara.prolearningplatform.model.exam.QuestionOption;
 import com.cabybara.prolearningplatform.model.exam.Quiz;
 import com.cabybara.prolearningplatform.repository.QuizRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
+import com.cabybara.prolearningplatform.service.ai.AIExamService;
 import com.cabybara.prolearningplatform.service.exam.QuizService;
+import com.cabybara.prolearningplatform.service.file.FileService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +37,8 @@ public class QuizServiceImpl implements QuizService {
     private final QuizRepository quizRepository;
     private final SetRepository setRepository;
     private final ExamMapper examMapper;
+    private final FileService fileService;
+    private final AIExamService aiExamService;
 
     @Override
 //    @CacheEvict(value = "set_quízzes", key = "'set' + #setId")
@@ -89,5 +99,46 @@ public class QuizServiceImpl implements QuizService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cannot find quiz with id: " + quizId));
 
         quizRepository.delete(quiz);
+    }
+
+    @Override
+    public GenerateExamByAIResponseDto generateExamByFiles(GenerateExamByFileRequestDto request) {
+        List<MultipartFile> files = request.getFiles();
+
+        StringBuilder allContent = new StringBuilder();
+
+        for (MultipartFile file : files) {
+            try {
+                String fileName = file.getOriginalFilename();
+
+                // Log file information
+                System.out.println("Processing file: " + fileName + " - Size: " + file.getSize());
+
+                // Read file
+                String content = fileService.readFile(file);
+
+                // Add separator between two files
+                allContent.append("=== Content from: ").append(fileName).append(" ===\n");
+                allContent.append(content);
+                allContent.append("\n\n");
+
+            } catch (Exception e) {
+                throw new RuntimeException("Error processing file: " + file.getOriginalFilename() + " - " + e.getMessage());
+            }
+        }
+
+        // Build request body for AI API Call
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("content", allContent.toString());
+        requestBody.put("questions", request.getQuestions());
+        requestBody.put("language", request.getLanguage());
+        requestBody.put("type", "file");
+
+        return aiExamService.generateExam(requestBody);
+    }
+
+    @Override
+    public GenerateExamByAIResponseDto generateExamByNotes(GenerateExamByNoteRequestDto request) {
+        return null;
     }
 }
