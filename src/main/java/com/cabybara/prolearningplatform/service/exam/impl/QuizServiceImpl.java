@@ -13,6 +13,8 @@ import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.exam.Question;
 import com.cabybara.prolearningplatform.model.exam.QuestionOption;
 import com.cabybara.prolearningplatform.model.exam.Quiz;
+import com.cabybara.prolearningplatform.model.note.Note;
+import com.cabybara.prolearningplatform.repository.NoteRepository;
 import com.cabybara.prolearningplatform.repository.QuizRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
 import com.cabybara.prolearningplatform.service.ai.AIExamService;
@@ -36,6 +38,7 @@ public class QuizServiceImpl implements QuizService {
     private final AuthenticationContext authenticationContext;
     private final QuizRepository quizRepository;
     private final SetRepository setRepository;
+    private final NoteRepository noteRepository;
     private final ExamMapper examMapper;
     private final FileService fileService;
     private final AIExamService aiExamService;
@@ -86,7 +89,7 @@ public class QuizServiceImpl implements QuizService {
         }
 
         Quiz quiz = quizRepository.findById(quizId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Cannot find quiz with id: " + quizId));
+                .orElseThrow(() -> new ResourceNotFoundException("Cannot find quiz with id: " + quizId));
 
         examMapper.updateQuizFromDto(updateQuizRequestDto, quiz);
 
@@ -139,6 +142,26 @@ public class QuizServiceImpl implements QuizService {
 
     @Override
     public GenerateExamByAIResponseDto generateExamByNotes(GenerateExamByNoteRequestDto request) {
-        return null;
+        List<Long> noteIds = request.getNoteIds();
+
+        List<Note> notes = noteRepository.findAllById(noteIds);
+
+        if (notes.isEmpty()) {
+            throw new RuntimeException("No notes found with provided IDs");
+        }
+
+        StringBuilder allContent = new StringBuilder();
+        for (Note note : notes) {
+            allContent.append("=== Note: ").append(note.getTitle()).append(" ===\n");
+            allContent.append(note.getContent()).append("\n\n");
+        }
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("content", allContent.toString());
+        requestBody.put("questions", request.getQuestions());
+        requestBody.put("language", request.getLanguage());
+        requestBody.put("type", "note");
+
+        return aiExamService.generateExam(requestBody);
     }
 }
