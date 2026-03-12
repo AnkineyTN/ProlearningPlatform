@@ -28,7 +28,7 @@ public class AIFlashcardServiceImpl implements AIFlashcardService {
 
 
     @Override
-    public GenerateFlashcardByAIResponseDto generateFlashcard(String content, String type) {
+    public GenerateFlashcardByAIResponseDto  generateFlashcard(String content, String type) {
         try {
             // Create RestTemplate
             RestTemplate restTemplate = new RestTemplate();

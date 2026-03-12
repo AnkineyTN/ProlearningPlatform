@@ -1,17 +1,22 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.request.exam.CreateQuestionRequestDto;
-import com.cabybara.prolearningplatform.dto.request.exam.CreateQuizRequestDto;
-import com.cabybara.prolearningplatform.dto.request.exam.UpdateQuestionRequestDto;
-import com.cabybara.prolearningplatform.dto.request.exam.UpdateQuizRequestDto;
+import com.cabybara.prolearningplatform.dto.request.exam.*;
+import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
+import com.cabybara.prolearningplatform.dto.response.ResponseData;
+import com.cabybara.prolearningplatform.dto.response.ResponseError;
+import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuizResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.service.exam.QuestionService;
 import com.cabybara.prolearningplatform.service.exam.QuizService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,11 +25,16 @@ import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
+
+import static jakarta.servlet.RequestDispatcher.ERROR_MESSAGE;
 
 @RestController
 @RequestMapping("/set/{setId}/exams")
@@ -40,7 +50,7 @@ public class ExamController {
     public ResponseEntity<ApiResponse<List<QuizResponseDto>>> getAllQuizzes(
             @PathVariable Long setId,
             @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
-            ) {
+    ) {
         List<QuizResponseDto> quizResponseDtos = quizService.getQuiz(setId, pageable);
 
         return ResponseEntity
@@ -77,7 +87,7 @@ public class ExamController {
             @PathVariable Long setId,
             @PathVariable Long quizId,
             @RequestBody @Valid UpdateQuizRequestDto updateQuizRequestDto
-            ) {
+    ) {
         QuizResponseDto response = quizService.updateQuiz(setId, quizId, updateQuizRequestDto);
 
         return ResponseEntity
@@ -182,5 +192,32 @@ public class ExamController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Delete question successfully", null, null));
+    }
+
+    // API AI
+    @Operation(method = "POST", summary = "Generate exam by files with AI", description = "Generate exam by file with AI")
+    @PostMapping(value = "/ai-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseData<GenerateExamByAIResponseDto> generateExamByFile(
+            @RequestPart("files") List<MultipartFile> files,
+            @RequestPart("questions") String questions,
+            @RequestPart("language") String language) {
+        log.info("Generate exam by files with AI");
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Integer> questionsMap = mapper.readValue(questions, new TypeReference<>() {
+            });
+
+            GenerateExamByFileRequestDto request = GenerateExamByFileRequestDto.builder()
+                    .files(files)
+                    .questions(questionsMap)
+                    .language(language)
+                    .build();
+
+            GenerateExamByAIResponseDto response = quizService.generateExamByFiles(request);
+            return new ResponseData<>(HttpStatus.OK.value(), "Generate exam by files with AI successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate exam by files with AI fail");
+        }
     }
 }
