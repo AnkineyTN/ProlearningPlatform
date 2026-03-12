@@ -220,4 +220,17 @@ public class ExamController {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate exam by files with AI fail");
         }
     }
+
+    @Operation(method = "POST", summary = "Generate exam by note with AI", description = "Generate exam by note with AI")
+    @PostMapping(value = "/ai-note")
+    public ResponseData<GenerateExamByAIResponseDto> generateExamByNote(@RequestBody GenerateExamByNoteRequestDto request) {
+        log.info("Generate exam by note with AI");
+        try {
+            GenerateExamByAIResponseDto response = quizService.generateExamByNotes(request);
+            return new ResponseData<>(HttpStatus.OK.value(), "Generate exam by note with AI successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate exam by note with AI fail");
+        }
+    }
 }
