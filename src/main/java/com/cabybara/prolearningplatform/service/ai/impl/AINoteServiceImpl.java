@@ -6,44 +6,50 @@ import com.cabybara.prolearningplatform.dto.request.note.SummarizeFileRequestDTO
 import com.cabybara.prolearningplatform.dto.response.note.ExplainNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.SummarizeFileResponseDTO;
 import com.cabybara.prolearningplatform.service.ai.AINoteService;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.cabybara.prolearningplatform.utils.RestHttpClientUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.http.*;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class AINoteServiceImpl implements AINoteService {
-    private static final String CONVERT_FILE_TO_VECTOR = "https://prolearning-aiservice.onrender.com/files-loader/all";
-    private static final String EXPLAIN_NOTE = "https://prolearning-aiservice.onrender.com/note/explain";
-    private static final String SUMMARY_FILE = "https://prolearning-aiservice.onrender.com/note/summarize";
+    // =============================================
+    // ==== PREPARATION
+    // =============================================
+    @Value("${aiservice.api}")
+    private String aiServiceBaseApi;
 
+    private static final String CONVERT_FILE_TO_VECTOR_PATH = "/files/process";
+    private static final String EXPLAIN_NOTE_PATH           = "/notes/explain";
+    private static final String SUMMARY_FILE_PATH           = "/notes/summarize";
+
+    private final RestHttpClientUtil restHttpClientUtil;
+    private final ObjectMapper objectMapper;
+
+    // =============================================
+    // ==== UTILS
+    // =============================================
+    private String parseData(String json) {
+        try {
+            return objectMapper.readTree(json).path("data").asText("");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse AI service response", e);
+        }
+    }
+
+    // =============================================
+    // ==== METHODS
+    // =============================================
     @Override
     public void convertFileToVector(ConvertFileToVectorRequestDTO request) {
         try {
-            // Create RestTemplate
-            RestTemplate restTemplate = new RestTemplate();
-
-            // Put headers
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            // Create request body
-            HttpEntity<ConvertFileToVectorRequestDTO> entity = new HttpEntity<>(request, headers);
-
-            // Call API
-            ResponseEntity<String> response = restTemplate.exchange(
-                    CONVERT_FILE_TO_VECTOR,
-                    HttpMethod.POST,
-                    entity,
-                    String.class
-            );
-            log.info("🐳 Response from AI Service: {}", response.getBody());
-
+            restHttpClientUtil.post(aiServiceBaseApi + CONVERT_FILE_TO_VECTOR_PATH, request, String.class);
         } catch (Exception e) {
-            log.error("😡 Error converting file to vector db: {}", e.getMessage(), e);
+            log.error("❌ Error converting file to vector db: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to convert file to vector db", e);
         }
     }
@@ -51,39 +57,13 @@ public class AINoteServiceImpl implements AINoteService {
     @Override
     public ExplainNoteResponseDTO explainNote(ExplainNoteRequestDTO request) {
         try {
-            // Create RestTemplate
-            RestTemplate restTemplate = new RestTemplate();
-
-            // Put headers
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            // Create request body
-            HttpEntity<ExplainNoteRequestDTO> entity = new HttpEntity<>(request, headers);
-
-            // Call API
-            ResponseEntity<String> response = restTemplate.exchange(
-                    EXPLAIN_NOTE,
-                    HttpMethod.POST,
-                    entity,
-                    String.class
-            );
-            log.info("🐳 Response from AI Service: {}", response.getBody());
-
-            // Parse JSON response
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(response.getBody());
-
-            boolean success = root.path("success").asBoolean(false);
-            String message = root.path("message").asText("");
-            String data = root.path("data").asText("");
-
+            String raw = restHttpClientUtil.post(aiServiceBaseApi + EXPLAIN_NOTE_PATH, request, String.class);
             return ExplainNoteResponseDTO.builder()
                     .queryText(request.getQueryText())
-                    .answer(data)
+                    .answer(parseData(raw))
                     .build();
         } catch (Exception e) {
-            log.error("😡 Error explaining note with AI: {}", e.getMessage(), e);
+            log.error("❌ Error explaining note with AI: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to explain note with AI", e);
         }
     }
@@ -91,39 +71,13 @@ public class AINoteServiceImpl implements AINoteService {
     @Override
     public SummarizeFileResponseDTO summarizeFile(SummarizeFileRequestDTO request) {
         try {
-            // Create RestTemplate
-            RestTemplate restTemplate = new RestTemplate();
-
-            // Put headers
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            // Create request body
-            HttpEntity<SummarizeFileRequestDTO> entity = new HttpEntity<>(request, headers);
-
-            // Call API
-            ResponseEntity<String> response = restTemplate.exchange(
-                    SUMMARY_FILE,
-                    HttpMethod.POST,
-                    entity,
-                    String.class
-            );
-            log.info("🐳 Response from AI Service: {}", response.getBody());
-
-            // Parse JSON response
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(response.getBody());
-
-            boolean success = root.path("success").asBoolean(false);
-            String message = root.path("message").asText("");
-            String data = root.path("data").asText("");
-
+            String raw = restHttpClientUtil.post(aiServiceBaseApi + SUMMARY_FILE_PATH, request, String.class);
             return SummarizeFileResponseDTO.builder()
-                    .summary(data)
+                    .summary(parseData(raw))
                     .build();
         } catch (Exception e) {
-            log.error("😡 Error explaining note with AI: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to explain note with AI", e);
+            log.error("❌ Error explaining note with AI: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to summarize file with AI", e);
         }
     }
 }

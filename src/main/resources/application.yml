@@ -1,3 +1,6 @@
+aiservice:
+  api: ${AI_SERVICE_BASE_API:https://prolearning-ai-service-dev.onrender.com/api/v1}
+
 firebase:
   googleCredentials: ${FIREBASE_CONFIG_PATH:prolearningplatform-bc37d-firebase-adminsdk-fbsvc-5dfd0cf044.json}
 
@@ -113,3 +116,5 @@ spring:
 logging:
   level:
     root: INFO
+
+
