@@ -1,28 +1,28 @@
 package com.cabybara.prolearningplatform.mapper;
 
 import com.cabybara.prolearningplatform.dto.request.exam.*;
+import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
-import com.cabybara.prolearningplatform.dto.response.exam.QuizResponseDto;
+import com.cabybara.prolearningplatform.model.exam.ExamQuestion;
 import com.cabybara.prolearningplatform.model.exam.Question;
 import com.cabybara.prolearningplatform.model.exam.QuestionOption;
-import com.cabybara.prolearningplatform.model.exam.Quiz;
-import com.cabybara.prolearningplatform.model.exam.QuizQuestion;
+import com.cabybara.prolearningplatform.model.exam.Exam;
 import org.mapstruct.*;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface ExamMapper {
-    Quiz toQuiz(CreateQuizRequestDto createQuizRequestDto);
+    Exam toExam(CreateExamRequestDto createExamRequestDto);
 
-    @Mapping(source = "quizQuestions", target = "numQuestions", qualifiedByName = "calNumQuestion")
-    QuizResponseDto toQuizResponseDto(Quiz quiz);
+    @Mapping(source = "examQuestions", target = "numQuestions", qualifiedByName = "calNumQuestion")
+    ExamResponseDto toExamResponseDto(Exam exam);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "set", ignore = true)
-    @Mapping(target = "quizQuestions", ignore = true)
-    void updateQuizFromDto(UpdateQuizRequestDto updateQuizRequestDto, @MappingTarget Quiz quiz);
+    @Mapping(target = "examQuestions", ignore = true)
+    void updateExamFromDto(UpdateExamRequestDto updateExamRequestDto, @MappingTarget Exam exam);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "options", ignore = true)
@@ -47,7 +47,7 @@ public interface ExamMapper {
     void updateQuestionFromDto(UpdateQuestionRequestDto dto, @MappingTarget Question question);
 
     @Named("calNumQuestion")
-    default Long calNumQuestion(List<QuizQuestion> quizQuestions) {
-        return (long) quizQuestions.size();
+    default Long calNumQuestion(List<ExamQuestion> examQuestions) {
+        return (long) examQuestions.size();
     }
 }

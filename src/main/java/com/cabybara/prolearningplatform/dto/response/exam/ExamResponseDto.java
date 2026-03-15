@@ -6,7 +6,7 @@ import lombok.Builder;
 import java.time.OffsetDateTime;
 
 @Builder
-public record QuizResponseDto(
+public record ExamResponseDto(
         Long id,
         String title,
         Privacy privacy,
