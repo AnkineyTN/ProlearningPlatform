@@ -11,5 +11,6 @@ public record QuestionResponseDto (
     Long id,
     String content,
     QuestionType type,
+    Integer points,
     List<QuestionOptionDto> options
 ) {}

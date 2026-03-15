@@ -31,6 +31,9 @@ public interface ExamMapper {
 
     QuestionResponseDto toQuestionResponseDto(Question question);
 
+    @Mapping(target = ".", source = "question")
+    QuestionResponseDto toQuestionResponseDto(ExamQuestion examQuestion);
+
     QuestionOptionDto toQuestionOptionDto(QuestionOption questionOption);
 
     List<QuestionOptionDto> toQuestionOptionDtoList(List<QuestionOption> options);

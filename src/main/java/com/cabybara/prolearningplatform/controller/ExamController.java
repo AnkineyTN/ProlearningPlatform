@@ -51,9 +51,27 @@ public class ExamController {
     ) {
         List<ExamResponseDto> examResponseDtos = examService.getExam(setId, pageable);
 
+        int totalItems = examResponseDtos.size();
+        int pageSize = pageable.getPageSize();
+        int currentPage = pageable.getPageNumber();
+
+        int start = currentPage * pageSize;
+        int end = Math.min(start + pageSize, totalItems);
+
+        List<ExamResponseDto> pagedExams =
+                start >= totalItems ? List.of() : examResponseDtos.subList(start, end);
+
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(ResponseUtil.success("Successfully", examResponseDtos, null));
+                .body(ResponseUtil.success("Successfully", pagedExams, PaginationResponseDto.builder()
+                        .pageSize(pageSize)
+                        .currentPage(currentPage)
+                        .totalItems(totalItems)
+                        .totalPages(totalPages)
+                        .build()
+                ));
     }
 
     @GetMapping("/{examId}")

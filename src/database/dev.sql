@@ -249,8 +249,6 @@ CREATE TABLE questions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_questions_type ON questions(type);
-
 CREATE TABLE question_options (
     id BIGSERIAL PRIMARY KEY,
     question_id BIGINT NOT NULL,

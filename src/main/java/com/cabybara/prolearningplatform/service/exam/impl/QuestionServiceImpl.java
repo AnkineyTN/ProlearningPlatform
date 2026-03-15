@@ -61,7 +61,7 @@ public class QuestionServiceImpl implements QuestionService {
         questionRepository.saveAll(questions);
         examQuestionRepository.saveAll(examQuestions);
 
-        return buildResponseDto(questions);
+        return buildResponseDto(examQuestions);
     }
 
     @Override
@@ -71,11 +71,12 @@ public class QuestionServiceImpl implements QuestionService {
             throw new ResourceNotFoundException("Exam not found");
         }
 
-        List<Question> questions = questionRepository.findAllByExamId(examId);
+        List<ExamQuestion> examQuestions = examQuestionRepository.findAllByExamId(examId);
 
-        List<QuestionResponseDto> questionResponseDtos = questions.stream()
+        List<QuestionResponseDto> questionResponseDtos = examQuestions.stream()
                 .map(examMapper::toQuestionResponseDto)
                 .toList();
+
 
         return QuestionListResponseDto.builder()
                 .questions(questionResponseDtos)
@@ -85,12 +86,14 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @Cacheable(value = "question", key = "#questionId")
     public QuestionResponseDto getQuestionById(Long examId, Long questionId) {
-        validateExamQuestionRelation(examId, questionId);
+        if (!examRepository.existsById(examId)) {
+            throw new ResourceNotFoundException("Exam not found");
+        }
 
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Question not found"));
+        ExamQuestion examQuestion = examQuestionRepository.findByExamIdAndQuestionId(examId, questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found in this exam"));
 
-        return examMapper.toQuestionResponseDto(question);
+        return examMapper.toQuestionResponseDto(examQuestion);
     }
 
     @Override
@@ -157,8 +160,8 @@ public class QuestionServiceImpl implements QuestionService {
         return examQuestion;
     }
 
-    private QuestionListResponseDto buildResponseDto(List<Question> questions) {
-        List<QuestionResponseDto> questionResponseDtos = questions.stream()
+    private QuestionListResponseDto buildResponseDto(List<ExamQuestion> examQuestions) {
+        List<QuestionResponseDto> questionResponseDtos = examQuestions.stream()
                 .map(examMapper::toQuestionResponseDto)
                 .toList();
 
