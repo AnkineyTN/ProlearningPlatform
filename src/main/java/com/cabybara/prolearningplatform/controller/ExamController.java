@@ -1,17 +1,15 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.exam.*;
-import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.ResponseData;
 import com.cabybara.prolearningplatform.dto.response.ResponseError;
+import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
-import com.cabybara.prolearningplatform.dto.response.exam.QuizResponseDto;
-import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.service.exam.QuestionService;
-import com.cabybara.prolearningplatform.service.exam.QuizService;
+import com.cabybara.prolearningplatform.service.exam.ExamService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -43,77 +41,77 @@ import static jakarta.servlet.RequestDispatcher.ERROR_MESSAGE;
 @Validated
 @Slf4j
 public class ExamController {
-    private final QuizService quizService;
+    private final ExamService examService;
     private final QuestionService questionService;
 
     @GetMapping()
-    public ResponseEntity<ApiResponse<List<QuizResponseDto>>> getAllQuizzes(
+    public ResponseEntity<ApiResponse<List<ExamResponseDto>>> getAllExams(
             @PathVariable Long setId,
             @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
     ) {
-        List<QuizResponseDto> quizResponseDtos = quizService.getQuiz(setId, pageable);
+        List<ExamResponseDto> examResponseDtos = examService.getExam(setId, pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(ResponseUtil.success("Successfully", quizResponseDtos, null));
+                .body(ResponseUtil.success("Successfully", examResponseDtos, null));
     }
 
-    @GetMapping("/{quizId}")
-    public ResponseEntity<ApiResponse<QuizResponseDto>> getQuiz(
+    @GetMapping("/{examId}")
+    public ResponseEntity<ApiResponse<ExamResponseDto>> getExam(
             @PathVariable Long setId,
-            @PathVariable Long quizId
+            @PathVariable Long examId
     ) {
-        QuizResponseDto quizResponseDto = quizService.getQuiz(setId, quizId);
+        ExamResponseDto examResponseDto = examService.getExam(setId, examId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(ResponseUtil.success("Successfully", quizResponseDto, null));
+                .body(ResponseUtil.success("Successfully", examResponseDto, null));
     }
 
     @PostMapping()
-    public ResponseEntity<ApiResponse<QuizResponseDto>> createQuiz(
-            @RequestBody @Valid CreateQuizRequestDto createQuizRequestDto,
+    public ResponseEntity<ApiResponse<ExamResponseDto>> createExam(
+            @RequestBody @Valid CreateExamRequestDto createExamRequestDto,
             @PathVariable Long setId
     ) {
-        QuizResponseDto quizResponseDto = quizService.createQuiz(setId, createQuizRequestDto);
+        ExamResponseDto examResponseDto = examService.createExam(setId, createExamRequestDto);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(ResponseUtil.success("Create exam successfully", quizResponseDto, null));
+                .body(ResponseUtil.success("Create exam successfully", examResponseDto, null));
     }
 
-    @PutMapping("/{quizId}")
-    public ResponseEntity<ApiResponse<QuizResponseDto>> updateQuiz(
+    @PutMapping("/{examId}")
+    public ResponseEntity<ApiResponse<ExamResponseDto>> updateExam(
             @PathVariable Long setId,
-            @PathVariable Long quizId,
-            @RequestBody @Valid UpdateQuizRequestDto updateQuizRequestDto
+            @PathVariable Long examId,
+            @RequestBody @Valid UpdateExamRequestDto updateExamRequestDto
     ) {
-        QuizResponseDto response = quizService.updateQuiz(setId, quizId, updateQuizRequestDto);
+        ExamResponseDto response = examService.updateExam(setId, examId, updateExamRequestDto);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(ResponseUtil.success("Update quiz successfully", response, null));
+                .body(ResponseUtil.success("Update exam successfully", response, null));
     }
 
-    @DeleteMapping("/{quizId}")
-    public ResponseEntity<ApiResponse<String>> deleteQuiz(
+    @DeleteMapping("/{examId}")
+    public ResponseEntity<ApiResponse<String>> deleteExam(
             @PathVariable Long setId,
-            @PathVariable Long quizId
+            @PathVariable Long examId
     ) {
-        quizService.deleteQuiz(setId, quizId);
+        examService.deleteExam(setId, examId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(ResponseUtil.success("Delete quiz successfully", null, null));
+                .body(ResponseUtil.success("Delete exam successfully", null, null));
     }
 
-    @GetMapping("/{quizId}/questions")
-    public ResponseEntity<ApiResponse<QuestionListResponseDto>> getAllQuestionsByQuiz(
+    @GetMapping("/{examId}/questions")
+    public ResponseEntity<ApiResponse<QuestionListResponseDto>> getAllQuestionsByExam(
             @PathVariable Long setId,
-            @PathVariable Long quizId,
+            @PathVariable Long examId,
             @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
     ) {
-        QuestionListResponseDto question = questionService.getQuestionsByQuizId(quizId);
+        QuestionListResponseDto question = questionService.getQuestionsByExamId(examId);
 
         List<QuestionResponseDto> allQuestions = question.questions();
 
@@ -142,52 +140,52 @@ public class ExamController {
                 ));
     }
 
-    @GetMapping("/{quizId}/questions/{questionId}")
+    @GetMapping("/{examId}/questions/{questionId}")
     public ResponseEntity<ApiResponse<QuestionResponseDto>> getQuestionById(
             @PathVariable Long setId,
-            @PathVariable Long quizId,
+            @PathVariable Long examId,
             @PathVariable Long questionId
     ) {
-        QuestionResponseDto question = questionService.getQuestionById(quizId, questionId);
+        QuestionResponseDto question = questionService.getQuestionById(examId, questionId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Get question successfully", question, null));
     }
 
-    @PostMapping("/{quizId}/questions")
+    @PostMapping("/{examId}/questions")
     public ResponseEntity<ApiResponse<QuestionListResponseDto>> createQuestion(
-            @PathVariable Long quizId,
+            @PathVariable Long examId,
             @RequestBody @Valid List<CreateQuestionRequestDto> createQuestionRequestDtos
     ) {
-        QuestionListResponseDto response = questionService.createQuestion(quizId, createQuestionRequestDtos);
+        QuestionListResponseDto response = questionService.createQuestion(examId, createQuestionRequestDtos);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ResponseUtil.success("Create question successfully", response, null));
     }
 
-    @PutMapping("/{quizId}/questions/{questionId}")
+    @PutMapping("/{examId}/questions/{questionId}")
     public ResponseEntity<ApiResponse<QuestionResponseDto>> updateQuestion(
             @PathVariable Long setId,
-            @PathVariable Long quizId,
+            @PathVariable Long examId,
             @PathVariable Long questionId,
             @RequestBody @Valid UpdateQuestionRequestDto request
     ) {
-        QuestionResponseDto response = questionService.updateQuestion(quizId, questionId, request);
+        QuestionResponseDto response = questionService.updateQuestion(examId, questionId, request);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Update question successfully", response, null));
     }
 
-    @DeleteMapping("/{quizId}/questions/{questionId}")
+    @DeleteMapping("/{examId}/questions/{questionId}")
     public ResponseEntity<ApiResponse<Void>> deleteQuestion(
             @PathVariable Long setId,
-            @PathVariable Long quizId,
+            @PathVariable Long examId,
             @PathVariable Long questionId
     ) {
-        questionService.deleteQuestion(quizId, questionId);
+        questionService.deleteQuestion(examId, questionId);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -213,7 +211,7 @@ public class ExamController {
                     .language(language)
                     .build();
 
-            GenerateExamByAIResponseDto response = quizService.generateExamByFiles(request);
+            GenerateExamByAIResponseDto response = examService.generateExamByFiles(request);
             return new ResponseData<>(HttpStatus.OK.value(), "Generate exam by files with AI successfully", response);
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e);
@@ -226,7 +224,7 @@ public class ExamController {
     public ResponseData<GenerateExamByAIResponseDto> generateExamByNote(@RequestBody GenerateExamByNoteRequestDto request) {
         log.info("Generate exam by note with AI");
         try {
-            GenerateExamByAIResponseDto response = quizService.generateExamByNotes(request);
+            GenerateExamByAIResponseDto response = examService.generateExamByNotes(request);
             return new ResponseData<>(HttpStatus.OK.value(), "Generate exam by note with AI successfully", response);
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e);

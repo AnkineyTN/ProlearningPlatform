@@ -6,13 +6,13 @@ import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDt
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.ExamMapper;
+import com.cabybara.prolearningplatform.model.exam.Exam;
+import com.cabybara.prolearningplatform.model.exam.ExamQuestion;
 import com.cabybara.prolearningplatform.model.exam.Question;
 import com.cabybara.prolearningplatform.model.exam.QuestionOption;
-import com.cabybara.prolearningplatform.model.exam.Quiz;
-import com.cabybara.prolearningplatform.model.exam.QuizQuestion;
 import com.cabybara.prolearningplatform.repository.QuestionRepository;
-import com.cabybara.prolearningplatform.repository.QuizQuestionRepository;
-import com.cabybara.prolearningplatform.repository.QuizRepository;
+import com.cabybara.prolearningplatform.repository.ExamQuestionRepository;
+import com.cabybara.prolearningplatform.repository.ExamRepository;
 import com.cabybara.prolearningplatform.service.exam.QuestionService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import jakarta.transaction.Transactional;
@@ -30,48 +30,48 @@ import java.util.concurrent.atomic.AtomicReference;
 @RequiredArgsConstructor
 public class QuestionServiceImpl implements QuestionService {
 
-    private final QuizRepository quizRepository;
+    private final ExamRepository examRepository;
     private final QuestionRepository questionRepository;
-    private final QuizQuestionRepository quizQuestionRepository;
+    private final ExamQuestionRepository examQuestionRepository;
     private final ExamMapper examMapper;
     private final AuthenticationContext authenticationContext;
 
     @Override
     @Transactional
-    @CacheEvict(value = "quiz_questions", allEntries = true)
-    public QuestionListResponseDto createQuestion(Long quizId, List<CreateQuestionRequestDto> createQuestionRequestDtos) {
+    @CacheEvict(value = "exam_questions", allEntries = true)
+    public QuestionListResponseDto createQuestion(Long examId, List<CreateQuestionRequestDto> createQuestionRequestDtos) {
         Long userId = authenticationContext.getCurrentUserId();
 
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new ResourceNotFoundException("Quiz not found"));
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
 
-        AtomicReference<Integer> currentOrderIndex = new AtomicReference<>(quizQuestionRepository.countByQuizId(quizId));
+        AtomicReference<Integer> currentOrderIndex = new AtomicReference<>(examQuestionRepository.countByExamId(examId));
 
         List<Question> questions = new ArrayList<>();
-        List<QuizQuestion> quizQuestions = new ArrayList<>();
+        List<ExamQuestion> examQuestions = new ArrayList<>();
 
         createQuestionRequestDtos.forEach(dto -> {
             Question question = createQuestionFromDto(dto, userId);
             questions.add(question);
 
-            QuizQuestion quizQuestion = createQuizQuestion(quiz, question, currentOrderIndex.getAndSet(currentOrderIndex.get() + 1), dto);
-            quizQuestions.add(quizQuestion);
+            ExamQuestion examQuestion = createExamQuestion(exam, question, currentOrderIndex.getAndSet(currentOrderIndex.get() + 1), dto);
+            examQuestions.add(examQuestion);
         });
 
         questionRepository.saveAll(questions);
-        quizQuestionRepository.saveAll(quizQuestions);
+        examQuestionRepository.saveAll(examQuestions);
 
         return buildResponseDto(questions);
     }
 
     @Override
-    @Cacheable(value = "quiz_questions", key = "'quiz:' + #quizId")
-    public QuestionListResponseDto getQuestionsByQuizId(Long quizId) {
-        if (!quizRepository.existsById(quizId)) {
-            throw new ResourceNotFoundException("Quiz not found");
+    @Cacheable(value = "exam_questions", key = "'exam:' + #examId")
+    public QuestionListResponseDto getQuestionsByExamId(Long examId) {
+        if (!examRepository.existsById(examId)) {
+            throw new ResourceNotFoundException("Exam not found");
         }
 
-        List<Question> questions = questionRepository.findAllByQuizId(quizId);
+        List<Question> questions = questionRepository.findAllByExamId(examId);
 
         List<QuestionResponseDto> questionResponseDtos = questions.stream()
                 .map(examMapper::toQuestionResponseDto)
@@ -84,8 +84,8 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Cacheable(value = "question", key = "#questionId")
-    public QuestionResponseDto getQuestionById(Long quizId, Long questionId) {
-        validateQuizQuestionRelation(quizId, questionId);
+    public QuestionResponseDto getQuestionById(Long examId, Long questionId) {
+        validateExamQuestionRelation(examId, questionId);
 
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Question not found"));
@@ -96,9 +96,9 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @Transactional
     @CachePut(value = "question", key = "#questionId")
-    @CacheEvict(value = "quiz_questions", allEntries = true)
-    public QuestionResponseDto updateQuestion(Long quizId, Long questionId, UpdateQuestionRequestDto dto) {
-        validateQuizQuestionRelation(quizId, questionId);
+    @CacheEvict(value = "exam_questions", allEntries = true)
+    public QuestionResponseDto updateQuestion(Long examId, Long questionId, UpdateQuestionRequestDto dto) {
+        validateExamQuestionRelation(examId, questionId);
 
         Question question = questionRepository.findById(questionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Question not found"));
@@ -118,21 +118,21 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"question", "quiz_questions"}, allEntries = true, beforeInvocation = true)
-    public void deleteQuestion(Long quizId, Long questionId) {
-        validateQuizQuestionRelation(quizId, questionId);
+    @CacheEvict(value = {"question", "exam_questions"}, allEntries = true, beforeInvocation = true)
+    public void deleteQuestion(Long examId, Long questionId) {
+        validateExamQuestionRelation(examId, questionId);
 
-        quizQuestionRepository.deleteByQuizIdAndQuestionId(quizId, questionId);
+        examQuestionRepository.deleteByExamIdAndQuestionId(examId, questionId);
         questionRepository.deleteById(questionId);
     }
 
-    private void validateQuizQuestionRelation(Long quizId, Long questionId) {
-        if (!quizRepository.existsById(quizId)) {
-            throw new ResourceNotFoundException("Quiz not found");
+    private void validateExamQuestionRelation(Long examId, Long questionId) {
+        if (!examRepository.existsById(examId)) {
+            throw new ResourceNotFoundException("Exam not found");
         }
 
-        quizQuestionRepository.findByQuizIdAndQuestionId(quizId, questionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Question not found in this quiz"));
+        examQuestionRepository.findByExamIdAndQuestionId(examId, questionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Question not found in this exam"));
     }
 
     private Question createQuestionFromDto(CreateQuestionRequestDto dto, Long userId) {
@@ -148,13 +148,13 @@ public class QuestionServiceImpl implements QuestionService {
         return question;
     }
 
-    private QuizQuestion createQuizQuestion(Quiz quiz, Question question, int orderIndex, CreateQuestionRequestDto dto) {
-        QuizQuestion quizQuestion = new QuizQuestion();
-        quizQuestion.setQuiz(quiz);
-        quizQuestion.setQuestion(question);
-        quizQuestion.setOrderIndex(orderIndex);
-        quizQuestion.setPoints(dto.point());
-        return quizQuestion;
+    private ExamQuestion createExamQuestion(Exam exam, Question question, int orderIndex, CreateQuestionRequestDto dto) {
+        ExamQuestion examQuestion = new ExamQuestion();
+        examQuestion.setExam(exam);
+        examQuestion.setQuestion(question);
+        examQuestion.setOrderIndex(orderIndex);
+        examQuestion.setPoints(dto.point());
+        return examQuestion;
     }
 
     private QuestionListResponseDto buildResponseDto(List<Question> questions) {

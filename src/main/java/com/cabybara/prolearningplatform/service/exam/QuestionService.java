@@ -8,13 +8,13 @@ import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
 import java.util.List;
 
 public interface QuestionService {
-    QuestionListResponseDto createQuestion(Long quizId, List<CreateQuestionRequestDto> dto);
+    QuestionListResponseDto createQuestion(Long examId, List<CreateQuestionRequestDto> dto);
 
-    QuestionListResponseDto getQuestionsByQuizId(Long quizId);
+    QuestionListResponseDto getQuestionsByExamId(Long examId);
 
-    QuestionResponseDto getQuestionById(Long quizId, Long questionId);
+    QuestionResponseDto getQuestionById(Long examId, Long questionId);
 
-    QuestionResponseDto updateQuestion(Long quizId, Long questionId, UpdateQuestionRequestDto dto);
+    QuestionResponseDto updateQuestion(Long examId, Long questionId, UpdateQuestionRequestDto dto);
 
-    void deleteQuestion(Long quizId, Long questionId);
+    void deleteQuestion(Long examId, Long questionId);
 }

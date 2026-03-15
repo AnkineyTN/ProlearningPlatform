@@ -1,0 +1,28 @@
+package com.cabybara.prolearningplatform.service.exam;
+
+import com.cabybara.prolearningplatform.dto.request.exam.CreateExamRequestDto;
+import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByFileRequestDto;
+import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByNoteRequestDto;
+import com.cabybara.prolearningplatform.dto.request.exam.UpdateExamRequestDto;
+import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
+import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+
+public interface ExamService {
+    ExamResponseDto createExam(Long setId, CreateExamRequestDto createExamRequestDto);
+
+    List<ExamResponseDto> getExam(Long setId, Pageable pageable);
+
+    ExamResponseDto getExam(Long setId, Long ExamId);
+
+    ExamResponseDto updateExam(Long setId, Long ExamId, @Valid UpdateExamRequestDto updateExamRequestDto);
+
+    void deleteExam(Long setId, Long ExamId);
+
+    GenerateExamByAIResponseDto generateExamByFiles(GenerateExamByFileRequestDto request);
+
+    GenerateExamByAIResponseDto generateExamByNotes(GenerateExamByNoteRequestDto request);
+}

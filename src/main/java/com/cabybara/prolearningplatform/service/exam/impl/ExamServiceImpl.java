@@ -1,29 +1,25 @@
 package com.cabybara.prolearningplatform.service.exam.impl;
 
-import com.cabybara.prolearningplatform.dto.request.exam.CreateQuizRequestDto;
+import com.cabybara.prolearningplatform.dto.request.exam.CreateExamRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByFileRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByNoteRequestDto;
-import com.cabybara.prolearningplatform.dto.request.exam.UpdateQuizRequestDto;
+import com.cabybara.prolearningplatform.dto.request.exam.UpdateExamRequestDto;
+import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
-import com.cabybara.prolearningplatform.dto.response.exam.QuizResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceAlreadyExistsException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.ExamMapper;
 import com.cabybara.prolearningplatform.model.Set;
-import com.cabybara.prolearningplatform.model.exam.Question;
-import com.cabybara.prolearningplatform.model.exam.QuestionOption;
-import com.cabybara.prolearningplatform.model.exam.Quiz;
+import com.cabybara.prolearningplatform.model.exam.Exam;
 import com.cabybara.prolearningplatform.model.note.Note;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
-import com.cabybara.prolearningplatform.repository.QuizRepository;
+import com.cabybara.prolearningplatform.repository.ExamRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
 import com.cabybara.prolearningplatform.service.ai.AIExamService;
-import com.cabybara.prolearningplatform.service.exam.QuizService;
+import com.cabybara.prolearningplatform.service.exam.ExamService;
 import com.cabybara.prolearningplatform.service.file.FileService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,9 +30,9 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class QuizServiceImpl implements QuizService {
+public class ExamServiceImpl implements ExamService {
     private final AuthenticationContext authenticationContext;
-    private final QuizRepository quizRepository;
+    private final ExamRepository examRepository;
     private final SetRepository setRepository;
     private final NoteRepository noteRepository;
     private final ExamMapper examMapper;
@@ -44,64 +40,64 @@ public class QuizServiceImpl implements QuizService {
     private final AIExamService aiExamService;
 
     @Override
-//    @CacheEvict(value = "set_quízzes", key = "'set' + #setId")
-    public QuizResponseDto createQuiz(Long setId, CreateQuizRequestDto createQuizRequestDto) {
+//    @CacheEvict(value = "set_exams", key = "'set' + #setId")
+    public ExamResponseDto createExam(Long setId, CreateExamRequestDto createExamRequestDto) {
         Long userId = authenticationContext.getCurrentUserId();
 
         Set set = setRepository.findById(setId)
                 .orElseThrow(() -> new ResourceNotFoundException("set not found"));
 
-        if (quizRepository.existsByTitleAndSet(createQuizRequestDto.title(), set)) {
+        if (examRepository.existsByTitleAndSet(createExamRequestDto.title(), set)) {
             throw new ResourceAlreadyExistsException("Exam has been existed");
         }
 
-        Quiz quiz = examMapper.toQuiz(createQuizRequestDto);
-        quiz.setCreatedBy(userId);
-        quiz.setSet(set);
+        Exam exam = examMapper.toExam(createExamRequestDto);
+        exam.setCreatedBy(userId);
+        exam.setSet(set);
 
-        return examMapper.toQuizResponseDto(quizRepository.save(quiz));
+        return examMapper.toExamResponseDto(examRepository.save(exam));
     }
 
     @Override
-//    @Cacheable(value = "set_quízzes", key = "'set' + #setId")
-    public List<QuizResponseDto> getQuiz(Long setId, Pageable pageable) {
+//    @Cacheable(value = "set_exams", key = "'set' + #setId")
+    public List<ExamResponseDto> getExam(Long setId, Pageable pageable) {
         Set set = setRepository.findById(setId)
                 .orElseThrow(() -> new ResourceNotFoundException("set not found"));
 
-        return quizRepository.findAllBySet(set, pageable).stream()
-                .map(examMapper::toQuizResponseDto)
+        return examRepository.findAllBySet(set, pageable).stream()
+                .map(examMapper::toExamResponseDto)
                 .toList();
     }
 
     @Override
-//    @Cacheable(value = "quiz", key = "#quizId")
-    public QuizResponseDto getQuiz(Long setId, Long quizId) {
-        Quiz quiz = quizRepository.findBySetIdAndId(setId, quizId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cannot find quiz with id: " + quizId));
+//    @Cacheable(value = "exam", key = "#examId")
+    public ExamResponseDto getExam(Long setId, Long examId) {
+        Exam exam = examRepository.findBySetIdAndId(setId, examId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cannot find exam with id: " + examId));
 
-        return examMapper.toQuizResponseDto(quiz);
+        return examMapper.toExamResponseDto(exam);
     }
 
     @Override
-    public QuizResponseDto updateQuiz(Long setId, Long quizId, UpdateQuizRequestDto updateQuizRequestDto) {
-        if (!quizRepository.existsBySetIdAndId(setId, quizId)) {
-            throw new ResourceNotFoundException("Cannot find quiz with id: " + quizId + " in set with id: " + setId);
+    public ExamResponseDto updateExam(Long setId, Long examId, UpdateExamRequestDto updateExamRequestDto) {
+        if (!examRepository.existsBySetIdAndId(setId, examId)) {
+            throw new ResourceNotFoundException("Cannot find exam with id: " + examId + " in set with id: " + setId);
         }
 
-        Quiz quiz = quizRepository.findById(quizId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cannot find quiz with id: " + quizId));
+        Exam exam = examRepository.findById(examId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cannot find exam with id: " + examId));
 
-        examMapper.updateQuizFromDto(updateQuizRequestDto, quiz);
+        examMapper.updateExamFromDto(updateExamRequestDto, exam);
 
-        return examMapper.toQuizResponseDto(quizRepository.save(quiz));
+        return examMapper.toExamResponseDto(examRepository.save(exam));
     }
 
     @Override
-    public void deleteQuiz(Long setId, Long quizId) {
-        Quiz quiz = quizRepository.findBySetIdAndId(setId, quizId)
-                .orElseThrow(() -> new ResourceNotFoundException("Cannot find quiz with id: " + quizId));
+    public void deleteExam(Long setId, Long examId) {
+        Exam exam = examRepository.findBySetIdAndId(setId, examId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cannot find exam with id: " + examId));
 
-        quizRepository.delete(quiz);
+        examRepository.delete(exam);
     }
 
     @Override

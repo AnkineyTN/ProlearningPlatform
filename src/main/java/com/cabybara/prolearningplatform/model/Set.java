@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.model;
 
 import com.cabybara.prolearningplatform.enums.Privacy;
-import com.cabybara.prolearningplatform.model.exam.Quiz;
+import com.cabybara.prolearningplatform.model.exam.Exam;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import com.cabybara.prolearningplatform.model.note.Note;
 import jakarta.persistence.Entity;
@@ -43,5 +43,5 @@ public class Set extends AbstractEntity {
     private List<Flashcard> flashcards;
 
     @OneToMany(mappedBy = "set", cascade = CascadeType.ALL)
-    private List<Quiz> quizzes = new ArrayList<>();
+    private List<Exam> exams = new ArrayList<>();
 }

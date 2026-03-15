@@ -221,7 +221,7 @@ CREATE TYPE question_type AS ENUM (
     'ESSAY'
     );
 
-CREATE TABLE quizzes (
+CREATE TABLE exams (
     id BIGSERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
@@ -232,14 +232,14 @@ CREATE TABLE quizzes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT fk_quiz_set
+    CONSTRAINT fk_exam_set
         FOREIGN KEY (set_id)
             REFERENCES set(id)
             ON DELETE CASCADE
 );
 
-CREATE INDEX idx_quizzes_created_by ON quizzes(created_by);
-CREATE INDEX idx_quiz_set ON quizzes(set_id);
+CREATE INDEX idx_exams_created_by ON exams(created_by);
+CREATE INDEX idx_exam_set ON exams(set_id);
 
 CREATE TABLE questions (
     id BIGSERIAL PRIMARY KEY,
@@ -263,19 +263,19 @@ CREATE TABLE question_options (
 CREATE INDEX idx_options_question_id
     ON question_options(question_id);
 
-CREATE TABLE quiz_questions (
+CREATE TABLE exam_questions (
     id BIGSERIAL PRIMARY KEY,
-    quiz_id BIGINT NOT NULL,
+    exam_id BIGINT NOT NULL,
     question_id BIGINT NOT NULL,
     order_index INT,
     points INT DEFAULT 1,
 
-    CONSTRAINT fk_quiz_questions_quiz FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE,
-    CONSTRAINT fk_quiz_questions_question FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+    CONSTRAINT fk_exam_questions_exam FOREIGN KEY (exam_id) REFERENCES exams(id) ON DELETE CASCADE,
+    CONSTRAINT fk_exam_questions_question FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_quiz_questions_quiz_id
-    ON quiz_questions(quiz_id);
+CREATE INDEX idx_exam_questions_exam_id
+    ON exam_questions(exam_id);
 
-CREATE INDEX idx_quiz_questions_question_id
-    ON quiz_questions(question_id);
+CREATE INDEX idx_exam_questions_question_id
+    ON exam_questions(question_id);

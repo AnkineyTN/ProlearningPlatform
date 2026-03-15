@@ -10,10 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "quizzes")
+@Table(name = "exams")
 @Getter
 @Setter
-public class Quiz extends AbstractEntity {
+public class Exam extends AbstractEntity {
     private String title;
 
     private String description;
@@ -29,6 +29,6 @@ public class Quiz extends AbstractEntity {
     @JoinColumn(name = "set_id")
     private Set set;
 
-    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL)
-    private List<QuizQuestion> quizQuestions = new ArrayList<>();
+    @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL)
+    private List<ExamQuestion> examQuestions = new ArrayList<>();
 }
