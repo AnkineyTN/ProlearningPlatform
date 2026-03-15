@@ -1,6 +1,5 @@
 package com.cabybara.prolearningplatform.dto.request.exam;
 
-import com.cabybara.prolearningplatform.enums.QuestionType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;

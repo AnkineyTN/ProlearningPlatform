@@ -2,10 +2,21 @@ package com.cabybara.prolearningplatform.repository;
 
 import com.cabybara.prolearningplatform.model.exam.ExamQuestion;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface ExamQuestionRepository extends JpaRepository<ExamQuestion, Long> {
+
+    @Query("""
+    SELECT qq FROM ExamQuestion qq
+    JOIN FETCH qq.question q
+    LEFT JOIN FETCH q.options
+    WHERE qq.exam.id = :examId
+    ORDER BY qq.orderIndex
+    """)
+    List<ExamQuestion> findAllByExamId(Long examId);
 
     Optional<ExamQuestion> findByExamIdAndQuestionId(Long examId, Long questionId);
 
