@@ -229,6 +229,7 @@ CREATE TABLE exams (
     duration BIGINT,
     created_by INTEGER NOT NULL,
     set_id INTEGER NOT NULL,
+    id_user BIGINT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -277,3 +278,71 @@ CREATE INDEX idx_exam_questions_exam_id
 
 CREATE INDEX idx_exam_questions_question_id
     ON exam_questions(question_id);
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS unaccent;
+
+CREATE TABLE search_index (
+                              id BIGSERIAL PRIMARY KEY,
+                              user_id BIGINT NOT NULL,
+                              entity_id BIGINT NOT NULL,
+                              entity_type VARCHAR(50) NOT NULL,
+                              title VARCHAR(255),
+                              description TEXT,
+                              search_vector tsvector
+);
+
+-- index for fts
+CREATE INDEX idx_search_vector ON search_index USING GIN (search_vector);
+
+-- filter user
+CREATE INDEX idx_search_user_id ON search_index (user_id);
+
+-- index to combine pg trigram - fuzzy search
+CREATE INDEX idx_search_title_trgm
+    ON search_index
+        USING GIN (title gin_trgm_ops);
+
+CREATE INDEX idx_search_desc_trgm
+    ON search_index
+        USING GIN (description gin_trgm_ops);
+
+-- update search_index with existed data
+BEGIN;
+
+TRUNCATE TABLE search_index RESTART IDENTITY;
+
+INSERT INTO search_index (entity_id, entity_type, title, description, search_vector, user_id)
+SELECT
+    id,
+    'SET',
+    title,
+    description,
+    setweight(to_tsvector('simple', unaccent(COALESCE(title, ''))), 'A') ||
+    setweight(to_tsvector('simple', unaccent(COALESCE(description, ''))), 'C'),
+    id_user
+FROM "set";
+
+INSERT INTO search_index (entity_id, entity_type, title, description, search_vector, user_id)
+SELECT
+    id,
+    'FLASHCARD',
+    title,
+    description,
+    setweight(to_tsvector('simple', unaccent(COALESCE(title, ''))), 'A') ||
+    setweight(to_tsvector('simple', unaccent(COALESCE(description, ''))), 'C'),
+    id_user
+FROM flashcard;
+
+INSERT INTO search_index (entity_id, entity_type, title, description, search_vector, user_id)
+SELECT
+    id,
+    'EXAM',
+    title,
+    description,
+    setweight(to_tsvector('simple', unaccent(COALESCE(title, ''))), 'A') ||
+    setweight(to_tsvector('simple', unaccent(COALESCE(description, ''))), 'C'),
+    id_user
+FROM exams;
+
+COMMIT;
