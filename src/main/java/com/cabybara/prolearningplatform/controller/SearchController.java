@@ -33,35 +33,29 @@ public class SearchController {
 
     @GetMapping()
     @Operation(
-            summary = "Search all resource (note, set, flashcard, exam) belongs to the current user"
+            summary = "Search all resource (note, set, flashcard, exam) belongs to all users"
     )
-    public ResponseEntity<ApiResponse<?>> searchAllForUser(
+    public ResponseEntity<ApiResponse<?>> searchAll(
             @RequestParam String keyword,
             @RequestParam int limit,
             @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
     ) {
-        List<SearchResponseDto> searchResponseDtos = searchService.searchForUser(keyword, limit);
+        List<SearchResponseDto> searchResponseDtos = searchService.searchForAllUser(keyword, limit);
 
-        int totalItems = searchResponseDtos.size();
-        int pageSize = pageable.getPageSize();
-        int currentPage = pageable.getPageNumber();
+        return ResponseUtil.toPaginationedResponse("Successfully", pageable, searchResponseDtos);
+    }
 
-        int start = currentPage * pageSize;
-        int end = Math.min(start + pageSize, totalItems);
+    @GetMapping("/me")
+    @Operation(
+            summary = "Search all resource (note, set, flashcard, exam) belongs to the current user"
+    )
+    public ResponseEntity<ApiResponse<?>> searchForCurrentUser(
+            @RequestParam String keyword,
+            @RequestParam int limit,
+            @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
+    ) {
+        List<SearchResponseDto> searchResponseDtos = searchService.searchForCurrentUser(keyword, limit);
 
-        List<SearchResponseDto> pagedResponse =
-                start >= totalItems ? List.of() : searchResponseDtos.subList(start, end);
-
-        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
-
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ResponseUtil.success("Successfully", pagedResponse, PaginationResponseDto.builder()
-                        .pageSize(pageSize)
-                        .currentPage(currentPage)
-                        .totalItems(totalItems)
-                        .totalPages(totalPages)
-                        .build()
-                ));
+        return ResponseUtil.toPaginationedResponse("Successfully", pageable, searchResponseDtos);
     }
 }

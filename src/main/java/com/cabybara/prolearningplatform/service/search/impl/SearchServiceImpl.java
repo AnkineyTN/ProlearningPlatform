@@ -20,10 +20,19 @@ public class SearchServiceImpl implements SearchService {
 
 
     @Override
-    public List<SearchResponseDto> searchForUser(String keyword, int limit) {
+    public List<SearchResponseDto> searchForCurrentUser(String keyword, int limit) {
         Long userId = authenticationContext.getCurrentUserId();
 
         List<SearchResultDto> searchResultDtos = searchIndexRepository.searchByUserId(keyword, userId, limit);
+
+        return searchResultDtos.stream()
+                .map(searchMapper::toSearchResponseDto)
+                .toList();
+    }
+
+    @Override
+    public List<SearchResponseDto> searchForAllUser(String keyword, int limit) {
+        List<SearchResultDto> searchResultDtos = searchIndexRepository.searchAll(keyword, limit);
 
         return searchResultDtos.stream()
                 .map(searchMapper::toSearchResponseDto)
