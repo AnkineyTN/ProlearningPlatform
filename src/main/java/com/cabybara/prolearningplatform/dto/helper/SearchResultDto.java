@@ -8,4 +8,5 @@ public interface SearchResultDto {
     String getDescription();
     String getType();
     double getScore();
+    long getUserId();
 }

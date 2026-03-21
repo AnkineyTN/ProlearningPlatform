@@ -1,12 +1,17 @@
 package com.cabybara.prolearningplatform.controller;
 
+import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.search.SearchResponseDto;
 import com.cabybara.prolearningplatform.service.search.SearchService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -27,11 +32,30 @@ public class SearchController {
     private final SearchService searchService;
 
     @GetMapping()
-    public ResponseEntity<ApiResponse<?>> searchAllForUser(@RequestParam String keyword, @RequestParam int limit) {
-        List<SearchResponseDto> searchResponseDtos = searchService.searchForUser(keyword, limit);
+    @Operation(
+            summary = "Search all resource (note, set, flashcard, exam) belongs to all users"
+    )
+    public ResponseEntity<ApiResponse<?>> searchAll(
+            @RequestParam String keyword,
+            @RequestParam int limit,
+            @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
+    ) {
+        List<SearchResponseDto> searchResponseDtos = searchService.searchForAllUser(keyword, limit);
 
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ResponseUtil.success("Successfully", searchResponseDtos, null));
+        return ResponseUtil.toPaginationedResponse("Successfully", pageable, searchResponseDtos);
+    }
+
+    @GetMapping("/me")
+    @Operation(
+            summary = "Search all resource (note, set, flashcard, exam) belongs to the current user"
+    )
+    public ResponseEntity<ApiResponse<?>> searchForCurrentUser(
+            @RequestParam String keyword,
+            @RequestParam int limit,
+            @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
+    ) {
+        List<SearchResponseDto> searchResponseDtos = searchService.searchForCurrentUser(keyword, limit);
+
+        return ResponseUtil.toPaginationedResponse("Successfully", pageable, searchResponseDtos);
     }
 }

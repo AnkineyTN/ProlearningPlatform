@@ -17,16 +17,17 @@ public interface SearchIndexRepository extends JpaRepository<SearchIndex, Long> 
             title,
             description,
             ts_rank(search_vector, query) * 0.7 +
-            similarity(title, :keyword) * 0.3 AS score
+            similarity(title, :keyword) * 0.3 AS score,
+            user_id as userId
         FROM search_index,
              websearch_to_tsquery('simple', unaccent(:keyword)) query
         WHERE
             search_vector @@ query
            OR (title || ' ' || description) % unaccent(:keyword)
         ORDER BY score DESC
-        LIMIT :limit;
+        LIMIT :limit
     """, nativeQuery = true)
-    List<SearchResultDto> searchAll(String keyword, int limit);
+    List<SearchResultDto> searchAll(@Param("keyword") String keyword, @Param("limit") int limit);
 
     @Query(value = """
         SELECT
@@ -35,7 +36,8 @@ public interface SearchIndexRepository extends JpaRepository<SearchIndex, Long> 
             description,
             entity_type AS type,
             ts_rank(search_vector, query) * 0.7 +
-            similarity(title, :keyword) * 0.3 AS score
+            similarity(title, :keyword) * 0.3 AS score,
+            user_id as userId
         FROM search_index,
              websearch_to_tsquery('simple', unaccent(:keyword)) query
         WHERE
