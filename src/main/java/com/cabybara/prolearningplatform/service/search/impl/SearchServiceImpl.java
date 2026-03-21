@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.service.search.impl;
 
 import com.cabybara.prolearningplatform.dto.helper.SearchResultDto;
 import com.cabybara.prolearningplatform.dto.response.search.SearchResponseDto;
+import com.cabybara.prolearningplatform.enums.SearchType;
 import com.cabybara.prolearningplatform.mapper.SearchMapper;
 import com.cabybara.prolearningplatform.repository.SearchIndexRepository;
 import com.cabybara.prolearningplatform.service.search.SearchService;
@@ -20,10 +21,13 @@ public class SearchServiceImpl implements SearchService {
 
 
     @Override
-    public List<SearchResponseDto> searchForCurrentUser(String keyword, int limit) {
-        Long userId = authenticationContext.getCurrentUserId();
+    public List<SearchResponseDto> search(String keyword, SearchType searchType, int limit) {
+        String type = null;
+        if (searchType != null) {
+            type = searchType.name();
+        }
 
-        List<SearchResultDto> searchResultDtos = searchIndexRepository.searchByUserId(keyword, userId, limit);
+        List<SearchResultDto> searchResultDtos = searchIndexRepository.search(keyword, null, type, limit);
 
         return searchResultDtos.stream()
                 .map(searchMapper::toSearchResponseDto)
@@ -31,8 +35,15 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public List<SearchResponseDto> searchForAllUser(String keyword, int limit) {
-        List<SearchResultDto> searchResultDtos = searchIndexRepository.searchAll(keyword, limit);
+    public List<SearchResponseDto> searchForCurrentUser(String keyword, SearchType searchType, int limit) {
+        Long userId = authenticationContext.getCurrentUserId();
+
+        String type = null;
+        if (searchType != null) {
+            type = searchType.name();
+        }
+
+        List<SearchResultDto> searchResultDtos = searchIndexRepository.search(keyword, userId, type, limit);
 
         return searchResultDtos.stream()
                 .map(searchMapper::toSearchResponseDto)
