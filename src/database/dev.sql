@@ -77,9 +77,15 @@ CREATE TABLE note
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     id_set      INT,
+    id_user     BIGINT NOT NULL,
     CONSTRAINT fk_note_set
         FOREIGN KEY (id_set)
             REFERENCES set (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_note_user
+        FOREIGN KEY (id_user)
+            REFERENCES users(id)
             ON DELETE CASCADE
 );
 
@@ -322,6 +328,17 @@ SELECT
     setweight(to_tsvector('simple', unaccent(COALESCE(description, ''))), 'C'),
     id_user
 FROM "set";
+
+INSERT INTO search_index (entity_id, entity_type, title, description, search_vector, user_id)
+SELECT
+    id,
+    'NOTE',
+    title,
+    description,
+    setweight(to_tsvector('simple', unaccent(COALESCE(title, ''))), 'A') ||
+    setweight(to_tsvector('simple', unaccent(COALESCE(description, ''))), 'C'),
+    id_user
+FROM note;
 
 INSERT INTO search_index (entity_id, entity_type, title, description, search_vector, user_id)
 SELECT
