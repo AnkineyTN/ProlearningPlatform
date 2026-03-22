@@ -21,6 +21,4 @@ public class ExplainNoteRequestDTO {
     private String queryText;
 
     private String lang;
-
-    private String limit;
 }
