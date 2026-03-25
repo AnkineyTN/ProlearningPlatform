@@ -13,6 +13,7 @@ public interface SearchIndexRepository extends JpaRepository<SearchIndex, Long> 
     @Query(value = """
     SELECT
         entity_id AS id,
+        set_id AS setId,
         entity_type AS type,
         title,
         description,

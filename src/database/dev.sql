@@ -292,6 +292,7 @@ CREATE TABLE search_index (
                               id BIGSERIAL PRIMARY KEY,
                               user_id BIGINT NOT NULL,
                               entity_id BIGINT NOT NULL,
+                              set_id BIGINT NOT NULL,
                               entity_type VARCHAR(50) NOT NULL,
                               title VARCHAR(255),
                               description TEXT,
