@@ -66,7 +66,7 @@ CREATE TABLE set
             ON DELETE CASCADE
 );
 
-CREATE OR REPLACE FUNCTION update_search_vector_set() RETURNS trigger AS $$
+CREATE OR REPLACE FUNCTION update_search_vector() RETURNS trigger AS $$
 BEGIN
     NEW.search_vector :=
             setweight(to_tsvector('simple', unaccent(COALESCE(NEW.title, ''))), 'A') ||
@@ -77,7 +77,7 @@ $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trigger_update_search_vector_set
     BEFORE INSERT OR UPDATE ON "set"
-    FOR EACH ROW EXECUTE FUNCTION update_search_vector_set();
+    FOR EACH ROW EXECUTE FUNCTION update_search_vector();
 
 CREATE TABLE note
 (
@@ -130,6 +130,7 @@ CREATE TABLE flashcard
     create_method character varying(50)  NOT NULL,
     id_user       integer                NOT NULL,
     privacy       character varying(50)  NOT NULL DEFAULT 'PRIVATE'::character varying,
+    search_vector tsvector,
     created_at    timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP,
     known         integer NULL DEFAULT 0,
@@ -147,6 +148,14 @@ CREATE TABLE flashcard
     CONSTRAINT chk_learning_non_negative CHECK (learning >= 0),
     CONSTRAINT chk_remain_non_negative CHECK (remain >= 0)
 );
+
+CREATE TRIGGER trigger_update_search_vector_flashcard
+    BEFORE INSERT OR UPDATE ON flashcard
+    FOR EACH ROW EXECUTE FUNCTION update_search_vector();
+
+CREATE INDEX idx_flashcard_search_vector ON flashcard USING GIN(search_vector);
+CREATE INDEX idx_flashcard_title_trgm ON flashcard USING GIN(title gin_trgm_ops);
+CREATE INDEX idx_flashcard_user_privacy_created ON flashcard(id_user, privacy, created_at DESC);
 
 CREATE TABLE card_item
 (

@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
+import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.event.model.ChildEntityUpdatedEvent;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
@@ -60,12 +61,26 @@ public class FlashcardServiceImpl implements FlashcardService {
     private final AIFlashcardService aiFlashcardService;
 
     @Override
-    public Page<FlashcardResponseDto> getAllFlashcard(Long setId, Pageable pageable) {
+    public Page<FlashcardResponseDto> getAllFlashcard(Long setId, String q, Privacy privacy, Pageable pageable) {
         Long userId = authenticationContext.getCurrentUserId();
 
-        Page<Flashcard> allPageFlashcards = flashcardRepository.findAllBySetIdAndUserId(setId, userId, pageable);
+        Page<Flashcard> pagedFlashcard;
 
-        return allPageFlashcards.map(flashcardMapper::toFlashcardResponseDto);
+        if (q == null || q.isBlank()) {
+            if (privacy == null) {
+                pagedFlashcard = flashcardRepository.findByUserIdAndSetId(userId, setId, pageable);
+            } else {
+                pagedFlashcard = flashcardRepository.findByUserIdAndSetIdAndPrivacy(userId,setId, privacy, pageable);
+            }
+        } else {
+            if (privacy == null) {
+                pagedFlashcard = flashcardRepository.searchByUserIdAndSetId(userId, setId, q, pageable);
+            } else {
+                pagedFlashcard = flashcardRepository.searchByUserIdAndSetIdAndPrivacy(userId, setId, q, privacy.name(), pageable);
+            }
+        }
+
+        return pagedFlashcard.map(flashcardMapper::toFlashcardResponseDto);
     }
 
     @Override

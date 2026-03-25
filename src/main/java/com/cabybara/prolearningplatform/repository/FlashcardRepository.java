@@ -1,5 +1,7 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.enums.Privacy;
+import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -22,6 +24,53 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
     boolean existsBySetIdAndTitle(Long userId, @NotEmpty @NotBlank @NotNull String title);
 
     Page<Flashcard> findAllBySetIdAndUserId(Long setId, Long userId, Pageable pageable);
+
+    Page<Flashcard> findByUserIdAndSetId(Long userId, Long setId, Pageable pageable);
+
+    Page<Flashcard> findByUserIdAndSetIdAndPrivacy(Long userId, Long setId, Privacy privacy, Pageable pageable);
+
+    @Query(
+            value = """
+                SELECT *
+                FROM flashcard
+                WHERE id_user = :userId AND id_set = :setId
+                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                      OR (title || ' ' || description) % unaccent(:q))
+                ORDER BY created_at DESC
+            """,
+            countQuery = """
+                SELECT count(*)
+                FROM flashcard
+                WHERE id_user = :userId AND id_set = :setId
+                  AND (
+                        search_vector @@ plainto_tsquery('simple', :q)
+                        OR (title || ' ' || description) % unaccent(:q))
+                """,
+            nativeQuery = true)
+    Page<Flashcard> searchByUserIdAndSetId(Long userId, Long setId, String q, Pageable pageable);
+
+    @Query(
+            value = """
+                SELECT *
+                FROM flashcard
+                WHERE id_user = :userId
+                  AND id_set = :setId
+                  AND privacy = :privacy
+                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                      OR (title || ' ' || description) % unaccent(:q))
+                ORDER BY created_at DESC
+            """,
+            countQuery = """
+                SELECT *
+                FROM flashcard
+                WHERE id_user = :userId
+                  AND id_set = :setId
+                  AND privacy = :privacy
+                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                      OR (title || ' ' || description) % unaccent(:q))
+            """,
+            nativeQuery = true)
+    Page<Flashcard> searchByUserIdAndSetIdAndPrivacy(Long userId, Long setId, String q, String privacy, Pageable pageable);
 
     @EntityGraph(attributePaths = {"cards", "cards.image"})
     Optional<Flashcard> findByIdAndSetIdAndUserId(Long flashcardId, Long setId, Long userId);
