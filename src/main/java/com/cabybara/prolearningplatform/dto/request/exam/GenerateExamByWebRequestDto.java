@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.enums.Language;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
+
 import java.util.List;
 import java.util.Map;
 
@@ -12,8 +13,8 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GenerateExamByNoteRequestDto {
-    private List<Long> noteIds;
+public class GenerateExamByWebRequestDto {
+    private List<String> urls;
 
     private Map<String, Integer> questions;
 
