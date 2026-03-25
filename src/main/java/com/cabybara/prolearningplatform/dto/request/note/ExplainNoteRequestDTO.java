@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.dto.request.note;
 
+import com.cabybara.prolearningplatform.enums.Language;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
@@ -20,5 +21,5 @@ public class ExplainNoteRequestDTO {
     @JsonAlias("queryText")
     private String queryText;
 
-    private String lang;
+    private Language language;
 }

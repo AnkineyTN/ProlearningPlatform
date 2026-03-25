@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 @Component
@@ -26,6 +27,25 @@ public class RestHttpClientUtil {
         log.info("POST {} | body: {}", url, body);
 
         ResponseEntity<R> response = restTemplate.exchange(url, HttpMethod.POST, entity, responseType);
+        log.info("✅ Response [{}]: {}", response.getStatusCode(), response.getBody());
+
+        return response.getBody();
+    }
+
+    public <R> R postMultipart(String url, MultiValueMap<String, Object> body, Class<R> responseType) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+        log.info("POST MULTIPART {} | body: {}", url, body);
+
+        ResponseEntity<R> response = restTemplate.exchange(
+                url,
+                HttpMethod.POST,
+                entity,
+                responseType
+        );
+
         log.info("✅ Response [{}]: {}", response.getStatusCode(), response.getBody());
 
         return response.getBody();

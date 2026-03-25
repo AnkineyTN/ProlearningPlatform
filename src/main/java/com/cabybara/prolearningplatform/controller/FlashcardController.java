@@ -1,14 +1,12 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardCreateRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardUpdatingRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByNoteRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.*;
 import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.enums.Privacy;
+import com.cabybara.prolearningplatform.service.ai.AIFlashcardService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -39,9 +37,10 @@ import java.util.List;
 @Validated
 @Tag(name = "Flashcard")
 public class FlashcardController {
-    private final FlashcardService flashcardService;
-
     private static final String ERROR_MESSAGE = "errorMessage={}";
+
+    private final FlashcardService flashcardService;
+    private final AIFlashcardService aIFlashcardService;
 
     @Operation(
             summary = "Get All Flashcards in a Set (Paginated)",
@@ -163,13 +162,15 @@ public class FlashcardController {
                 .body(ResponseUtil.success("Delete flashcard successfully", null, null));
     }
 
-    // API AI
+    // =============================================
+    // ==== AI API
+    // =============================================
     @Operation(method = "POST", summary = "Generate flashcard by files with AI", description = "Generate flashcard by file with AI")
     @PostMapping(value = "/ai-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByFile(@Valid @ModelAttribute GenerateFlashcardByFileRequestDto request) {
         log.info("Generate flashcard by files with AI");
         try {
-            GenerateFlashcardByAIResponseDto response = flashcardService.generateFlashcardByFiles(request);
+            GenerateFlashcardByAIResponseDto response = aIFlashcardService.generateFlashcardByFiles(request);
             return new ResponseData<>(HttpStatus.OK.value(), "Generate flashcard by files with AI successfully", response);
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e);
@@ -190,4 +191,16 @@ public class FlashcardController {
         }
     }
 
+    @Operation(method = "POST", summary = "Generate flashcard by web URL with AI", description = "Generate flashcard by web URL with AI")
+    @PostMapping(value = "/ai-web")
+    public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByWeb(@Valid @RequestBody GenerateFlashcardByWebRequestDto request) {
+        log.info("Generate flashcard by notes with AI");
+        try {
+            GenerateFlashcardByAIResponseDto response = aIFlashcardService.generateFlashcardByWeb(request);
+            return new ResponseData<>(HttpStatus.OK.value(), "Generate flashcard by web with AI successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate flashcard by web with AI fail");
+        }
+    }
 }
