@@ -4,6 +4,7 @@ import lombok.Builder;
 
 public interface SearchResultDto {
     Long getId();
+    Long getSetId();
     String getTitle();
     String getDescription();
     String getType();

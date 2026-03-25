@@ -6,7 +6,9 @@ import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByNoteReque
 import com.cabybara.prolearningplatform.dto.request.exam.UpdateExamRequestDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
+import com.cabybara.prolearningplatform.enums.Privacy;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
@@ -14,7 +16,7 @@ import java.util.List;
 public interface ExamService {
     ExamResponseDto createExam(Long setId, CreateExamRequestDto createExamRequestDto);
 
-    List<ExamResponseDto> getExam(Long setId, Pageable pageable);
+    Page<ExamResponseDto> getExam(Long setId, String q, Privacy privacy, Pageable pageable);
 
     ExamResponseDto getExam(Long setId, Long ExamId);
 

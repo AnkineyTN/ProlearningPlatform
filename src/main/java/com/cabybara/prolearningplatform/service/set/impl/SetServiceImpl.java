@@ -3,6 +3,8 @@ package com.cabybara.prolearningplatform.service.set.impl;
 import com.cabybara.prolearningplatform.dto.request.set.SetUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.set.SetCreationRequestDto;
 import com.cabybara.prolearningplatform.dto.response.set.SetResponseDto;
+import com.cabybara.prolearningplatform.enums.Privacy;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -29,6 +31,7 @@ public class SetServiceImpl implements SetService {
     private final SetRepository setRepository;
     private final UserRepository userRepository;
     private final SetMapper setMapper;
+    private final AuthenticationContext authenticationContext;
 
     @Override
     public Set getSetById(Long setId) {
@@ -37,10 +40,26 @@ public class SetServiceImpl implements SetService {
     }
 
     @Override
-    public Page<SetResponseDto> getAllSet(Long userId, Pageable pageable) {
-        Page<Set> allSetPages = setRepository.findAllByUserId(userId, pageable);
+    public Page<SetResponseDto> getAllSet(String q, Privacy privacy, Pageable pageable) {
+        Long userId = authenticationContext.getCurrentUserId();
 
-        return allSetPages.map(setMapper::toSetResponseDto);
+        Page<Set> pagedSet;
+
+        if (q == null || q.isBlank()) {
+            if (privacy == null) {
+                pagedSet = setRepository.findByUserId(userId, pageable);
+            } else {
+                pagedSet = setRepository.findByUserIdAndPrivacy(userId, privacy, pageable);
+            }
+        } else {
+            if (privacy == null) {
+                pagedSet = setRepository.searchByUserId(userId, q, pageable);
+            } else {
+                pagedSet = setRepository.searchByUserIdAndPrivacy(userId, q, privacy.name(), pageable);
+            }
+        }
+
+        return pagedSet.map(setMapper::toSetResponseDto);
     }
 
     @Override

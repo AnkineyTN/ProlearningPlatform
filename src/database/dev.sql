@@ -56,6 +56,7 @@ CREATE TABLE set
     title       VARCHAR(255),
     description TEXT,
     privacy     VARCHAR(50),
+    search_vector tsvector,
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -64,6 +65,19 @@ CREATE TABLE set
             REFERENCES users (id)
             ON DELETE CASCADE
 );
+
+CREATE OR REPLACE FUNCTION update_search_vector() RETURNS trigger AS $$
+BEGIN
+    NEW.search_vector :=
+            setweight(to_tsvector('simple', unaccent(COALESCE(NEW.title, ''))), 'A') ||
+            setweight(to_tsvector('simple', unaccent(COALESCE(NEW.description, ''))), 'C');
+    RETURN NEW;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_search_vector_set
+    BEFORE INSERT OR UPDATE ON "set"
+    FOR EACH ROW EXECUTE FUNCTION update_search_vector();
 
 CREATE TABLE note
 (
@@ -77,9 +91,15 @@ CREATE TABLE note
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     id_set      INT,
+    id_user     BIGINT NOT NULL,
     CONSTRAINT fk_note_set
         FOREIGN KEY (id_set)
             REFERENCES set (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_note_user
+        FOREIGN KEY (id_user)
+            REFERENCES users(id)
             ON DELETE CASCADE
 );
 
@@ -110,6 +130,7 @@ CREATE TABLE flashcard
     create_method character varying(50)  NOT NULL,
     id_user       integer                NOT NULL,
     privacy       character varying(50)  NOT NULL DEFAULT 'PRIVATE'::character varying,
+    search_vector tsvector,
     created_at    timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP,
     known         integer NULL DEFAULT 0,
@@ -127,6 +148,14 @@ CREATE TABLE flashcard
     CONSTRAINT chk_learning_non_negative CHECK (learning >= 0),
     CONSTRAINT chk_remain_non_negative CHECK (remain >= 0)
 );
+
+CREATE TRIGGER trigger_update_search_vector_flashcard
+    BEFORE INSERT OR UPDATE ON flashcard
+    FOR EACH ROW EXECUTE FUNCTION update_search_vector();
+
+CREATE INDEX idx_flashcard_search_vector ON flashcard USING GIN(search_vector);
+CREATE INDEX idx_flashcard_title_trgm ON flashcard USING GIN(title gin_trgm_ops);
+CREATE INDEX idx_flashcard_user_privacy_created ON flashcard(id_user, privacy, created_at DESC);
 
 CREATE TABLE card_item
 (
@@ -230,6 +259,7 @@ CREATE TABLE exams (
     created_by INTEGER NOT NULL,
     set_id INTEGER NOT NULL,
     id_user BIGINT NOT NULL,
+    search_vector tsvector,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -238,6 +268,14 @@ CREATE TABLE exams (
             REFERENCES set(id)
             ON DELETE CASCADE
 );
+
+CREATE TRIGGER trigger_update_search_vector_exam
+    BEFORE INSERT OR UPDATE ON exams
+    FOR EACH ROW EXECUTE FUNCTION update_search_vector();
+
+CREATE INDEX idx_exam_search_vector ON exams USING GIN(search_vector);
+CREATE INDEX idx_exam_title_trgm ON exams USING GIN(title gin_trgm_ops);
+CREATE INDEX idx_exam_user_privacy_created ON exams(id_user, privacy, created_at DESC);
 
 CREATE INDEX idx_exams_created_by ON exams(created_by);
 CREATE INDEX idx_exam_set ON exams(set_id);
@@ -286,6 +324,7 @@ CREATE TABLE search_index (
                               id BIGSERIAL PRIMARY KEY,
                               user_id BIGINT NOT NULL,
                               entity_id BIGINT NOT NULL,
+                              set_id BIGINT NOT NULL,
                               entity_type VARCHAR(50) NOT NULL,
                               title VARCHAR(255),
                               description TEXT,
@@ -322,6 +361,17 @@ SELECT
     setweight(to_tsvector('simple', unaccent(COALESCE(description, ''))), 'C'),
     id_user
 FROM "set";
+
+INSERT INTO search_index (entity_id, entity_type, title, description, search_vector, user_id)
+SELECT
+    id,
+    'NOTE',
+    title,
+    description,
+    setweight(to_tsvector('simple', unaccent(COALESCE(title, ''))), 'A') ||
+    setweight(to_tsvector('simple', unaccent(COALESCE(description, ''))), 'C'),
+    id_user
+FROM note;
 
 INSERT INTO search_index (entity_id, entity_type, title, description, search_vector, user_id)
 SELECT

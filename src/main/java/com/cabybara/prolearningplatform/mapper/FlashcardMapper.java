@@ -7,21 +7,23 @@ import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponse
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import org.mapstruct.*;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring",unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {CardItemMapper.class})
 public interface FlashcardMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     Flashcard toFlashcard(FlashcardCreateRequestDto flashcardCreateRequestDto);
 
     @Mapping(source = "create_method", target = "createMethod")
-    @Mapping(source = "flashcard", target = "numCards", qualifiedByName = "calNumCard")
+    @Mapping(source = "cards", target = "numCards", qualifiedByName = "listToCount")
     FlashcardResponseDto toFlashcardResponseDto(Flashcard flashcard);
 
     @Mapping(source = "create_method", target = "createMethod")
     DetailFlashcardResponseDto toDetailFlashcardResponseDto(Flashcard flashcard);
 
-    @Named("calNumCard")
-    default Long calNumCard(Flashcard flashcard) {
-        return (long) flashcard.getCards().size();
+    @Named("listToCount")
+    default Long listToCount(List<?> list) {
+        return list == null ? 0L : (long) list.size();
     }
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

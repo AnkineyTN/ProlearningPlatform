@@ -8,6 +8,7 @@ import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
+import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -51,9 +52,11 @@ public class FlashcardController {
     public ResponseEntity<ApiResponse<List<FlashcardResponseDto>>> getAllFlashcard(
             @Parameter(description = "The ID of the Set to retrieve flashcards from", required = true)
             @PathVariable Long setId,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Privacy privacy,
             @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
     ) {
-        Page<FlashcardResponseDto> allFlashcardResponseDtos = flashcardService.getAllFlashcard(setId, pageable);
+        Page<FlashcardResponseDto> allFlashcardResponseDtos = flashcardService.getAllFlashcard(setId, q, privacy, pageable);
         PaginationResponseDto paginationResponseDto = PaginationResponseDto.builder()
                 .currentPage(allFlashcardResponseDtos.getNumber())
                 .totalPages(allFlashcardResponseDtos.getTotalPages())
@@ -64,7 +67,7 @@ public class FlashcardController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success(
-                        "Successfully get all flashcard",
+                        "Successfully",
                         allFlashcardResponseDtos.getContent(),
                         paginationResponseDto
                 ));
