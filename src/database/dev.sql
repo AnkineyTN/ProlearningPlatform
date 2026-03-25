@@ -56,6 +56,7 @@ CREATE TABLE set
     title       VARCHAR(255),
     description TEXT,
     privacy     VARCHAR(50),
+    search_vector tsvector,
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -64,6 +65,19 @@ CREATE TABLE set
             REFERENCES users (id)
             ON DELETE CASCADE
 );
+
+CREATE OR REPLACE FUNCTION update_search_vector_set() RETURNS trigger AS $$
+BEGIN
+    NEW.search_vector :=
+            setweight(to_tsvector('simple', unaccent(COALESCE(NEW.title, ''))), 'A') ||
+            setweight(to_tsvector('simple', unaccent(COALESCE(NEW.description, ''))), 'C');
+    RETURN NEW;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_search_vector_set
+    BEFORE INSERT OR UPDATE ON "set"
+    FOR EACH ROW EXECUTE FUNCTION update_search_vector_set();
 
 CREATE TABLE note
 (

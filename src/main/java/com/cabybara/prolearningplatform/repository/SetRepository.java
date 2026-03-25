@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.Set;
 
 import java.time.OffsetDateTime;
@@ -27,5 +28,48 @@ public interface SetRepository extends JpaRepository<Set, Long> {
     @Query("UPDATE Set s SET s.updatedAt = :now WHERE s.id = :id")
     void updateLastModifiedDate(@Param("id") Long id, @Param("now") OffsetDateTime now);
 
+    Page<Set> findByUserId(Long userId, Pageable pageable);
 
+    Page<Set> findByUserIdAndPrivacy(Long userId, Privacy privacy, Pageable pageable);
+
+    @Query(
+            value = """
+                SELECT *
+                FROM set
+                WHERE id_user = :userId
+                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                      OR (title || ' ' || description) % unaccent(:q))
+                ORDER BY created_at DESC
+            """,
+            countQuery = """
+                SELECT count(*)
+                FROM set
+                WHERE id_user = :userId
+                  AND (
+                        search_vector @@ plainto_tsquery('simple', :q)
+                        OR (title || ' ' || description) % unaccent(:q))
+                """,
+            nativeQuery = true)
+    Page<Set> searchByUserId(Long userId, String q, Pageable pageable);
+
+    @Query(
+            value = """
+                SELECT *
+                FROM set
+                WHERE id_user = :userId
+                  AND privacy = :privacy
+                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                      OR (title || ' ' || description) % unaccent(:q))
+                ORDER BY created_at DESC
+            """,
+            countQuery = """
+                SELECT *
+                FROM set
+                WHERE id_user = :userId
+                  AND privacy = :privacy
+                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                      OR (title || ' ' || description) % unaccent(:q))
+            """,
+            nativeQuery = true)
+    Page<Set> searchByUserIdAndPrivacy(Long userId, String q, String privacy, Pageable pageable);
 }

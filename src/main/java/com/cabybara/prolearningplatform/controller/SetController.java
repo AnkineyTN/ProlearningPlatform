@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.set.SetUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
+import com.cabybara.prolearningplatform.enums.Privacy;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,10 +41,12 @@ public class SetController {
     @GetMapping("")
     public ResponseEntity<ApiResponse<Object>> getSet(
             @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Privacy privacy,
             @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
     ) {
 
-        Page<SetResponseDto> allSetResponseDtos = setService.getAllSet((Long) jwt.getClaims().get("id"), pageable);
+        Page<SetResponseDto> allSetResponseDtos = setService.getAllSet(q, privacy, pageable);
         PaginationResponseDto paginationResponseDto = PaginationResponseDto.builder()
                 .currentPage(allSetResponseDtos.getNumber())
                 .totalPages(allSetResponseDtos.getTotalPages())
