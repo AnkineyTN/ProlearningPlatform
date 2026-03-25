@@ -178,36 +178,6 @@ public class FlashcardServiceImpl implements FlashcardService {
     }
 
     @Override
-    public GenerateFlashcardByAIResponseDto generateFlashcardByFiles(GenerateFlashcardByFileRequestDto request) {
-        List<MultipartFile> files = request.getFiles();
-
-        StringBuilder allContent = new StringBuilder();
-
-        for (MultipartFile file : files) {
-            try {
-                String fileName = file.getOriginalFilename();
-
-                // Log thông tin file
-                System.out.println("Processing file: " + fileName + " - Size: " + file.getSize());
-
-                // Đọc nội dung file
-                String content = fileService.readFile(file);
-
-                // Thêm separator giữa các file
-                allContent.append("=== Content from: ").append(fileName).append(" ===\n");
-                allContent.append(content);
-                allContent.append("\n\n");
-
-            } catch (Exception e) {
-                throw new RuntimeException("Error processing file: " + file.getOriginalFilename() + " - " + e.getMessage());
-            }
-        }
-
-        String finalContent = allContent.toString();
-        return aiFlashcardService.generateFlashcard(finalContent, "file");
-    }
-
-    @Override
     public GenerateFlashcardByAIResponseDto generateFlashcardByNotes(GenerateFlashcardByNoteRequestDto request) {
         List<Long> noteIds = request.getNoteIds();
 
@@ -226,7 +196,8 @@ public class FlashcardServiceImpl implements FlashcardService {
         String finalContent = allContent.toString();
         System.out.println("Final content: " + finalContent);
 
-        return aiFlashcardService.generateFlashcard(finalContent, "note");
+//        return aiFlashcardService.generateFlashcard(finalContent, "note");
+        return null;
     }
 
     @Override

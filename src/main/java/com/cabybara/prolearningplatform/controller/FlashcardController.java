@@ -8,6 +8,7 @@ import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
+import com.cabybara.prolearningplatform.service.ai.AIFlashcardService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -38,9 +39,10 @@ import java.util.List;
 @Validated
 @Tag(name = "Flashcard")
 public class FlashcardController {
-    private final FlashcardService flashcardService;
-
     private static final String ERROR_MESSAGE = "errorMessage={}";
+
+    private final FlashcardService flashcardService;
+    private final AIFlashcardService aIFlashcardService;
 
     @Operation(
             summary = "Get All Flashcards in a Set (Paginated)",
@@ -166,7 +168,7 @@ public class FlashcardController {
     public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByFile(@Valid @ModelAttribute GenerateFlashcardByFileRequestDto request) {
         log.info("Generate flashcard by files with AI");
         try {
-            GenerateFlashcardByAIResponseDto response = flashcardService.generateFlashcardByFiles(request);
+            GenerateFlashcardByAIResponseDto response = aIFlashcardService.generateFlashcardByFiles(request);
             return new ResponseData<>(HttpStatus.OK.value(), "Generate flashcard by files with AI successfully", response);
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e);

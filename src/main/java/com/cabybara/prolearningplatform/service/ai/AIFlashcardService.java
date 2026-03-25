@@ -9,5 +9,5 @@ import com.cabybara.prolearningplatform.dto.response.note.ExplainNoteResponseDTO
 import com.cabybara.prolearningplatform.dto.response.note.SummarizeFileResponseDTO;
 
 public interface AIFlashcardService {
-    public GenerateFlashcardByAIResponseDto generateFlashcard(String content, String type);
+    public GenerateFlashcardByAIResponseDto generateFlashcardByFiles(GenerateFlashcardByFileRequestDto request);
 }
