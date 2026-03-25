@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.set.SetUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.set.SetCreationRequestDto;
 import com.cabybara.prolearningplatform.dto.response.set.SetResponseDto;
 import com.cabybara.prolearningplatform.mapper.helpers.DateTimeMapper;
+import com.cabybara.prolearningplatform.model.exam.Exam;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import com.cabybara.prolearningplatform.model.note.Note;
 import org.mapstruct.*;
@@ -19,17 +20,13 @@ public interface SetMapper {
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateSetFromDto(SetUpdatingRequestDto setUpdatingRequestDto, @MappingTarget Set targetSet);
 
-    @Mapping(source = "notes", target = "numNotes", qualifiedByName = "listNotesToNumNotes")
-    @Mapping(source = "flashcards", target = "numFlashcards", qualifiedByName = "listFlashcardsToNumFlashcards")
+    @Mapping(source = "notes", target = "numNotes", qualifiedByName = "listToCount")
+    @Mapping(source = "flashcards", target = "numFlashcards", qualifiedByName = "listToCount")
+    @Mapping(source = "exams", target = "numExams", qualifiedByName = "listToCount")
     SetResponseDto toSetResponseDto(Set set);
 
-    @Named("listNotesToNumNotes")
-    default Long numNotesMapping(List<Note> listNotes) {
-        return (long) listNotes.size();
-    }
-
-    @Named("listFlashcardsToNumFlashcards")
-    default Long numFlashcardsMapping(List<Flashcard> listFlashcards) {
-        return (long) listFlashcards.size();
+    @Named("listToCount")
+    default Long listToCount(List<?> list) {
+        return list == null ? 0L : (long) list.size();
     }
 }

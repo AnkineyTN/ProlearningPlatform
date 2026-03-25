@@ -15,7 +15,7 @@ import java.util.List;
 public interface ExamMapper {
     Exam toExam(CreateExamRequestDto createExamRequestDto);
 
-    @Mapping(source = "examQuestions", target = "numQuestions", qualifiedByName = "calNumQuestion")
+    @Mapping(source = "examQuestions", target = "numQuestions", qualifiedByName = "listToCount")
     ExamResponseDto toExamResponseDto(Exam exam);
 
     @Mapping(target = "id", ignore = true)
@@ -49,8 +49,8 @@ public interface ExamMapper {
     @Mapping(target = "options", ignore = true)
     void updateQuestionFromDto(UpdateQuestionRequestDto dto, @MappingTarget Question question);
 
-    @Named("calNumQuestion")
-    default Long calNumQuestion(List<ExamQuestion> examQuestions) {
-        return (long) examQuestions.size();
+    @Named("listToCount")
+    default Long listToCount(List<?> list) {
+        return list == null ? 0L : (long) list.size();
     }
 }
