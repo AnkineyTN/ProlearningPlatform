@@ -1,16 +1,12 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
+import com.cabybara.prolearningplatform.dto.request.flashcard.*;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.event.model.ChildEntityUpdatedEvent;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import com.cabybara.prolearningplatform.model.note.Note;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
-import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemCreateRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardCreateRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardUpdatingRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
@@ -31,12 +27,14 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -70,7 +68,7 @@ public class FlashcardServiceImpl implements FlashcardService {
             if (privacy == null) {
                 pagedFlashcard = flashcardRepository.findByUserIdAndSetId(userId, setId, pageable);
             } else {
-                pagedFlashcard = flashcardRepository.findByUserIdAndSetIdAndPrivacy(userId,setId, privacy, pageable);
+                pagedFlashcard = flashcardRepository.findByUserIdAndSetIdAndPrivacy(userId, setId, privacy, pageable);
             }
         } else {
             if (privacy == null) {
@@ -158,7 +156,7 @@ public class FlashcardServiceImpl implements FlashcardService {
     public void deleteFlashcard(Long setId, Long flashcardId) throws BadRequestException {
         Long userId = authenticationContext.getCurrentUserId();
         Flashcard deletedFlashcard = flashcardRepository.findById(flashcardId)
-                .orElseThrow(() -> new  ResourceNotFoundException("Flashcard with id: " + flashcardId + "not found!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id: " + flashcardId + "not found!"));
         int deletedCount = flashcardRepository.deleteByIdAndSetIdAndSetUserId(flashcardId, setId, userId);
 
         if (deletedCount == 0) {
@@ -195,24 +193,23 @@ public class FlashcardServiceImpl implements FlashcardService {
     @Override
     public GenerateFlashcardByAIResponseDto generateFlashcardByNotes(GenerateFlashcardByNoteRequestDto request) {
         List<Long> noteIds = request.getNoteIds();
-
         List<Note> notes = noteRepository.findAllById(noteIds);
 
         if (notes.isEmpty()) {
             throw new RuntimeException("No notes found with provided IDs");
         }
 
-        StringBuilder allContent = new StringBuilder();
-        for(Note note: notes){
-            allContent.append("=== Note: ").append(note.getTitle()).append(" ===\n");
-            allContent.append(note.getContent()).append("\n\n");
+        List<String> contents = new ArrayList<>();
+        for (Note note : notes) {
+            String content = "=== Note: " + note.getTitle() + " ===\n" + note.getContent();
+            contents.add(content);
         }
 
-        String finalContent = allContent.toString();
-        System.out.println("Final content: " + finalContent);
-
-//        return aiFlashcardService.generateFlashcard(finalContent, "note");
-        return null;
+        return aiFlashcardService.generateFlashcardByNotes(
+                contents,
+                request.getFreeText(),
+                request.getLanguage()
+        );
     }
 
     @Override

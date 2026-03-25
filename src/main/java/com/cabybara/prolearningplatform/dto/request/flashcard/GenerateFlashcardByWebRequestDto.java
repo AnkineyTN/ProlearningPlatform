@@ -4,7 +4,6 @@ import com.cabybara.prolearningplatform.enums.Language;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -13,8 +12,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GenerateFlashcardByNoteRequestDto {
-    private List<Long> noteIds;
+public class GenerateFlashcardByWebRequestDto {
+    private List<String> urls;
 
     @JsonProperty("free_text")
     @JsonAlias("freeText")

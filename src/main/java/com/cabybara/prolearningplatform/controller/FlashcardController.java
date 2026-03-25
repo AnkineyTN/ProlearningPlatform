@@ -1,9 +1,6 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardCreateRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardUpdatingRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByNoteRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.*;
 import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
@@ -192,4 +189,16 @@ public class FlashcardController {
         }
     }
 
+    @Operation(method = "POST", summary = "Generate flashcard by web URL with AI", description = "Generate flashcard by web URL with AI")
+    @PostMapping(value = "/ai-web")
+    public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByWeb(@Valid @RequestBody GenerateFlashcardByWebRequestDto request) {
+        log.info("Generate flashcard by notes with AI");
+        try {
+            GenerateFlashcardByAIResponseDto response = aIFlashcardService.generateFlashcardByWeb(request);
+            return new ResponseData<>(HttpStatus.OK.value(), "Generate flashcard by web with AI successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate flashcard by web with AI fail");
+        }
+    }
 }
