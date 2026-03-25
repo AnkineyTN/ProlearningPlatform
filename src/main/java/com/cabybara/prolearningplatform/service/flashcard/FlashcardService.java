@@ -29,7 +29,5 @@ public interface FlashcardService {
 
     DetailFlashcardResponseDto updateFlashcard(Flashcard newFlashcard);
 
-    GenerateFlashcardByAIResponseDto generateFlashcardByFiles(GenerateFlashcardByFileRequestDto request);
-
     GenerateFlashcardByAIResponseDto generateFlashcardByNotes(GenerateFlashcardByNoteRequestDto request);
 }

@@ -1,26 +1,24 @@
 package com.cabybara.prolearningplatform.service.ai.impl;
 
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
-import com.cabybara.prolearningplatform.dto.request.note.ConvertFileToVectorRequestDTO;
-import com.cabybara.prolearningplatform.dto.request.note.ExplainNoteRequestDTO;
-import com.cabybara.prolearningplatform.dto.request.note.SummarizeFileRequestDTO;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
-import com.cabybara.prolearningplatform.dto.response.note.ExplainNoteResponseDTO;
-import com.cabybara.prolearningplatform.dto.response.note.SummarizeFileResponseDTO;
 import com.cabybara.prolearningplatform.service.ai.AIFlashcardService;
-import com.cabybara.prolearningplatform.service.ai.AINoteService;
 import com.cabybara.prolearningplatform.utils.RestHttpClientUtil;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.Map;
+
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @Slf4j
@@ -46,18 +44,32 @@ public class AIFlashcardServiceImpl implements AIFlashcardService {
         }
     }
 
-    @Override
-    public GenerateFlashcardByAIResponseDto generateFlashcard(String content, String type) {
-        try {
-            String path = switch (type) {
-                case "file" -> GENERATE_FLASHCARD_BY_FILE_PATH;
-                case "note" -> GENERATE_FLASHCARD_BY_NOTE_PATH;
-                default -> throw new IllegalArgumentException("Invalid type: " + type);
-            };
+    private Resource convertToResource(MultipartFile file) throws IOException {
+        return new ByteArrayResource(file.getBytes()) {
+            @Override
+            public String getFilename() {
+                return file.getOriginalFilename();
+            }
+        };
+    }
 
-            String raw = restHttpClientUtil.post(
-                    aiServiceBaseApi + path,
-                    Map.of("content", content),
+    @Override
+    public GenerateFlashcardByAIResponseDto generateFlashcardByFiles(GenerateFlashcardByFileRequestDto request) {
+        try {
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+            // Add files
+            for (MultipartFile file : request.getFiles()) {
+                body.add("files", convertToResource(file));
+            }
+
+            // Add extra fields
+            body.add("freeText", request.getFreeText());
+            body.add("language", request.getLanguage());
+
+            String raw = restHttpClientUtil.postMultipart(
+                    aiServiceBaseApi + GENERATE_FLASHCARD_BY_FILE_PATH,
+                    body,
                     String.class
             );
 
@@ -66,8 +78,7 @@ public class AIFlashcardServiceImpl implements AIFlashcardService {
                     .build();
 
         } catch (Exception e) {
-            log.error("❌ Error generating flashcard with AI: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to generate flashcard with AI", e);
+            throw new RuntimeException("Failed to call AI service", e);
         }
     }
 }
