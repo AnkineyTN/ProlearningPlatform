@@ -1,11 +1,14 @@
 package com.cabybara.prolearningplatform.model.exam;
 
+import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.AbstractEntity;
 import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +24,9 @@ public class Exam extends AbstractEntity {
 
     private Long duration;
 
-    private String privacy;
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    private Privacy privacy;
 
     @Column(name = "created_by")
     private Long createdBy;

@@ -8,6 +8,7 @@ import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
+import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.service.exam.QuestionService;
 import com.cabybara.prolearningplatform.service.exam.ExamService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
@@ -20,6 +21,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -47,30 +49,25 @@ public class ExamController {
     @GetMapping()
     public ResponseEntity<ApiResponse<List<ExamResponseDto>>> getAllExams(
             @PathVariable Long setId,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Privacy privacy,
             @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
     ) {
-        List<ExamResponseDto> examResponseDtos = examService.getExam(setId, pageable);
+        Page<ExamResponseDto> examResponseDtos = examService.getExam(setId, q, privacy, pageable);
+        PaginationResponseDto paginationResponseDto = PaginationResponseDto.builder()
+                .currentPage(examResponseDtos.getNumber())
+                .totalPages(examResponseDtos.getTotalPages())
+                .totalItems(examResponseDtos.getTotalElements())
+                .pageSize(examResponseDtos.getSize())
+                .build();
 
-        int totalItems = examResponseDtos.size();
-        int pageSize = pageable.getPageSize();
-        int currentPage = pageable.getPageNumber();
-
-        int start = currentPage * pageSize;
-        int end = Math.min(start + pageSize, totalItems);
-
-        List<ExamResponseDto> pagedExams =
-                start >= totalItems ? List.of() : examResponseDtos.subList(start, end);
-
-        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
-                .body(ResponseUtil.success("Successfully", pagedExams, PaginationResponseDto.builder()
-                        .pageSize(pageSize)
-                        .currentPage(currentPage)
-                        .totalItems(totalItems)
-                        .totalPages(totalPages)
-                        .build()
+                .body(ResponseUtil.success(
+                        "Successfully",
+                        examResponseDtos.getContent(),
+                        paginationResponseDto
                 ));
     }
 

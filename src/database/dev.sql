@@ -259,6 +259,7 @@ CREATE TABLE exams (
     created_by INTEGER NOT NULL,
     set_id INTEGER NOT NULL,
     id_user BIGINT NOT NULL,
+    search_vector tsvector,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -267,6 +268,14 @@ CREATE TABLE exams (
             REFERENCES set(id)
             ON DELETE CASCADE
 );
+
+CREATE TRIGGER trigger_update_search_vector_exam
+    BEFORE INSERT OR UPDATE ON exams
+    FOR EACH ROW EXECUTE FUNCTION update_search_vector();
+
+CREATE INDEX idx_exam_search_vector ON exams USING GIN(search_vector);
+CREATE INDEX idx_exam_title_trgm ON exams USING GIN(title gin_trgm_ops);
+CREATE INDEX idx_exam_user_privacy_created ON exams(id_user, privacy, created_at DESC);
 
 CREATE INDEX idx_exams_created_by ON exams(created_by);
 CREATE INDEX idx_exam_set ON exams(set_id);

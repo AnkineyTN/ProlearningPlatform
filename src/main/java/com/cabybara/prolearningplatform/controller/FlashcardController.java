@@ -67,7 +67,7 @@ public class FlashcardController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success(
-                        "Successfully get all flashcard",
+                        "Successfully",
                         allFlashcardResponseDtos.getContent(),
                         paginationResponseDto
                 ));

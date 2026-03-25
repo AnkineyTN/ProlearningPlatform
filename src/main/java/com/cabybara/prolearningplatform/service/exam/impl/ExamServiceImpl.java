@@ -6,6 +6,7 @@ import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByNoteReque
 import com.cabybara.prolearningplatform.dto.request.exam.UpdateExamRequestDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
+import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.exception.ResourceAlreadyExistsException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.ExamMapper;
@@ -20,6 +21,7 @@ import com.cabybara.prolearningplatform.service.exam.ExamService;
 import com.cabybara.prolearningplatform.service.file.FileService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,13 +62,26 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
 //    @Cacheable(value = "set_exams", key = "'set' + #setId")
-    public List<ExamResponseDto> getExam(Long setId, Pageable pageable) {
-        Set set = setRepository.findById(setId)
-                .orElseThrow(() -> new ResourceNotFoundException("set not found"));
+    public Page<ExamResponseDto> getExam(Long setId, String q, Privacy privacy, Pageable pageable) {
+        Long userId = authenticationContext.getCurrentUserId();
 
-        return examRepository.findAllBySet(set, pageable).stream()
-                .map(examMapper::toExamResponseDto)
-                .toList();
+        Page<Exam> pagedExam;
+
+        if (q == null || q.isBlank()) {
+            if (privacy == null) {
+                pagedExam = examRepository.findByUserIdAndSetId(userId, setId, pageable);
+            } else {
+                pagedExam = examRepository.findByUserIdAndSetIdAndPrivacy(userId, setId, privacy, pageable);
+            }
+        } else {
+            if (privacy == null) {
+                pagedExam = examRepository.searchByUserIdAndSetId(userId, setId, q, pageable);
+            } else {
+                pagedExam = examRepository.searchByUserIdAndSetIdAndPrivacy(userId, setId, q, privacy.name(), pageable);
+            }
+        }
+
+        return pagedExam.map(examMapper::toExamResponseDto);
     }
 
     @Override

@@ -40,7 +40,6 @@ public class SetController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("")
     public ResponseEntity<ApiResponse<Object>> getSet(
-            @AuthenticationPrincipal Jwt jwt,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Privacy privacy,
             @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
@@ -57,7 +56,7 @@ public class SetController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success(
-                        "Successfully get all set",
+                        "Successfully",
                         allSetResponseDtos.getContent(),
                         paginationResponseDto
                 ));
