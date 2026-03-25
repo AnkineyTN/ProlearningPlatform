@@ -207,7 +207,9 @@ public class ExamController {
                 .body(ResponseUtil.success("Delete question successfully", null, null));
     }
 
-    // API AI
+    // =============================================
+    // ==== AI API
+    // =============================================
     @Operation(method = "POST", summary = "Generate exam by files with AI", description = "Generate exam by file with AI")
     @PostMapping(value = "/ai-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseData<GenerateExamByAIResponseDto> generateExamByFile(

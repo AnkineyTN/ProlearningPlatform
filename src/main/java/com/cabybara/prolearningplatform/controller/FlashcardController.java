@@ -162,7 +162,9 @@ public class FlashcardController {
                 .body(ResponseUtil.success("Delete flashcard successfully", null, null));
     }
 
-    // API AI
+    // =============================================
+    // ==== AI API
+    // =============================================
     @Operation(method = "POST", summary = "Generate flashcard by files with AI", description = "Generate flashcard by file with AI")
     @PostMapping(value = "/ai-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByFile(@Valid @ModelAttribute GenerateFlashcardByFileRequestDto request) {
