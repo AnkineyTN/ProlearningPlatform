@@ -4,6 +4,7 @@ public record SearchResponseDto(
         Long id,
         String title,
         String description,
-        String type
+        String type,
+        Long userId
 ) {
 }
