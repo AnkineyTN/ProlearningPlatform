@@ -61,6 +61,7 @@ public class AIExamServiceImpl implements AIExamService {
                 body.add("files", convertToResource(file));
             }
             body.add("questions", request.getQuestions());
+            body.add("difficulty", request.getDifficulty());
             body.add("free_text", request.getFreeText());
             body.add("language", request.getLanguage());
 
@@ -80,11 +81,12 @@ public class AIExamServiceImpl implements AIExamService {
     }
 
     @Override
-    public GenerateExamByAIResponseDto generateExamByNotes(List<String> contents, Map<String, Integer> questions, String freeText, Language language) {
+    public GenerateExamByAIResponseDto generateExamByNotes(List<String> contents, Map<String, Integer> questions, Map<String, Double> difficulty, String freeText, Language language) {
         try {
             Map<String, Object> body = new HashMap<>();
             body.put("contents", contents);
             body.put("questions", questions);
+            body.put("difficulty", difficulty);
             body.put("free_text", freeText != null ? freeText : "");
             body.put("language", language != null ? language : "English");
 
@@ -109,6 +111,7 @@ public class AIExamServiceImpl implements AIExamService {
             Map<String, Object> body = new HashMap<>();
             body.put("urls", request.getUrls());
             body.put("questions", request.getQuestions());
+            body.put("difficulty", request.getDifficulty());
             body.put("free_text", request.getFreeText() != null ? request.getFreeText() : "");
             body.put("language", request.getLanguage() != null ? request.getLanguage() : "English");
 

@@ -17,6 +17,8 @@ public class GenerateExamByNoteRequestDto {
 
     private Map<String, Integer> questions;
 
+    private Map<String, Double> difficulty;
+
     @JsonProperty("free_text")
     @JsonAlias("freeText")
     private String freeText;

@@ -134,6 +134,7 @@ public class ExamServiceImpl implements ExamService {
         return aiExamService.generateExamByNotes(
                 contents,
                 request.getQuestions(),
+                request.getDifficulty(),
                 request.getFreeText(),
                 request.getLanguage()
         );

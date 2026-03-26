@@ -18,6 +18,8 @@ public class GenerateExamByFileRequestDto {
 
     private String questions;
 
+    private String difficulty;
+
     @JsonProperty("free_text")
     @JsonAlias("freeText")
     private String freeText;
