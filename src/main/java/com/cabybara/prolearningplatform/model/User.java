@@ -5,6 +5,7 @@ import com.cabybara.prolearningplatform.enums.UserEducation;
 import com.cabybara.prolearningplatform.enums.UserHearAppFrom;
 import com.cabybara.prolearningplatform.enums.UserLanguage;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
+import com.cabybara.prolearningplatform.model.note.Note;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -71,6 +72,10 @@ public class User extends AbstractEntity implements UserDetails {
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
     @ToString.Exclude
     private List<Asset> assets;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
+    @ToString.Exclude
+    private List<Note> notes;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

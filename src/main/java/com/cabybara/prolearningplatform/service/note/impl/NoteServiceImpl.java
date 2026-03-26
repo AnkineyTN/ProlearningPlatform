@@ -42,10 +42,15 @@ public class NoteServiceImpl implements NoteService {
 
     private final AssetService assetService;
     private final AuthenticationContext authenticationContext;
+    private final UserRepository userRepository;
 
     // [POST]: /api/note/create
     @Override
     public CreateNoteResponseDTO createNote(CreateNoteRequestDTO request) {
+        Long userId = authenticationContext.getCurrentUserId();
+
+        User user = userRepository.findById(userId).orElseThrow(()-> new ResourceNotFoundException("User not found"));
+
         Set set = getSetById(request.getSetId());
 
         Note note = Note.builder()
@@ -53,6 +58,7 @@ public class NoteServiceImpl implements NoteService {
                 .privacy(request.getPrivacy())
                 .description(request.getDescription())
                 .set(set)
+                .user(user)
                 .build();
         Note saved = noteRepository.save(note);
         log.info("🐳️ Created note '{}' in set id {}", note.getTitle(), set.getId());

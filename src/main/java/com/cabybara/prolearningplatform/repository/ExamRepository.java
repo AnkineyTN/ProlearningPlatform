@@ -23,38 +23,38 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
             value = """
                 SELECT *
                 FROM exams
-                WHERE id_user = :userId AND set_id = :setId
+                WHERE created_by = :userId AND set_id = :setId
             """,
             nativeQuery = true)
-    Page<Exam> findByUserIdAndSetId(Long userId, Long setId, Pageable pageable);
+    Page<Exam> findByCreatedByAndSetId(Long userId, Long setId, Pageable pageable);
 
     @Query(
             value = """
                 SELECT *
                 FROM exams
-                WHERE id_user = :userId AND set_id = :setId AND privacy = :privacy
+                WHERE created_by = :userId AND set_id = :setId AND privacy = :privacy
             """,
             nativeQuery = true)
-    Page<Exam> findByUserIdAndSetIdAndPrivacy(Long userId, Long setId, String privacy, Pageable pageable);
+    Page<Exam> findByCreatedByAndSetIdAndPrivacy(Long userId, Long setId, String privacy, Pageable pageable);
 
     @Query(
             value = """
                 SELECT *
                 FROM exams
-                WHERE id_user = :userId AND set_id = :setId
+                WHERE created_by = :userId AND set_id = :setId
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             countQuery = """
                 SELECT count(*)
                 FROM exams
-                WHERE id_user = :userId AND set_id = :setId
+                WHERE created_by = :userId AND set_id = :setId
                   AND (
                         search_vector @@ plainto_tsquery('simple', :q)
                         OR (title || ' ' || description) % unaccent(:q))
                 """,
             nativeQuery = true)
-    Page<Exam> searchByUserIdAndSetId(Long userId, Long setId, String q, Pageable pageable);
+    Page<Exam> searchByCreatedByAndSetId(Long userId, Long setId, String q, Pageable pageable);
 
     @Query(
             value = """
@@ -76,7 +76,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             nativeQuery = true)
-    Page<Exam> searchByUserIdAndSetIdAndPrivacy(Long userId, Long setId, String q, String privacy, Pageable pageable);
+    Page<Exam> searchByCreatedByAndSetIdAndPrivacy(Long userId, Long setId, String q, String privacy, Pageable pageable);
 
     @Query(
             value = "SELECT * FROM exams q WHERE q.set_id = :setId AND q.id = :examId",
