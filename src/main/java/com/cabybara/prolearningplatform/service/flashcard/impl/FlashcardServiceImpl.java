@@ -1,16 +1,12 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
+import com.cabybara.prolearningplatform.dto.request.flashcard.*;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.event.model.ChildEntityUpdatedEvent;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import com.cabybara.prolearningplatform.model.note.Note;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
-import com.cabybara.prolearningplatform.dto.request.flashcard.CardItemCreateRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardCreateRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardUpdatingRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
@@ -31,6 +27,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -159,7 +156,7 @@ public class FlashcardServiceImpl implements FlashcardService {
     public void deleteFlashcard(Long setId, Long flashcardId) throws BadRequestException {
         Long userId = authenticationContext.getCurrentUserId();
         Flashcard deletedFlashcard = flashcardRepository.findById(flashcardId)
-                .orElseThrow(() -> new  ResourceNotFoundException("Flashcard with id: " + flashcardId + "not found!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id: " + flashcardId + "not found!"));
         int deletedCount = flashcardRepository.deleteByIdAndSetIdAndSetUserId(flashcardId, setId, userId);
 
         if (deletedCount == 0) {
@@ -194,55 +191,25 @@ public class FlashcardServiceImpl implements FlashcardService {
     }
 
     @Override
-    public GenerateFlashcardByAIResponseDto generateFlashcardByFiles(GenerateFlashcardByFileRequestDto request) {
-        List<MultipartFile> files = request.getFiles();
-
-        StringBuilder allContent = new StringBuilder();
-
-        for (MultipartFile file : files) {
-            try {
-                String fileName = file.getOriginalFilename();
-
-                // Log thông tin file
-                System.out.println("Processing file: " + fileName + " - Size: " + file.getSize());
-
-                // Đọc nội dung file
-                String content = fileService.readFile(file);
-
-                // Thêm separator giữa các file
-                allContent.append("=== Content from: ").append(fileName).append(" ===\n");
-                allContent.append(content);
-                allContent.append("\n\n");
-
-            } catch (Exception e) {
-                throw new RuntimeException("Error processing file: " + file.getOriginalFilename() + " - " + e.getMessage());
-            }
-        }
-
-        String finalContent = allContent.toString();
-        return aiFlashcardService.generateFlashcard(finalContent, "file");
-    }
-
-    @Override
     public GenerateFlashcardByAIResponseDto generateFlashcardByNotes(GenerateFlashcardByNoteRequestDto request) {
         List<Long> noteIds = request.getNoteIds();
-
         List<Note> notes = noteRepository.findAllById(noteIds);
 
         if (notes.isEmpty()) {
             throw new RuntimeException("No notes found with provided IDs");
         }
 
-        StringBuilder allContent = new StringBuilder();
-        for(Note note: notes){
-            allContent.append("=== Note: ").append(note.getTitle()).append(" ===\n");
-            allContent.append(note.getContent()).append("\n\n");
+        List<String> contents = new ArrayList<>();
+        for (Note note : notes) {
+            String content = "=== Note: " + note.getTitle() + " ===\n" + note.getContent();
+            contents.add(content);
         }
 
-        String finalContent = allContent.toString();
-        System.out.println("Final content: " + finalContent);
-
-        return aiFlashcardService.generateFlashcard(finalContent, "note");
+        return aiFlashcardService.generateFlashcardByNotes(
+                contents,
+                request.getFreeText(),
+                request.getLanguage()
+        );
     }
 
     @Override

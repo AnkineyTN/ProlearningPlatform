@@ -1,5 +1,7 @@
 package com.cabybara.prolearningplatform.dto.request.exam;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,6 +15,12 @@ import java.util.Map;
 @Builder
 public class GenerateExamByFileRequestDto {
     private List<MultipartFile> files;
-    private Map<String, Integer> questions;
+
+    private String questions;
+
+    @JsonProperty("free_text")
+    @JsonAlias("freeText")
+    private String freeText;
+
     private String language;
 }

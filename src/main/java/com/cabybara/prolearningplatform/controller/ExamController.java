@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.exam.*;
+import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByWebRequestDto;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.ResponseData;
 import com.cabybara.prolearningplatform.dto.response.ResponseError;
@@ -8,7 +9,9 @@ import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.enums.Privacy;
+import com.cabybara.prolearningplatform.service.ai.AIExamService;
 import com.cabybara.prolearningplatform.service.exam.QuestionService;
 import com.cabybara.prolearningplatform.service.exam.ExamService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
@@ -48,6 +51,7 @@ import static jakarta.servlet.RequestDispatcher.ERROR_MESSAGE;
 public class ExamController {
     private final ExamService examService;
     private final QuestionService questionService;
+    private final AIExamService aiExamService;
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping()
@@ -212,26 +216,26 @@ public class ExamController {
                 .body(ResponseUtil.success("Delete question successfully", null, null));
     }
 
-    // API AI
+    // =============================================
+    // ==== AI API
+    // =============================================
     @Operation(method = "POST", summary = "Generate exam by files with AI", description = "Generate exam by file with AI")
     @PostMapping(value = "/ai-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseData<GenerateExamByAIResponseDto> generateExamByFile(
             @RequestPart("files") List<MultipartFile> files,
             @RequestPart("questions") String questions,
+            @RequestPart("questions") String freeText,
             @RequestPart("language") String language) {
         log.info("Generate exam by files with AI");
         try {
-            ObjectMapper mapper = new ObjectMapper();
-            Map<String, Integer> questionsMap = mapper.readValue(questions, new TypeReference<>() {
-            });
-
             GenerateExamByFileRequestDto request = GenerateExamByFileRequestDto.builder()
                     .files(files)
-                    .questions(questionsMap)
+                    .questions(questions)
+                    .freeText(freeText)
                     .language(language)
                     .build();
 
-            GenerateExamByAIResponseDto response = examService.generateExamByFiles(request);
+            GenerateExamByAIResponseDto response = aiExamService.generateExamByFiles(request);
             return new ResponseData<>(HttpStatus.OK.value(), "Generate exam by files with AI successfully", response);
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e);
@@ -249,6 +253,19 @@ public class ExamController {
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e);
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate exam by note with AI fail");
+        }
+    }
+
+    @Operation(method = "POST", summary = "Generate flashcard by web URL with AI", description = "Generate exam by web URL with AI")
+    @PostMapping(value = "/ai-web")
+    public ResponseData<GenerateExamByAIResponseDto> generateExamByWeb(@Valid @RequestBody GenerateExamByWebRequestDto request) {
+        log.info("Generate exam by notes with AI");
+        try {
+            GenerateExamByAIResponseDto response = aiExamService.generateExamByWeb(request);
+            return new ResponseData<>(HttpStatus.OK.value(), "Generate exam by web with AI successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate exam by web with AI fail");
         }
     }
 }
