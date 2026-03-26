@@ -24,7 +24,5 @@ public interface ExamService {
 
     void deleteExam(Long setId, Long ExamId);
 
-    GenerateExamByAIResponseDto generateExamByFiles(GenerateExamByFileRequestDto request);
-
     GenerateExamByAIResponseDto generateExamByNotes(GenerateExamByNoteRequestDto request);
 }

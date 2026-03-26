@@ -26,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -116,63 +117,25 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
-    public GenerateExamByAIResponseDto generateExamByFiles(GenerateExamByFileRequestDto request) {
-        List<MultipartFile> files = request.getFiles();
-
-        StringBuilder allContent = new StringBuilder();
-
-        for (MultipartFile file : files) {
-            try {
-                String fileName = file.getOriginalFilename();
-
-                // Log file information
-                System.out.println("Processing file: " + fileName + " - Size: " + file.getSize());
-
-                // Read file
-                String content = fileService.readFile(file);
-
-                // Add separator between two files
-                allContent.append("=== Content from: ").append(fileName).append(" ===\n");
-                allContent.append(content);
-                allContent.append("\n\n");
-
-            } catch (Exception e) {
-                throw new RuntimeException("Error processing file: " + file.getOriginalFilename() + " - " + e.getMessage());
-            }
-        }
-
-        // Build request body for AI API Call
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("content", allContent.toString());
-        requestBody.put("questions", request.getQuestions());
-        requestBody.put("language", request.getLanguage());
-        requestBody.put("type", "file");
-
-        return aiExamService.generateExam(requestBody);
-    }
-
-    @Override
     public GenerateExamByAIResponseDto generateExamByNotes(GenerateExamByNoteRequestDto request) {
         List<Long> noteIds = request.getNoteIds();
-
         List<Note> notes = noteRepository.findAllById(noteIds);
 
         if (notes.isEmpty()) {
             throw new RuntimeException("No notes found with provided IDs");
         }
 
-        StringBuilder allContent = new StringBuilder();
+        List<String> contents = new ArrayList<>();
         for (Note note : notes) {
-            allContent.append("=== Note: ").append(note.getTitle()).append(" ===\n");
-            allContent.append(note.getContent()).append("\n\n");
+            String content = "=== Note: " + note.getTitle() + " ===\n" + note.getContent();
+            contents.add(content);
         }
 
-        Map<String, Object> requestBody = new HashMap<>();
-        requestBody.put("content", allContent.toString());
-        requestBody.put("questions", request.getQuestions());
-        requestBody.put("language", request.getLanguage());
-        requestBody.put("type", "note");
-
-        return aiExamService.generateExam(requestBody);
+        return aiExamService.generateExamByNotes(
+                contents,
+                request.getQuestions(),
+                request.getFreeText(),
+                request.getLanguage()
+        );
     }
 }

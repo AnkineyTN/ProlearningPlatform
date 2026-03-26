@@ -1,19 +1,22 @@
-package com.cabybara.prolearningplatform.dto.request.flashcard;
+package com.cabybara.prolearningplatform.dto.request.exam;
 
 import com.cabybara.prolearningplatform.enums.Language;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.web.multipart.MultipartFile;
+import lombok.*;
+
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
 @Builder
-public class GenerateFlashcardByFileRequestDto {
-    private List<MultipartFile> files;
+@NoArgsConstructor
+@AllArgsConstructor
+public class GenerateExamByWebRequestDto {
+    private List<String> urls;
+
+    private Map<String, Integer> questions;
 
     @JsonProperty("free_text")
     @JsonAlias("freeText")

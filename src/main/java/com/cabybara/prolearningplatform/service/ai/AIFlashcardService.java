@@ -1,13 +1,17 @@
 package com.cabybara.prolearningplatform.service.ai;
 
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
-import com.cabybara.prolearningplatform.dto.request.note.ConvertFileToVectorRequestDTO;
-import com.cabybara.prolearningplatform.dto.request.note.ExplainNoteRequestDTO;
-import com.cabybara.prolearningplatform.dto.request.note.SummarizeFileRequestDTO;
+import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByNoteRequestDto;
+import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByWebRequestDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
-import com.cabybara.prolearningplatform.dto.response.note.ExplainNoteResponseDTO;
-import com.cabybara.prolearningplatform.dto.response.note.SummarizeFileResponseDTO;
+import com.cabybara.prolearningplatform.enums.Language;
+
+import java.util.List;
 
 public interface AIFlashcardService {
-    public GenerateFlashcardByAIResponseDto generateFlashcard(String content, String type);
+    public GenerateFlashcardByAIResponseDto generateFlashcardByFiles(GenerateFlashcardByFileRequestDto request);
+
+    public GenerateFlashcardByAIResponseDto generateFlashcardByNotes(List<String> contents, String freeText, Language language);
+
+    public GenerateFlashcardByAIResponseDto generateFlashcardByWeb(GenerateFlashcardByWebRequestDto request);
 }

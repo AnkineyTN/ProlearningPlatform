@@ -89,45 +89,6 @@ public class NoteController {
         }
     }
 
-    @Operation(method = "POST", summary = "Convert file to vector DB", description = "Convert file to vector DB to query when explaining with AI")
-    @PostMapping(value = "/convert-to-vectordb")
-    public ResponseData<Void> convertFileToVector(@Valid @RequestBody ConvertFileToVectorRequestDTO request) {
-        log.info("Convert file to vector DB");
-        try {
-            aiNoteService.convertFileToVector(request);
-            return new ResponseData<>(HttpStatus.CREATED.value(), "Convert file to vector successfully");
-        } catch (Exception e) {
-            log.error(ERROR_MESSAGE, e);
-            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Convert file to vector fail");
-        }
-    }
-
-    @Operation(method = "POST", summary = "Explain note with AI", description = "Explain selected text in note with AI")
-    @PostMapping(value = "/explain")
-    public ResponseData<ExplainNoteResponseDTO> explainNote(@Valid @RequestBody ExplainNoteRequestDTO request) {
-        log.info("Explain note with AI");
-        try {
-            ExplainNoteResponseDTO response = aiNoteService.explainNote(request);
-            return new ResponseData<>(HttpStatus.OK.value(), "Explain note with AI successfully", response);
-        } catch (Exception e) {
-            log.error(ERROR_MESSAGE, e);
-            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Explain note with AI fail");
-        }
-    }
-
-    @Operation(method = "POST", summary = "Summarize file with AI", description = "Summarize file with AI")
-    @PostMapping(value = "/summarize")
-    public ResponseData<SummarizeFileResponseDTO> summarizeFile(@Valid @RequestBody SummarizeFileRequestDTO request) {
-        log.info("Summarize file with AI");
-        try {
-            SummarizeFileResponseDTO response = aiNoteService.summarizeFile(request);
-            return new ResponseData<>(HttpStatus.OK.value(), "Summarize file with AI successfully", response);
-        } catch (Exception e) {
-            log.error(ERROR_MESSAGE, e);
-            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Summarize file with AI fail");
-        }
-    }
-
     @Operation(method = "GET", summary = "Get all notes of set", description = "Get all notes of set")
     @GetMapping(value = "/all/{setId}")
     @ValidateSort(allowedFields = {"id", "created_at", "updated_at", "title"})
@@ -223,6 +184,48 @@ public class NoteController {
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Delete note fail");
+        }
+    }
+
+    // =============================================
+    // ==== AI API
+    // =============================================
+    @Operation(method = "POST", summary = "Convert file to vector DB", description = "Convert file to vector DB to query when explaining with AI")
+    @PostMapping(value = "/convert-to-vectordb")
+    public ResponseData<Void> convertFileToVector(@Valid @RequestBody ConvertFileToVectorRequestDTO request) {
+        log.info("Convert file to vector DB");
+        try {
+            aiNoteService.convertFileToVector(request);
+            return new ResponseData<>(HttpStatus.CREATED.value(), "Convert file to vector successfully");
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Convert file to vector fail");
+        }
+    }
+
+    @Operation(method = "POST", summary = "Explain note with AI", description = "Explain selected text in note with AI")
+    @PostMapping(value = "/explain")
+    public ResponseData<ExplainNoteResponseDTO> explainNote(@Valid @RequestBody ExplainNoteRequestDTO request) {
+        log.info("Explain note with AI");
+        try {
+            ExplainNoteResponseDTO response = aiNoteService.explainNote(request);
+            return new ResponseData<>(HttpStatus.OK.value(), "Explain note with AI successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Explain note with AI fail");
+        }
+    }
+
+    @Operation(method = "POST", summary = "Summarize file with AI", description = "Summarize file with AI")
+    @PostMapping(value = "/summarize")
+    public ResponseData<SummarizeFileResponseDTO> summarizeFile(@Valid @RequestBody SummarizeFileRequestDTO request) {
+        log.info("Summarize file with AI");
+        try {
+            SummarizeFileResponseDTO response = aiNoteService.summarizeFile(request);
+            return new ResponseData<>(HttpStatus.OK.value(), "Summarize file with AI successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Summarize file with AI fail");
         }
     }
 }
