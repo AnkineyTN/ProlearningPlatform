@@ -25,9 +25,23 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
 
     Page<Flashcard> findAllBySetIdAndUserId(Long setId, Long userId, Pageable pageable);
 
+    @Query(
+            value = """
+                SELECT *
+                FROM flashcard
+                WHERE id_user = :userId AND id_set = :setId
+            """,
+            nativeQuery = true)
     Page<Flashcard> findByUserIdAndSetId(Long userId, Long setId, Pageable pageable);
 
-    Page<Flashcard> findByUserIdAndSetIdAndPrivacy(Long userId, Long setId, Privacy privacy, Pageable pageable);
+    @Query(
+            value = """
+                SELECT *
+                FROM flashcard
+                WHERE id_user = :userId AND id_set = :setId AND privacy = :privacy
+            """,
+        nativeQuery = true)
+    Page<Flashcard> findByUserIdAndSetIdAndPrivacy(Long userId, Long setId, String privacy, Pageable pageable);
 
     @Query(
             value = """
@@ -36,14 +50,13 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
                 WHERE id_user = :userId AND id_set = :setId
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
-                ORDER BY created_at DESC
             """,
             countQuery = """
                 SELECT count(*)
                 FROM flashcard
                 WHERE id_user = :userId AND id_set = :setId
                   AND (
-                        search_vector @@ plainto_tsquery('simple', :q)
+                        search_vector @@ plainto_tsquery('simple', unaccent(:q))
                         OR (title || ' ' || description) % unaccent(:q))
                 """,
             nativeQuery = true)
@@ -58,7 +71,6 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
                   AND privacy = :privacy
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
-                ORDER BY created_at DESC
             """,
             countQuery = """
                 SELECT *

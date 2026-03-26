@@ -2,21 +2,30 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.note.*;
 import com.cabybara.prolearningplatform.dto.response.*;
-import com.cabybara.prolearningplatform.dto.response.note.CreateNoteResponseDTO;
-import com.cabybara.prolearningplatform.dto.response.note.ExplainNoteResponseDTO;
-import com.cabybara.prolearningplatform.dto.response.note.GetDetailNoteResponseDTO;
-import com.cabybara.prolearningplatform.dto.response.note.SummarizeFileResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
+import com.cabybara.prolearningplatform.dto.response.note.*;
+import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.service.ai.AINoteService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
+import com.cabybara.prolearningplatform.utils.ApiResponse;
+import com.cabybara.prolearningplatform.utils.ResponseUtil;
+import com.cabybara.prolearningplatform.utils.ValidateSort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/note")
@@ -82,11 +91,36 @@ public class NoteController {
 
     @Operation(method = "GET", summary = "Get all notes of set", description = "Get all notes of set")
     @GetMapping(value = "/all/{setId}")
-    public ResponseData<?> getAllNotesOfSet(@RequestParam(defaultValue = "0", required = false) int pageNo,
-                                            @Min(1) @RequestParam(defaultValue = "10", required = false) int pageSize,
-                                            @PathVariable @Min(1) Long setId) {
-        log.info("Get notes of set");
-        return new ResponseData<>(HttpStatus.OK.value(), "Get videos by category", noteService.getAllNotesOfSet(pageNo, pageSize, setId));
+    @ValidateSort(allowedFields = {"id", "created_at", "updated_at", "title"})
+//    public ResponseData<?> getAllNotesOfSet(@RequestParam(defaultValue = "0", required = false) int pageNo,
+//                                            @Min(1) @RequestParam(defaultValue = "10", required = false) int pageSize,
+//                                            @PathVariable @Min(1) Long setId) {
+    public ResponseEntity<ApiResponse<List<GetAllNotesResponseDTO>>> getAllNotesOfSet(
+            @PathVariable Long setId,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Privacy privacy,
+            @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
+    ) {
+
+        Page<GetAllNotesResponseDTO> noteResponseDtos = noteService.getAllNotes(setId, q, privacy, pageable);
+        PaginationResponseDto paginationResponseDto = PaginationResponseDto.builder()
+                .currentPage(noteResponseDtos.getNumber())
+                .totalPages(noteResponseDtos.getTotalPages())
+                .totalItems(noteResponseDtos.getTotalElements())
+                .pageSize(noteResponseDtos.getSize())
+                .build();
+
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success(
+                        "Successfully",
+                        noteResponseDtos.getContent(),
+                        paginationResponseDto
+                ));
+
+//        log.info("Get notes of set");
+//        return new ResponseData<>(HttpStatus.OK.value(), "Get videos by category", noteService.getAllNotesOfSet(pageNo, pageSize, setId));
     }
 
     @Operation(summary = "Get note detail", description = "Get note detail")

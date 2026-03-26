@@ -68,7 +68,7 @@ public class FlashcardServiceImpl implements FlashcardService {
             if (privacy == null) {
                 pagedFlashcard = flashcardRepository.findByUserIdAndSetId(userId, setId, pageable);
             } else {
-                pagedFlashcard = flashcardRepository.findByUserIdAndSetIdAndPrivacy(userId, setId, privacy, pageable);
+                pagedFlashcard = flashcardRepository.findByUserIdAndSetIdAndPrivacy(userId,setId, privacy.name(), pageable);
             }
         } else {
             if (privacy == null) {

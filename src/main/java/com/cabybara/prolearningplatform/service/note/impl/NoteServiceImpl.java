@@ -6,6 +6,7 @@ import com.cabybara.prolearningplatform.dto.response.note.CreateNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetAllNotesResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetDetailNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetDocsInNoteResponseDTO;
+import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.*;
 import com.cabybara.prolearningplatform.model.composite_key.NoteDocsId;
@@ -17,6 +18,7 @@ import com.cabybara.prolearningplatform.repository.*;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
 import com.cabybara.prolearningplatform.service.cloudinary.CloudinaryService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,7 @@ public class NoteServiceImpl implements NoteService {
     private final CloudinaryService cloudinaryService;
 
     private final AssetService assetService;
+    private final AuthenticationContext authenticationContext;
 
     // [POST]: /api/note/create
     @Override
@@ -151,6 +154,36 @@ public class NoteServiceImpl implements NoteService {
                 .totalElements(notesPage.getTotalElements())
                 .items(noteDTOs)
                 .build();
+    }
+
+    @Override
+    public Page<GetAllNotesResponseDTO> getAllNotes(Long setId, String q, Privacy privacy, Pageable pageable) {
+        Long userId = authenticationContext.getCurrentUserId();
+
+        Page<Note> pagedNote;
+
+        if (q == null || q.isBlank()) {
+            if (privacy == null) {
+                pagedNote = noteRepository.findByUserIdAndSetId(userId, setId, pageable);
+            } else {
+                pagedNote = noteRepository.findByUserIdAndSetIdAndPrivacy(userId, setId, privacy.name(), pageable);
+            }
+        } else {
+            if (privacy == null) {
+                pagedNote = noteRepository.searchByUserIdAndSetId(userId, setId, q, pageable);
+            } else {
+                pagedNote = noteRepository.searchByUserIdAndSetIdAndPrivacy(userId, setId, q, privacy.name(), pageable);
+            }
+        }
+
+        return pagedNote.map(note -> GetAllNotesResponseDTO.builder()
+                .id(note.getId())
+                .title(note.getTitle())
+                .description(note.getDescription())
+                .privacy(note.getPrivacy())
+                .created_at(note.getCreatedAt() != null ? note.getCreatedAt().toString() : null)
+                .updated_at(note.getUpdatedAt() != null ? note.getUpdatedAt().toString() : null)
+                .build());
     }
 
     // [GET]: /api/note/{noteId}

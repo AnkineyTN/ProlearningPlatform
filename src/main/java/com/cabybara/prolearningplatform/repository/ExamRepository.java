@@ -19,9 +19,23 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
 
     List<Exam> findAllBySet(Set set, Pageable pageable);
 
+    @Query(
+            value = """
+                SELECT *
+                FROM exams
+                WHERE id_user = :userId AND set_id = :setId
+            """,
+            nativeQuery = true)
     Page<Exam> findByUserIdAndSetId(Long userId, Long setId, Pageable pageable);
 
-    Page<Exam> findByUserIdAndSetIdAndPrivacy(Long userId, Long setId, Privacy privacy, Pageable pageable);
+    @Query(
+            value = """
+                SELECT *
+                FROM exams
+                WHERE id_user = :userId AND set_id = :setId AND privacy = :privacy
+            """,
+            nativeQuery = true)
+    Page<Exam> findByUserIdAndSetIdAndPrivacy(Long userId, Long setId, String privacy, Pageable pageable);
 
     @Query(
             value = """
@@ -30,7 +44,6 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
                 WHERE id_user = :userId AND set_id = :setId
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
-                ORDER BY created_at DESC
             """,
             countQuery = """
                 SELECT count(*)
@@ -52,7 +65,6 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
                   AND privacy = :privacy
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
-                ORDER BY created_at DESC
             """,
             countQuery = """
                 SELECT *

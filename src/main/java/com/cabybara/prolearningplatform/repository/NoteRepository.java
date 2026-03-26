@@ -25,4 +25,63 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
                 WHERE n.id = :noteId
             """)
     Optional<Note> findNoteWithDocsById(@Param("noteId") Long noteId);
+
+    @Query(
+            value = """
+                SELECT *
+                FROM note
+                WHERE id_user = :userId AND id_set = :setId
+            """,
+            nativeQuery = true)
+    Page<Note> findByUserIdAndSetId(Long userId, Long setId, Pageable pageable);
+
+    @Query(
+            value = """
+                SELECT *
+                FROM note
+                WHERE id_user = :userId AND id_set = :setId AND privacy = :privacy
+            """,
+            nativeQuery = true)
+    Page<Note> findByUserIdAndSetIdAndPrivacy(Long userId, Long setId, String privacy, Pageable pageable);
+
+    @Query(
+            value = """
+                SELECT *
+                FROM note
+                WHERE id_user = :userId AND id_set = :setId
+                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                      OR (title || ' ' || description) % unaccent(:q))
+            """,
+            countQuery = """
+                SELECT count(*)
+                FROM note
+                WHERE id_user = :userId AND id_set = :setId
+                  AND (
+                        search_vector @@ plainto_tsquery('simple', :q)
+                        OR (title || ' ' || description) % unaccent(:q))
+                """,
+            nativeQuery = true)
+    Page<Note> searchByUserIdAndSetId(Long userId, Long setId, String q, Pageable pageable);
+
+    @Query(
+            value = """
+                SELECT *
+                FROM note
+                WHERE id_user = :userId
+                  AND id_set = :setId
+                  AND privacy = :privacy
+                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                      OR (title || ' ' || description) % unaccent(:q))
+            """,
+            countQuery = """
+                SELECT *
+                FROM note
+                WHERE id_user = :userId
+                  AND id_set = :setId
+                  AND privacy = :privacy
+                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                      OR (title || ' ' || description) % unaccent(:q))
+            """,
+            nativeQuery = true)
+    Page<Note> searchByUserIdAndSetIdAndPrivacy(Long userId, Long setId, String q, String privacy, Pageable pageable);
 }

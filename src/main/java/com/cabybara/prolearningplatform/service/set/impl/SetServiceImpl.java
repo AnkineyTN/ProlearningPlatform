@@ -49,7 +49,7 @@ public class SetServiceImpl implements SetService {
             if (privacy == null) {
                 pagedSet = setRepository.findByUserId(userId, pageable);
             } else {
-                pagedSet = setRepository.findByUserIdAndPrivacy(userId, privacy, pageable);
+                pagedSet = setRepository.findByUserIdAndPrivacy(userId, privacy.name(), pageable);
             }
         } else {
             if (privacy == null) {

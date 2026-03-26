@@ -106,4 +106,13 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(response);
     }
+
+    @ExceptionHandler(InvalidSortFieldException.class)
+    public ResponseEntity<ApiResponse<Object>> handleInvalidSortFieldException(
+            InvalidSortFieldException ex, WebRequest request) {
+        ApiResponse<Object> response = ResponseUtil.error("Error: " + ex.getMessage(),null, "path: " + request.getDescription(false).replace("uri=", ""));
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
 }
