@@ -66,6 +66,10 @@ CREATE TABLE set
             ON DELETE CASCADE
 );
 
+CREATE INDEX idx_set_search_vector ON set USING GIN(search_vector);
+CREATE INDEX idx_set_title_trgm ON set USING GIN(title gin_trgm_ops);
+CREATE INDEX idx_set_user_privacy_created ON set(id_user, privacy, created_at DESC);
+
 CREATE OR REPLACE FUNCTION update_search_vector() RETURNS trigger AS $$
 BEGIN
     NEW.search_vector :=
@@ -88,6 +92,7 @@ CREATE TABLE note
     description TEXT,
     privacy     VARCHAR(50),
     status      VARCHAR(50),
+    search_vector tsvector,
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     id_set      INT,
@@ -102,6 +107,14 @@ CREATE TABLE note
             REFERENCES users(id)
             ON DELETE CASCADE
 );
+
+CREATE TRIGGER trigger_update_search_vector_note
+    BEFORE INSERT OR UPDATE ON "note"
+    FOR EACH ROW EXECUTE FUNCTION update_search_vector();
+
+CREATE INDEX idx_note_search_vector ON note USING GIN(search_vector);
+CREATE INDEX idx_note_title_trgm ON note USING GIN(title gin_trgm_ops);
+CREATE INDEX idx_note_user_privacy_created ON note(id_user, privacy, created_at DESC);
 
 CREATE TABLE note_docs
 (
