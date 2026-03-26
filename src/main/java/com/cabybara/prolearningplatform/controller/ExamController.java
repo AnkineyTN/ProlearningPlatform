@@ -13,6 +13,7 @@ import com.cabybara.prolearningplatform.service.exam.QuestionService;
 import com.cabybara.prolearningplatform.service.exam.ExamService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
+import com.cabybara.prolearningplatform.utils.ValidateSort;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,10 +28,12 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +49,9 @@ public class ExamController {
     private final ExamService examService;
     private final QuestionService questionService;
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping()
+    @ValidateSort(allowedFields = {"id", "created_at", "updated_at", "title"})
     public ResponseEntity<ApiResponse<List<ExamResponseDto>>> getAllExams(
             @PathVariable Long setId,
             @RequestParam(required = false) String q,

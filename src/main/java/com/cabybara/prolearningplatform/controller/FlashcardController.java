@@ -12,6 +12,7 @@ import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
+import com.cabybara.prolearningplatform.utils.ValidateSort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,6 +50,7 @@ public class FlashcardController {
     )
     @PreAuthorize("isAuthenticated()")
     @GetMapping("")
+    @ValidateSort(allowedFields = {"id", "created_at", "updated_at", "title"})
     public ResponseEntity<ApiResponse<List<FlashcardResponseDto>>> getAllFlashcard(
             @Parameter(description = "The ID of the Set to retrieve flashcards from", required = true)
             @PathVariable Long setId,

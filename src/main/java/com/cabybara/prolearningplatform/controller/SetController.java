@@ -3,6 +3,7 @@ package com.cabybara.prolearningplatform.controller;
 import com.cabybara.prolearningplatform.dto.request.set.SetUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.enums.Privacy;
+import com.cabybara.prolearningplatform.utils.ValidateSort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,6 +40,7 @@ public class SetController {
     )
     @PreAuthorize("isAuthenticated()")
     @GetMapping("")
+    @ValidateSort(allowedFields = {"id", "created_at", "updated_at", "title"})
     public ResponseEntity<ApiResponse<Object>> getSet(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Privacy privacy,
