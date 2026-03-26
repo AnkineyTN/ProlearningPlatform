@@ -71,7 +71,7 @@ public class ExamServiceImpl implements ExamService {
             if (privacy == null) {
                 pagedExam = examRepository.findByUserIdAndSetId(userId, setId, pageable);
             } else {
-                pagedExam = examRepository.findByUserIdAndSetIdAndPrivacy(userId, setId, privacy, pageable);
+                pagedExam = examRepository.findByUserIdAndSetIdAndPrivacy(userId, setId, privacy.name(), pageable);
             }
         } else {
             if (privacy == null) {

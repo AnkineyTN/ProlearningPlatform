@@ -28,9 +28,23 @@ public interface SetRepository extends JpaRepository<Set, Long> {
     @Query("UPDATE Set s SET s.updatedAt = :now WHERE s.id = :id")
     void updateLastModifiedDate(@Param("id") Long id, @Param("now") OffsetDateTime now);
 
+    @Query(
+            value = """
+                SELECT *
+                FROM set
+                WHERE id_user = :userId
+            """,
+            nativeQuery = true)
     Page<Set> findByUserId(Long userId, Pageable pageable);
 
-    Page<Set> findByUserIdAndPrivacy(Long userId, Privacy privacy, Pageable pageable);
+    @Query(
+            value = """
+                SELECT *
+                FROM set
+                WHERE id_user = :userId AND privacy = :privacy
+            """,
+            nativeQuery = true)
+    Page<Set> findByUserIdAndPrivacy(Long userId, String privacy, Pageable pageable);
 
     @Query(
             value = """
@@ -39,7 +53,6 @@ public interface SetRepository extends JpaRepository<Set, Long> {
                 WHERE id_user = :userId
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
-                ORDER BY created_at DESC
             """,
             countQuery = """
                 SELECT count(*)
@@ -60,7 +73,6 @@ public interface SetRepository extends JpaRepository<Set, Long> {
                   AND privacy = :privacy
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
-                ORDER BY created_at DESC
             """,
             countQuery = """
                 SELECT *

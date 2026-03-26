@@ -37,6 +37,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -70,7 +71,7 @@ public class FlashcardServiceImpl implements FlashcardService {
             if (privacy == null) {
                 pagedFlashcard = flashcardRepository.findByUserIdAndSetId(userId, setId, pageable);
             } else {
-                pagedFlashcard = flashcardRepository.findByUserIdAndSetIdAndPrivacy(userId,setId, privacy, pageable);
+                pagedFlashcard = flashcardRepository.findByUserIdAndSetIdAndPrivacy(userId,setId, privacy.name(), pageable);
             }
         } else {
             if (privacy == null) {
