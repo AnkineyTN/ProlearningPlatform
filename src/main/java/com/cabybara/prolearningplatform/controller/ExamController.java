@@ -224,13 +224,15 @@ public class ExamController {
     public ResponseData<GenerateExamByAIResponseDto> generateExamByFile(
             @RequestPart("files") List<MultipartFile> files,
             @RequestPart("questions") String questions,
-            @RequestPart("questions") String freeText,
+            @RequestPart("difficulty") String difficulty,
+            @RequestPart(value = "freeText", required = false) String freeText,
             @RequestPart("language") String language) {
         log.info("Generate exam by files with AI");
         try {
             GenerateExamByFileRequestDto request = GenerateExamByFileRequestDto.builder()
                     .files(files)
                     .questions(questions)
+                    .difficulty(difficulty)
                     .freeText(freeText)
                     .language(language)
                     .build();
