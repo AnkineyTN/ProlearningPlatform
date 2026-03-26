@@ -70,15 +70,15 @@ public class ExamServiceImpl implements ExamService {
 
         if (q == null || q.isBlank()) {
             if (privacy == null) {
-                pagedExam = examRepository.findByUserIdAndSetId(userId, setId, pageable);
+                pagedExam = examRepository.findByCreatedByAndSetId(userId, setId, pageable);
             } else {
-                pagedExam = examRepository.findByUserIdAndSetIdAndPrivacy(userId, setId, privacy.name(), pageable);
+                pagedExam = examRepository.findByCreatedByAndSetIdAndPrivacy(userId, setId, privacy.name(), pageable);
             }
         } else {
             if (privacy == null) {
-                pagedExam = examRepository.searchByUserIdAndSetId(userId, setId, q, pageable);
+                pagedExam = examRepository.searchByCreatedByAndSetId(userId, setId, q, pageable);
             } else {
-                pagedExam = examRepository.searchByUserIdAndSetIdAndPrivacy(userId, setId, q, privacy.name(), pageable);
+                pagedExam = examRepository.searchByCreatedByAndSetIdAndPrivacy(userId, setId, q, privacy.name(), pageable);
             }
         }
 
