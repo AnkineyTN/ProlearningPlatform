@@ -11,6 +11,7 @@ import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import com.cabybara.prolearningplatform.utils.ValidateSort;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -22,31 +23,38 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/note")
+@RequestMapping("/sets/{setId}/notes")
 @Validated
 @Slf4j
 @Tag(name = "Note APIs")
 @RequiredArgsConstructor
 public class NoteController {
-    private final NoteService noteService;
-    private final AINoteService aiNoteService;
     private static final String ERROR_MESSAGE = "errorMessage={}";
 
-    @Operation(method = "POST", summary = "Create note", description = "Create new note")
+    private final NoteService noteService;
+    private final AINoteService aiNoteService;
+
+    @Operation(method = "POST", summary = "Create new note", description = "Create new note")
     @PostMapping(value = "/create")
-    public ResponseData<CreateNoteResponseDTO> createNote(@Valid @RequestBody CreateNoteRequestDTO request) {
-        log.info("Create note");
+    @PreAuthorize("isAuthenticated()")
+    public ResponseData<CreateNoteResponseDTO> createNote(
+            @Parameter(description = "The ID of the Set", required = true)
+            @PathVariable Long setId,
+            @Valid @RequestBody CreateNoteRequestDTO request
+    ) {
+        log.info("Create new note");
         try {
-            return new ResponseData<>(HttpStatus.CREATED.value(), "Create note successfully", noteService.createNote(request));
+            return new ResponseData<>(HttpStatus.CREATED.value(), "Create new note successfully", noteService.createNote(request));
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e);
-            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Create note fail");
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Create new note fail");
         }
     }
 
@@ -90,11 +98,8 @@ public class NoteController {
     }
 
     @Operation(method = "GET", summary = "Get all notes of set", description = "Get all notes of set")
-    @GetMapping(value = "/all/{setId}")
+    @GetMapping(value = "")
     @ValidateSort(allowedFields = {"id", "created_at", "updated_at", "title"})
-//    public ResponseData<?> getAllNotesOfSet(@RequestParam(defaultValue = "0", required = false) int pageNo,
-//                                            @Min(1) @RequestParam(defaultValue = "10", required = false) int pageSize,
-//                                            @PathVariable @Min(1) Long setId) {
     public ResponseEntity<ApiResponse<List<GetAllNotesResponseDTO>>> getAllNotesOfSet(
             @PathVariable Long setId,
             @RequestParam(required = false) String q,
@@ -109,8 +114,6 @@ public class NoteController {
                 .totalItems(noteResponseDtos.getTotalElements())
                 .pageSize(noteResponseDtos.getSize())
                 .build();
-
-
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success(
@@ -118,9 +121,6 @@ public class NoteController {
                         noteResponseDtos.getContent(),
                         paginationResponseDto
                 ));
-
-//        log.info("Get notes of set");
-//        return new ResponseData<>(HttpStatus.OK.value(), "Get videos by category", noteService.getAllNotesOfSet(pageNo, pageSize, setId));
     }
 
     @Operation(summary = "Get note detail", description = "Get note detail")

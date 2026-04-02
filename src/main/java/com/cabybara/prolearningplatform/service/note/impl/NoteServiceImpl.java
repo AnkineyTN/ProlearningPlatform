@@ -38,7 +38,6 @@ public class NoteServiceImpl implements NoteService {
     private final NoteDocsRepository noteDocsRepository;
     private final NoteImgsRepository noteImgsRepository;
     private final AssetRepository assetRepository;
-    private final CloudinaryService cloudinaryService;
 
     private final AssetService assetService;
     private final AuthenticationContext authenticationContext;

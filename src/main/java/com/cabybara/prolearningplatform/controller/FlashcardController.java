@@ -36,7 +36,7 @@ import java.util.List;
 @RequestMapping("/sets/{setId}/flashcards")
 @RequiredArgsConstructor
 @Validated
-@Tag(name = "Flashcard")
+@Tag(name = "Flashcard API")
 public class FlashcardController {
     private static final String ERROR_MESSAGE = "errorMessage={}";
 
