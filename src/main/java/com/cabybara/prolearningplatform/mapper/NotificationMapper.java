@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.mapper;
 
 import com.cabybara.prolearningplatform.dto.response.notification.NotificationResponseDto;
-import com.cabybara.prolearningplatform.model.Notification;
+import com.cabybara.prolearningplatform.model.noti.Notification;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 

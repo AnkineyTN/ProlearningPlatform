@@ -1,12 +1,15 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.internal.FCMMessage;
+import com.cabybara.prolearningplatform.dto.request.notification.UpdateNotificationPreferenceRequestDto;
 import com.cabybara.prolearningplatform.dto.request.user.DeviceTokenRegistrationDto;
 import com.cabybara.prolearningplatform.dto.request.notification.MarkNotificationsReadRequestDto;
 import com.cabybara.prolearningplatform.dto.response.notification.NotificationListResponseDto;
+import com.cabybara.prolearningplatform.dto.response.notification.NotificationPreferenceResponseDto;
 import com.cabybara.prolearningplatform.dto.response.notification.NotificationResponseDto;
 import com.cabybara.prolearningplatform.service.fcm.DeviceTokenService;
 import com.cabybara.prolearningplatform.service.fcm.FCMService;
+import com.cabybara.prolearningplatform.service.notification.NotificationPreferenceService;
 import com.cabybara.prolearningplatform.service.notification.NotificationService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -15,6 +18,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +39,7 @@ import java.util.Map;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final NotificationPreferenceService notificationPreferenceService;
     private final DeviceTokenService deviceTokenService;
     private final FCMService fcmService;
 
@@ -54,6 +59,37 @@ public class NotificationController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Notifications retrieved successfully", response, null));
+    }
+
+    @Operation(
+            summary = "Get current user notification preferences",
+            description = "Retrieve notification preferences of the currently authenticated user",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @GetMapping("/preferences")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getPreferences() {
+        NotificationPreferenceResponseDto response =
+                notificationPreferenceService.getCurrentUserPreference();
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Get user notification preference successfully", response, null));
+    }
+
+    @Operation(
+            summary = "Update current user notification preferences",
+            description = "Update notification preferences for the currently authenticated user",
+            security = @SecurityRequirement(name = "bearerAuth")
+    )
+    @PutMapping("/preferences")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> updatePreferences(
+            @Valid @RequestBody UpdateNotificationPreferenceRequestDto request) {
+        NotificationPreferenceResponseDto response =
+                notificationPreferenceService.updateCurrentUserPreference(request);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Update user notification preference successfully", response, null));
     }
 
     @GetMapping("/unread")

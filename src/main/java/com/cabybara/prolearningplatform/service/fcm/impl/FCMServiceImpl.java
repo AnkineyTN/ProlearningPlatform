@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.service.fcm.impl;
 
 import com.cabybara.prolearningplatform.dto.internal.FCMMessage;
-import com.cabybara.prolearningplatform.model.Notification;
+import com.cabybara.prolearningplatform.model.noti.Notification;
 import com.cabybara.prolearningplatform.repository.DeviceTokenRepository;
 import com.cabybara.prolearningplatform.repository.NotificationRepository;
 import com.cabybara.prolearningplatform.service.fcm.FCMService;

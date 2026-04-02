@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.dto.request.notification;
+package com.cabybara.prolearningplatform.dto.request.common;
 
 import lombok.Builder;
 import lombok.Data;

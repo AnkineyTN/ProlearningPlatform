@@ -3,6 +3,7 @@ package com.cabybara.prolearningplatform.enums;
 public enum NotificationType {
     CARD_DUE_REMINDER("Cards are due for review"),
     STUDY_SESSION_REMINDER("Time to study!"),
+    WEEKLY_SUMMARY("Weekly study summary"),
 
     // Social (future)
 //    SET_SHARED("Someone shared a set with you"),
