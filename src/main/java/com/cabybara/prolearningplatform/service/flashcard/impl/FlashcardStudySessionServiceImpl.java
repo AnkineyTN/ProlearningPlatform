@@ -16,6 +16,7 @@ import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.model.flashcard_study_session.FlashcardStudySession;
 import com.cabybara.prolearningplatform.model.flashcard_study_session.FlashcardStudySessionLogItem;
+import com.cabybara.prolearningplatform.model.flashcard_study_session.StudySessionReviewLog;
 import com.cabybara.prolearningplatform.repository.*;
 import com.cabybara.prolearningplatform.service.flashcard.CardItemService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardReviewService;
@@ -114,7 +115,7 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
                 .studyMode(studyMode)
                 .initialCardIds(cardIds)
                 .remainingCardIds(new ArrayList<>(cardIds))
-                .reviewLog(new ArrayList<>())
+                .reviewLogs(new ArrayList<>())
                 .correctCount(0)
                 .incorrectCount(0)
                 .lastInteractionAt(Instant.now())
@@ -154,7 +155,7 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
         }
 
         List<Long> remainingIds = session.getRemainingCardIds();
-        List<FlashcardStudySessionLogItem> logs = session.getReviewLog();
+        List<StudySessionReviewLog> logs = session.getReviewLogs();
 
         List<Long> cardIdsToUpdate = request.getCardItemReviews().stream()
                 .map(CardItemReviewRequestDto::getCardId)
@@ -175,12 +176,12 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
                     flashcardReviewService.calculateSpacedRepetition(card, reviewItem.isKnown());
                 }
 
-                FlashcardStudySessionLogItem logItem = FlashcardStudySessionLogItem.builder()
-                        .cardId(reviewItem.getCardId())
-                        .isKnown(reviewItem.isKnown())
+                StudySessionReviewLog reviewLog = StudySessionReviewLog.builder()
+                        .card(card)
+                        .known(reviewItem.isKnown())
                         .reviewedAt(OffsetDateTime.now())
                         .build();
-                logs.add(logItem);
+                session.addReviewLog(reviewLog);
 
                 remainingIds.remove(reviewItem.getCardId());
 
@@ -202,7 +203,7 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
         }
 
         session.setRemainingCardIds(remainingIds);
-        session.setReviewLog(logs);
+        session.setReviewLogs(logs);
 
         flashcardStudySessionRepository.save(session);
 

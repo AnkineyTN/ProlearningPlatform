@@ -48,10 +48,14 @@ public class FlashcardStudySession {
     @JdbcTypeCode(SqlTypes.JSON)
     private List<Long> remainingCardIds = new ArrayList<>();
 
-    @ColumnDefault("'[]'")
-    @Column(name = "review_log")
-    @JdbcTypeCode(SqlTypes.JSON)
-    private List<FlashcardStudySessionLogItem> reviewLog = new ArrayList<>();
+//    @ColumnDefault("'[]'")
+//    @Column(name = "review_log")
+//    @JdbcTypeCode(SqlTypes.JSON)
+//    private List<FlashcardStudySessionLogItem> reviewLog = new ArrayList<>();
+
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("reviewedAt ASC")
+    private List<StudySessionReviewLog> reviewLogs = new ArrayList<>();
 
     @ColumnDefault("0")
     @Column(name = "correct_count")
@@ -79,4 +83,9 @@ public class FlashcardStudySession {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "flashcard_id", nullable = false)
     private Flashcard flashcard;
+
+    public void addReviewLog(StudySessionReviewLog log) {
+        reviewLogs.add(log);
+        log.setSession(this);
+    }
 }
