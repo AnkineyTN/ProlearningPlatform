@@ -62,43 +62,44 @@ public class FlashcardReviewServiceImpl implements FlashcardReviewService {
         // trigger updatedAt on parent flashcard
     }
 
+    /**
+     * SM-2 (SuperMemo 2).
+     * Piotr Wozniak, adapt for binary input:
+     * - isKnown = true  → quality = 4 (correct after hesitation) | 5 (Prefect - instant answer)
+     * - isKnown = false → quality = 1 (incorrect, barely remembered)
+     * EF (Ease Factor):
+     *   EF' = EF + (0.1 - (5-q) * (0.08 + (5-q) * 0.02))
+     *   EF' = max(1.3, EF')
+     * Interval:
+     *   Correct (q >= 3): 1d → 6d → interval * EF
+     *   Incorrect (q < 3): reset ve 1d, repetitions = 0
+     */
     @Override
     public void calculateSpacedRepetition(CardItem card, boolean isKnown) {
-        if (isKnown) {
-            if (card.getRepetitions() == 0) {
+        int quality = isKnown ? 5 : 1;
+
+        float ef = card.getEaseFactor();
+        ef = ef + (0.1f - (5 - quality) * (0.08f + (5 - quality) * 0.02f));
+        ef = Math.max(1.3f, ef);
+        card.setEaseFactor(ef);
+
+        if (quality >= 3) {
+            int reps = card.getRepetitions();
+            if (reps == 0) {
                 card.setIntervalDays(1);
-            } else if (card.getRepetitions() == 1) {
-                card.setIntervalDays(3);
+            } else if (reps == 1) {
+                card.setIntervalDays(6);
             } else {
-                int newInterval = Math.round(card.getIntervalDays() * card.getEaseFactor());
-                card.setIntervalDays(newInterval);
+                card.setIntervalDays(Math.round(card.getIntervalDays() * ef));
             }
-
-            // bonus --> reduce EF
-            card.setEaseFactor((float) (card.getEaseFactor() + 0.1));
-
-            card.setRepetitions(card.getRepetitions() + 1);
+            card.setRepetitions(reps + 1);
             card.setCardStatus(CardStatus.KNOWN);
-
         } else {
-            card.setIntervalDays(0);
             card.setRepetitions(0);
-
-            // punish --> increase EF
-            double newEase = Math.max(1.3, card.getEaseFactor() - 0.2);
-            card.setEaseFactor((float) newEase);
-
+            card.setIntervalDays(1);
             card.setCardStatus(CardStatus.UNKNOWN);
         }
 
-        calculateDueDate(card);
-    }
-
-    private void calculateDueDate(CardItem card) {
-        if (card.getIntervalDays() == 0) {
-            card.setNextReviewAt(OffsetDateTime.now().plusMinutes(10));
-        } else {
-            card.setNextReviewAt(OffsetDateTime.now().plusDays(card.getIntervalDays()));
-        }
+        card.setNextReviewAt(OffsetDateTime.now().plusDays(card.getIntervalDays()));
     }
 }
