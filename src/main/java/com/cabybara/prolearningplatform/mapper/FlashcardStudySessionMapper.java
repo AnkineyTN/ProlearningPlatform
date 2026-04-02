@@ -7,6 +7,7 @@ import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySes
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import com.cabybara.prolearningplatform.model.flashcard_study_session.FlashcardStudySession;
 import com.cabybara.prolearningplatform.model.flashcard_study_session.FlashcardStudySessionLogItem;
+import com.cabybara.prolearningplatform.model.flashcard_study_session.StudySessionReviewLog;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -20,7 +21,7 @@ import java.util.List;
 )
 public interface FlashcardStudySessionMapper {
     @Mapping(target = "totalCards", expression = "java(mapListToCount(flashcardStudySession.getInitialCardIds()))")
-    @Mapping(target = "completedCount", expression = "java(mapListToCount(flashcardStudySession.getReviewLog()))")
+    @Mapping(target = "completedCount", expression = "java(mapListToCount(flashcardStudySession.getReviewLogs()))")
     @Mapping(target = "remainingCount", expression = "java(mapListToCount(flashcardStudySession.getRemainingCardIds()))")
     @Mapping(target = "progressPercent", expression = "java(calculateProgressPercent(flashcardStudySession))")
     FlashcardStudySessionStatusResponseDto toFlashcardStudySessionStatusResponse(FlashcardStudySession flashcardStudySession);
@@ -33,27 +34,30 @@ public interface FlashcardStudySessionMapper {
 
     @Mapping(source = "id", target = "sessionId")
     @Mapping(source = "lastInteractionAt", target = "finishedAt")
-    @Mapping(source = "reviewLog", target = "logs")
+    @Mapping(source = "reviewLogs", target = "logs")
     FlashcardStudySessionResultResponseDto toFlashcardStudySessionResultResponse(FlashcardStudySession flashcardStudySession);
 
-    FlashcardStudySessionLogItemResponseDto toFlashcardStudySessionLogItemResponse(FlashcardStudySessionLogItem flashcardStudySessionLogItem);
+    default FlashcardStudySessionLogItemResponseDto toLogItemDto(
+            StudySessionReviewLog log) {
+        return FlashcardStudySessionLogItemResponseDto.builder()
+                .cardId(log.getCard().getId())
+                .known(log.isKnown())
+                .reviewedAt(log.getReviewedAt())
+                .build();
+    }
 
     default Long mapListToCount(List<?> list) {
         return list != null ? (long) list.size() : 0L;
     }
 
     default Long calculateProgressPercent(FlashcardStudySession session) {
-        Long totalCards = mapListToCount(session.getInitialCardIds());
-        Long completedCount = mapListToCount(session.getReviewLog());
-
-        if (totalCards == null || totalCards == 0L) {
-            return 0L;
-        }
-
-        return Math.round((completedCount * 100.0) / totalCards);
+        long total = mapListToCount(session.getInitialCardIds());
+        if (total == 0) return 0L;
+        long completed = session.getReviewLogs().size();
+        return Math.round((double) completed / total * 100);
     }
 
-    default List<FlashcardStudySessionLogItemResponseDto> sessionLogToDto(List<FlashcardStudySessionLogItem> sessionLogItems) {
-        return sessionLogItems.stream().map(this::toFlashcardStudySessionLogItemResponse).toList();
+    default List<FlashcardStudySessionLogItemResponseDto> sessionLogToDto(List<StudySessionReviewLog> sessionLogItems) {
+        return sessionLogItems.stream().map(this::toLogItemDto).toList();
     }
 }
