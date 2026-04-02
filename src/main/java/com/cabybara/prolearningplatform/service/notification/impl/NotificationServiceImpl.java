@@ -5,7 +5,7 @@ import com.cabybara.prolearningplatform.dto.response.notification.NotificationLi
 import com.cabybara.prolearningplatform.dto.response.notification.NotificationResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.NotificationMapper;
-import com.cabybara.prolearningplatform.model.Notification;
+import com.cabybara.prolearningplatform.model.noti.Notification;
 import com.cabybara.prolearningplatform.repository.NotificationRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.notification.NotificationService;

@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.service.fcm;
 
 import com.cabybara.prolearningplatform.dto.internal.FCMMessage;
-import com.cabybara.prolearningplatform.model.Notification;
+import com.cabybara.prolearningplatform.model.noti.Notification;
 import com.google.firebase.messaging.BatchResponse;
 
 import java.util.List;

@@ -2,7 +2,7 @@ package com.cabybara.prolearningplatform.service.notification.impl;
 
 import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
 import com.cabybara.prolearningplatform.enums.NotificationType;
-import com.cabybara.prolearningplatform.model.Notification;
+import com.cabybara.prolearningplatform.model.noti.Notification;
 import com.cabybara.prolearningplatform.service.fcm.FCMService;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
 import com.cabybara.prolearningplatform.service.notification.NotificationService;

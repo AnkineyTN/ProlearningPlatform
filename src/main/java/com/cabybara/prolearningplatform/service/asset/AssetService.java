@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.service.asset;
 
 import com.cabybara.prolearningplatform.dto.request.common.AssetUrlUploadRequestDto;
-import com.cabybara.prolearningplatform.dto.request.notification.UpdateUploadedAssetRequestDto;
+import com.cabybara.prolearningplatform.dto.request.common.UpdateUploadedAssetRequestDto;
 import com.cabybara.prolearningplatform.dto.response.common.AssetSignatureResponseDto;
 import com.cabybara.prolearningplatform.dto.response.common.AssetUrlUploadResponseDto;
 import com.cabybara.prolearningplatform.enums.AssetType;

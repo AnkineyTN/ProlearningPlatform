@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.service.notification;
 
 import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
-import com.cabybara.prolearningplatform.model.Notification;
+import com.cabybara.prolearningplatform.model.noti.Notification;
 
 import java.util.List;
 

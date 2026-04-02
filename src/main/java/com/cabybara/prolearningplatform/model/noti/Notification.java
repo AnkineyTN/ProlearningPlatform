@@ -1,6 +1,7 @@
-package com.cabybara.prolearningplatform.model;
+package com.cabybara.prolearningplatform.model.noti;
 
 import com.cabybara.prolearningplatform.enums.NotificationType;
+import com.cabybara.prolearningplatform.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
