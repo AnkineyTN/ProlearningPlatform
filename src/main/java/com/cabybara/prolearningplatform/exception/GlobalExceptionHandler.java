@@ -7,112 +7,118 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
-import java.util.Date;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
-    @ExceptionHandler(
-            {
-                    MethodArgumentNotValidException.class,
-                    ConstraintViolationException.class,
-                    HttpMessageNotReadableException.class
-            })
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleValidationException(Exception e, WebRequest request) {
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setTimestamp(new Date(System.currentTimeMillis()));
-        errorResponse.setStatus(HttpStatus.BAD_REQUEST.value());
-        errorResponse.setPath(request.getDescription(false).replace("uri=", ""));
 
-        String message = e.getMessage();
-        if (e instanceof MethodArgumentNotValidException) {
-            int start = message.lastIndexOf("[");
-            int end = message.lastIndexOf("]");
-            message = message.substring(start + 1, end - 1);
-            errorResponse.setError("Payload invalid");
-        } else if (e instanceof ConstraintViolationException) {
-            message = message.substring(message.indexOf(" ") + 1);
-            errorResponse.setError("Parameter invalid");
-        } else if (e instanceof HttpMessageNotReadableException) {
-            message = "Incorrect value enum. Correct enum values are: " + message.substring(message.indexOf("Enum class:") + 12).trim();
-            errorResponse.setError("Incorrect enum value");
-        }
+    // ---- 400 Bad Request: validation & business logic ----
 
-        errorResponse.setMessage(message);
-        return errorResponse;
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex, WebRequest request) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+        return buildResponse(HttpStatus.BAD_REQUEST, message, request);
     }
 
-    @ExceptionHandler(
-            AuthException.class
-    )
-    public ResponseEntity<ApiResponse<Object>> handleAuthException(AuthException ex, WebRequest req) {
-        ApiResponse<Object> response = ResponseUtil.error("Authentication failed: " + ex.getMessage(), null, "path: " + req.getDescription(false).replace("uri=", ""));
-        return ResponseEntity
-                .status(ex.getStatus())
-                .body(response);
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Object>> handleConstraintViolation(
+            ConstraintViolationException ex, WebRequest request) {
+        String message = ex.getConstraintViolations().stream()
+                .map(cv -> cv.getPropertyPath() + ": " + cv.getMessage())
+                .collect(Collectors.joining("; "));
+        return buildResponse(HttpStatus.BAD_REQUEST, message, request);
     }
 
-    @ExceptionHandler(
-            GoogleAuthException.class
-    )
-    public ResponseEntity<ApiResponse<Object>> handleGoogleAuthException(GoogleAuthException ex, WebRequest req) {
-        ApiResponse<Object> response = ResponseUtil.error("Google auth failed: " + ex.getMessage(),null, "path: " + req.getDescription(false).replace("uri=", ""));
-        return ResponseEntity
-                .status(HttpStatus.UNAUTHORIZED)
-                .body(response);
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMessageNotReadable(
+            HttpMessageNotReadableException ex, WebRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST, "Malformed request body", request);
     }
 
-
-    @ExceptionHandler(ResourceAlreadyExistsException.class)
-    public ResponseEntity<ApiResponse<Object>> handleResourceAlreadyExistsException(
-            ResourceAlreadyExistsException ex, WebRequest request) {
-        ApiResponse<Object> response = ResponseUtil.error("Resource already exists: " + ex.getMessage(),null, "path: " + request.getDescription(false).replace("uri=", ""));
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT)
-                .body(response);
+    @ExceptionHandler({
+            FlashcardStudySessionException.class,
+            InvalidSortFieldException.class
+    })
+    public ResponseEntity<ApiResponse<Object>> handleBadRequest(
+            RuntimeException ex, WebRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
+
+    // ---- 401 Unauthorized ----
+
+    @ExceptionHandler({AuthException.class, GoogleAuthException.class})
+    public ResponseEntity<ApiResponse<Object>> handleAuthentication(
+            RuntimeException ex, WebRequest request) {
+        HttpStatus status = (ex instanceof AuthException authEx)
+                ? authEx.getStatus()
+                : HttpStatus.UNAUTHORIZED;
+        return buildResponse(status, ex.getMessage(), request);
+    }
+
+    // ---- 403 Forbidden ----
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAccessDenied(
+            AccessDeniedException ex, WebRequest request) {
+        return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request);
+    }
+
+    // ---- 404 Not Found ----
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiResponse<Object>> handleResourceNotFoundException(
+    public ResponseEntity<ApiResponse<Object>> handleNotFound(
             ResourceNotFoundException ex, WebRequest request) {
-        ApiResponse<Object> response = ResponseUtil.error("Resource not found: " + ex.getMessage(),null, "path: " + request.getDescription(false).replace("uri=", ""));
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(response);
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 
-    @ExceptionHandler(FlashcardStudySessionException.class)
-    public ResponseEntity<ApiResponse<Object>> handleFlashcardStudySessionException(
-            FlashcardStudySessionException ex, WebRequest request) {
-        ApiResponse<Object> response = ResponseUtil.error("Error: " + ex.getMessage(),null, "path: " + request.getDescription(false).replace("uri=", ""));
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(response);
+    // ---- 409 Conflict ----
+
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleConflict(
+            ResourceAlreadyExistsException ex, WebRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    // ---- 500 Internal Server Error ----
+
+    @ExceptionHandler(UploadFileException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUploadFile(
+            UploadFileException ex, WebRequest request) {
+        log.error("File upload failed: {}", ex.getMessage(), ex);
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);
     }
 
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ApiResponse<Object>> handleIllegalStateException(
-            IllegalStateException ex, WebRequest request
-    ) {
-        ApiResponse<Object> response = ResponseUtil.error("Server error: " + ex.getMessage(),null, "path: " + request.getDescription(false).replace("uri=", ""));
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(response);
+    public ResponseEntity<ApiResponse<Object>> handleIllegalState(
+            IllegalStateException ex, WebRequest request) {
+        log.error("Illegal state: {}", ex.getMessage(), ex);
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), request);
     }
 
-    @ExceptionHandler(InvalidSortFieldException.class)
-    public ResponseEntity<ApiResponse<Object>> handleInvalidSortFieldException(
-            InvalidSortFieldException ex, WebRequest request) {
-        ApiResponse<Object> response = ResponseUtil.error("Error: " + ex.getMessage(),null, "path: " + request.getDescription(false).replace("uri=", ""));
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(response);
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Object>> handleUnexpected(
+            Exception ex, WebRequest request) {
+        log.error("Unexpected error: {}", ex.getMessage(), ex);
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred", request);
+    }
+
+    // ---- Helper ----
+
+    private ResponseEntity<ApiResponse<Object>> buildResponse(
+            HttpStatus status, String message, WebRequest request) {
+        String path = request.getDescription(false).replace("uri=", "");
+        ApiResponse<Object> body = ResponseUtil.error(message, null, "path: " + path);
+        return ResponseEntity.status(status).body(body);
     }
 }
