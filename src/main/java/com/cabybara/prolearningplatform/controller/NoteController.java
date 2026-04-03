@@ -11,6 +11,7 @@ import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import com.cabybara.prolearningplatform.utils.ValidateSort;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -22,28 +23,40 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/note")
+@RequestMapping("/sets/{setId}/notes")
 @Validated
 @Slf4j
 @Tag(name = "Note APIs")
 @RequiredArgsConstructor
 public class NoteController {
+    // ##################################################
+    // #################  PREPARATION  ##################
+    // ##################################################
+    private static final String ERROR_MESSAGE = "errorMessage={}";
     private final NoteService noteService;
     private final AINoteService aiNoteService;
-    private static final String ERROR_MESSAGE = "errorMessage={}";
 
-    @Operation(method = "POST", summary = "Create note", description = "Create new note")
-    @PostMapping(value = "/create")
-    public ResponseData<CreateNoteResponseDTO> createNote(@Valid @RequestBody CreateNoteRequestDTO request) {
-        log.info("Create note");
+    // ##################################################
+    // #################  MAIN METHOD  ##################
+    // ##################################################
+    @Operation(method = "POST", summary = "Create new note", description = "Create new note")
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping(value = "")
+    public ResponseData<CreateNoteResponseDTO> createNote(
+            @Parameter(description = "The ID of the Set", required = true)
+            @PathVariable Long setId,
+            @Valid @RequestBody CreateNoteRequestDTO request
+    ) {
+        log.info("Create new note");
         try {
-            return new ResponseData<>(HttpStatus.CREATED.value(), "Create note successfully", noteService.createNote(request));
+            return new ResponseData<>(HttpStatus.CREATED.value(), "Create note successfully", noteService.createNote(setId, request));
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e);
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Create note fail");
@@ -52,10 +65,15 @@ public class NoteController {
 
     @Operation(method = "PATCH", summary = "Save note", description = "Save note while taking note")
     @PatchMapping(value = "/save/{noteId}")
-    public ResponseData<Void> saveNote(@PathVariable @Min(1) Long noteId, @Valid @RequestBody SaveNoteRequestDTO request) {
+    public ResponseData<Void> saveNote(
+            @Parameter(description = "The ID of the Set", required = true)
+            @PathVariable Long setId,
+            @PathVariable @Min(1) Long noteId,
+            @Valid @RequestBody SaveNoteRequestDTO request)
+    {
         log.info("Save note, noteId={}", noteId);
         try {
-            noteService.saveNote(noteId, request);
+            noteService.saveNote(setId, noteId, request);
             return new ResponseData<>(HttpStatus.OK.value(), "Save note successfully");
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
@@ -63,12 +81,16 @@ public class NoteController {
         }
     }
 
-    @Operation(method = "POST", summary = "Save document in note", description = "Save document to note_docs table after uploading to cloudinary and having assetId")
+    @Operation(method = "POST", summary = "Save document in note", description = "Save document to database after uploading to cloudinary and having assetId")
     @PostMapping(value = "/save-doc")
-    public ResponseData<Void> saveDocumentInNote(@Valid @RequestBody SaveDocInNoteRequestDto request) {
+    public ResponseData<Void> saveDocumentInNote(
+            @Parameter(description = "The ID of the Set", required = true)
+            @PathVariable Long setId,
+            @Valid @RequestBody SaveDocInNoteRequestDto request
+    ) {
         log.info("Save document in note");
         try {
-            noteService.saveDocInNote(request);
+            noteService.saveDocInNote(setId, request);
             return new ResponseData<>(HttpStatus.CREATED.value(), "Save document in note successfully");
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e);
@@ -90,7 +112,7 @@ public class NoteController {
     }
 
     @Operation(method = "GET", summary = "Get all notes of set", description = "Get all notes of set")
-    @GetMapping(value = "/all/{setId}")
+    @GetMapping(value = "/all")
     @ValidateSort(allowedFields = {"id", "created_at", "updated_at", "title"})
 //    public ResponseData<?> getAllNotesOfSet(@RequestParam(defaultValue = "0", required = false) int pageNo,
 //                                            @Min(1) @RequestParam(defaultValue = "10", required = false) int pageSize,
@@ -138,7 +160,7 @@ public class NoteController {
     @Operation(summary = "Delete document in note", description = "Delete document in note")
     @DeleteMapping("/delete-doc")
     public ResponseData<Void> deleteDocInNote(@Valid @RequestBody DeleteNoteDocRequestDTO request) {
-        log.info("Delete document in note, notedId={}, assetId={}", request.getNoteId(), request.getAssetId() );
+        log.info("Delete document in note, notedId={}, assetId={}", request.getNoteId(), request.getAssetId());
         try {
             noteService.deleteDocInNote(request);
             return new ResponseData<>(HttpStatus.NO_CONTENT.value(), "Delete document in note successfully");

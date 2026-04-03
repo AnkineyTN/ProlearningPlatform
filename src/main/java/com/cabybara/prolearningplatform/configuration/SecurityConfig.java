@@ -51,22 +51,17 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeHttpRequests((authorize) -> authorize
-                        .anyRequest().permitAll()
-                );
-
-//                .authorizeHttpRequests((authorize) -> authorize
-//                        .requestMatchers("/swagger-ui/**").permitAll()
-//                        .requestMatchers("/v3/api-docs/**").permitAll()
-//                        .requestMatchers("/swagger-resources/**").permitAll()
-//                        .requestMatchers("/webjars/**").permitAll()
-//                        .requestMatchers("/api-docs/**").permitAll()
-//                        .requestMatchers("/auth/register/**").permitAll()
-//                        .requestMatchers("/auth/login/**").permitAll()
-//                        .requestMatchers("/auth/google/**").permitAll()
-//                        .anyRequest().authenticated()
-//                );
+        http.authorizeHttpRequests((authorize) -> authorize
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger-resources/**").permitAll()
+                .requestMatchers("/webjars/**").permitAll()
+                .requestMatchers("/api-docs/**").permitAll()
+                .requestMatchers("/auth/register/**").permitAll()
+                .requestMatchers("/auth/login/**").permitAll()
+                .requestMatchers("/auth/google/**").permitAll()
+                .anyRequest().authenticated()
+        );
 
         http.sessionManagement(
                 session ->

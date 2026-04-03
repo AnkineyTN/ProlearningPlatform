@@ -16,7 +16,6 @@ import com.cabybara.prolearningplatform.model.note.NoteDocs;
 import com.cabybara.prolearningplatform.model.note.NoteImgs;
 import com.cabybara.prolearningplatform.repository.*;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
-import com.cabybara.prolearningplatform.service.cloudinary.CloudinaryService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
@@ -33,25 +32,29 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class NoteServiceImpl implements NoteService {
+    // ##################################################
+    // #################  PREPARATION  ##################
+    // ##################################################
     private final SetRepository setRepository;
     private final NoteRepository noteRepository;
     private final NoteDocsRepository noteDocsRepository;
     private final NoteImgsRepository noteImgsRepository;
     private final AssetRepository assetRepository;
-    private final CloudinaryService cloudinaryService;
+    private final UserRepository userRepository;
 
     private final AssetService assetService;
     private final AuthenticationContext authenticationContext;
-    private final UserRepository userRepository;
 
-    // [POST]: /api/note/create
+    // ##################################################
+    // #################  MAIN METHOD  ##################
+    // ##################################################
+
+    // [POST]: /sets/{setId}/notes
     @Override
-    public CreateNoteResponseDTO createNote(CreateNoteRequestDTO request) {
+    public CreateNoteResponseDTO createNote(Long setId, CreateNoteRequestDTO request) {
         Long userId = authenticationContext.getCurrentUserId();
-
-        User user = userRepository.findById(userId).orElseThrow(()-> new ResourceNotFoundException("User not found"));
-
-        Set set = getSetById(request.getSetId());
+        User user = getUserById(userId);
+        Set set = getSetByIdAndUserId(setId, userId);
 
         Note note = Note.builder()
                 .title(request.getTitle())
@@ -61,33 +64,37 @@ public class NoteServiceImpl implements NoteService {
                 .user(user)
                 .build();
         Note saved = noteRepository.save(note);
-        log.info("🐳️ Created note '{}' in set id {}", note.getTitle(), set.getId());
+        log.info("✅ Created note '{}' in set id {} by user {}", note.getTitle(), set.getId(), userId);
 
         return CreateNoteResponseDTO.builder()
                 .noteId(saved.getId())
                 .build();
     }
 
-    // [PATCH]: /api/note/save
+    // [PATCH]: /sets/{setId}/notes/save
     @Override
-    public void saveNote(Long noteId, SaveNoteRequestDTO request) {
-        Note note = getNoteById(noteId);
+    public void saveNote(Long setId, Long noteId, SaveNoteRequestDTO request) {
+        Long userId = authenticationContext.getCurrentUserId();
+
+        Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
+
         note.setTitle(request.getTitle());
         note.setContent(request.getContent());
         noteRepository.save(note);
-        log.info("🐳 Save note '{}'", noteId);
+        log.info("✅ Save note with noteId '{}'", noteId);
     }
 
-    // [POST]: /api/note/save-doc
+    // [POST]: /sets/{setId}/notes/save-doc
     @Override
-    public void saveDocInNote(SaveDocInNoteRequestDto request) {
-        Note note = getNoteById(request.getNoteId());
+    public void saveDocInNote(Long setId, SaveDocInNoteRequestDto request) {
+        Long userId = authenticationContext.getCurrentUserId();
+        Note note = getNoteByIdAndUserIdAndSetId(request.getNoteId(), userId, setId);
         Asset asset = getAssetById(request.getAssetId());
 
         NoteDocs noteDocs = new NoteDocs(note, asset);
 
         noteDocsRepository.save(noteDocs);
-        log.info("🐳️ Save document in note with noteId {} and assetId {}", note.getTitle(), asset.getId());
+        log.info("✅ Save document in note with noteId {} and assetId {}", note.getTitle(), asset.getId());
     }
 
     // [DELETE]: /api/note/delete-doc
@@ -257,12 +264,26 @@ public class NoteServiceImpl implements NoteService {
         return setRepository.findById(setId).orElseThrow(() -> new ResourceNotFoundException("Set not found"));
     }
 
+    private Set getSetByIdAndUserId(Long setId, Long userId) {
+        return setRepository.findByIdAndUserId(setId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Set not found or no permission"));
+    }
+
     private Note getNoteById(Long noteId) {
         return noteRepository.findById(noteId).orElseThrow(() -> new ResourceNotFoundException("Note not found"));
     }
 
+    private Note getNoteByIdAndUserIdAndSetId(Long noteId, Long userId, Long setId) {
+        return noteRepository.findByIdAndUserIdAndSetId(noteId, userId, setId)
+                .orElseThrow(() -> new ResourceNotFoundException("Note not found or no permission"));
+    }
+
     private Asset getAssetById(Long assetId) {
         return assetRepository.findById(assetId).orElseThrow(() -> new ResourceNotFoundException("Asset not found"));
+    }
+
+    private User getUserById(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 
     private void deleteImgInNote(Long noteId, Long assetId) {

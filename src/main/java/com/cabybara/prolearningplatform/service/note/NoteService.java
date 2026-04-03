@@ -12,11 +12,11 @@ import org.springframework.data.domain.Pageable;
 import java.io.IOException;
 
 public interface NoteService {
-    public CreateNoteResponseDTO createNote(CreateNoteRequestDTO request);
+    public CreateNoteResponseDTO createNote(Long setId, CreateNoteRequestDTO request);
 
-    public void saveNote(Long noteId, SaveNoteRequestDTO request);
+    public void saveNote(Long setId, Long noteId, SaveNoteRequestDTO request);
 
-    public void saveDocInNote(SaveDocInNoteRequestDto request);
+    public void saveDocInNote(Long setId, SaveDocInNoteRequestDto request);
 
     public void saveImgInNote(SaveImgInNoteRequestDto request);
 
