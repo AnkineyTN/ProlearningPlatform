@@ -34,9 +34,9 @@ CREATE TABLE "user"
     last_name     VARCHAR(100)        NOT NULL,
     password      VARCHAR(255)        NOT NULL,
     recovery_code character varying(255) NULL,
-    language      user_language            default 'VI',
-    education     user_education           default 'HIGH_SCHOOL',
-    hear_app_from user_hear_app_from       default 'GOOGLE',
+    language      user_language            NULL,
+    education     user_education           NULL,
+    hear_app_from user_hear_app_from       NULL,
     account_type  VARCHAR(50)              default 'FREE',
     created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -409,3 +409,10 @@ SELECT
 FROM exams;
 
 COMMIT;
+
+ALTER TABLE IF EXISTS users ALTER COLUMN language DROP NOT NULL;
+ALTER TABLE IF EXISTS users ALTER COLUMN language DROP DEFAULT;
+ALTER TABLE IF EXISTS users ALTER COLUMN education DROP NOT NULL;
+ALTER TABLE IF EXISTS users ALTER COLUMN education DROP DEFAULT;
+ALTER TABLE IF EXISTS users ALTER COLUMN hear_app_from DROP NOT NULL;
+ALTER TABLE IF EXISTS users ALTER COLUMN hear_app_from DROP DEFAULT;
