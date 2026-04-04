@@ -9,6 +9,8 @@ notification:
     cron: "0 0 8 * * *"
   evening-reminder:
     cron: "0 0 19 * * *"
+  weekly-summary:
+    cron: "0 0 9 * * *"
   cleanup:
     cron: "0 0 2 * * SUN"
     days-old: 30
