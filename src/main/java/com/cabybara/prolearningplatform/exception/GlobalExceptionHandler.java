@@ -46,6 +46,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({
+            BadRequestException.class,
             FlashcardStudySessionException.class,
             InvalidSortFieldException.class
     })
