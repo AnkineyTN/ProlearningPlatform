@@ -40,19 +40,20 @@ public class User extends AbstractEntity implements UserDetails {
     @Column()
     private String password;
 
+    @Column(name = "is_email_verified")
+    @ColumnDefault("false")
+    private boolean isEmailVerified;
+
     @Column(columnDefinition = "user_language")
     @Enumerated(EnumType.STRING)
-    @ColumnDefault("'vi'")
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private UserLanguage language;
 
     @Enumerated(EnumType.STRING)
-    @ColumnDefault("'High School'")
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private UserEducation education;
 
     @Enumerated(EnumType.STRING)
-    @ColumnDefault("'Google'")
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private UserHearAppFrom hearAppFrom;
 

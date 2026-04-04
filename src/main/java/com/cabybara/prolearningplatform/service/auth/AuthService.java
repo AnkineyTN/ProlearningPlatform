@@ -10,4 +10,12 @@ public interface AuthService {
     RegisterResponseDto registerUser(RegisterRequestDto registerRequestDto) throws Exception;
 
     RegisterResponseDto registerAdmin(RegisterRequestDto registerRequestDto) throws Exception;
+
+    void verifyEmail(String email, String inputOtp);
+
+    void forgotPassword(String email);
+
+    String verifyResetOtp(String email, String inputOtp);
+
+    void resetPassword(String email, String newPassword);
 }

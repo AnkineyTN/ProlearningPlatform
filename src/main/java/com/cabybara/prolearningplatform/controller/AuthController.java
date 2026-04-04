@@ -1,10 +1,15 @@
 package com.cabybara.prolearningplatform.controller;
 
+import com.cabybara.prolearningplatform.dto.request.email.VerifyOtpRequest;
+import com.cabybara.prolearningplatform.dto.request.email.VerifyResetOtpRequestDto;
+import com.cabybara.prolearningplatform.dto.request.user.ForgotPasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.request.user.LoginRequestDto;
 import com.cabybara.prolearningplatform.dto.request.user.RegisterRequestDto;
+import com.cabybara.prolearningplatform.dto.request.user.ResetPasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.response.user.GoogleAuthUrlResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.LoginResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.RegisterResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.VerifyResetOtpResponseDto;
 import com.cabybara.prolearningplatform.service.auth.AuthService;
 import com.cabybara.prolearningplatform.service.auth.GoogleAuthService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
@@ -23,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+
 
 @RestController
 @RequestMapping("/auth")
@@ -109,4 +115,38 @@ public class AuthController {
             HttpServletResponse response) throws Exception {
         googleAuthService.googleAuthCallback(code, state, error, response);
     }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<ApiResponse<String>> verifyEmail(@RequestBody VerifyOtpRequest req) {
+        authService.verifyEmail(req.getEmail(), req.getOtp());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Email verified successfully", null, null));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse<String>> forgotPassword(@RequestBody @Valid ForgotPasswordRequestDto req) {
+        authService.forgotPassword(req.getEmail());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Forgot password email sent successfully", null, null));
+    }
+
+    @PostMapping("/verify-reset-otp")
+    public ResponseEntity<ApiResponse<VerifyResetOtpResponseDto>> verifyResetOtp(@RequestBody @Valid VerifyResetOtpRequestDto req) {
+        String token = authService.verifyResetOtp(req.getEmail(), req.getOtp());
+        VerifyResetOtpResponseDto responseData = new VerifyResetOtpResponseDto(token);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("OTP verified successfully", responseData, null));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<String>> resetPassword(@RequestBody @Valid ResetPasswordRequestDto req) {
+        authService.resetPassword(req.getResetToken(), req.getNewPassword());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Password reset successfully", null, null));
+    }
+
 }
