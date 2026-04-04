@@ -5,13 +5,13 @@ firebase:
     googleCredentials: ${FIREBASE_CONFIG_PATH:prolearningplatform-bc37d-firebase-adminsdk-fbsvc-5dfd0cf044.json}
 
 notification:
-    due-card-reminder:
-        cron: "0 0 8 * * *"
-    evening-reminder:
-        cron: "0 0 19 * * *"
-    cleanup:
-        cron: "0 0 2 * * SUN"
-        days-old: 30
+  due-card-reminder:
+    cron: "0 0 8 * * *"
+  weekly-summary:
+    cron: "0 0 9 * * *"
+  cleanup:
+    cron: "0 0 2 * * SUN"
+    days-old: 30
 
 server:
     forward-headers-strategy: framework

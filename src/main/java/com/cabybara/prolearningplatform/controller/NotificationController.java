@@ -11,6 +11,10 @@ import com.cabybara.prolearningplatform.service.fcm.DeviceTokenService;
 import com.cabybara.prolearningplatform.service.fcm.FCMService;
 import com.cabybara.prolearningplatform.service.notification.NotificationPreferenceService;
 import com.cabybara.prolearningplatform.service.notification.NotificationService;
+import com.cabybara.prolearningplatform.enums.NotificationType;
+import com.cabybara.prolearningplatform.mapper.NotificationMapper;
+import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
+import com.cabybara.prolearningplatform.service.notification.WeeklySummaryService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -42,6 +46,9 @@ public class NotificationController {
     private final NotificationPreferenceService notificationPreferenceService;
     private final DeviceTokenService deviceTokenService;
     private final FCMService fcmService;
+    private final WeeklySummaryService weeklySummaryService;
+    private final NotificationDispatcher notificationDispatcher;
+    private final NotificationMapper notificationMapper;
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
@@ -68,7 +75,7 @@ public class NotificationController {
     )
     @GetMapping("/preferences")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<?> getPreferences() {
+    public ResponseEntity<ApiResponse<NotificationPreferenceResponseDto>> getPreferences() {
         NotificationPreferenceResponseDto response =
                 notificationPreferenceService.getCurrentUserPreference();
         return ResponseEntity
@@ -218,6 +225,42 @@ public class NotificationController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Device unregistered successfully", null, null));
+    }
+
+    @Hidden
+    @PostMapping("/debug/create/{userId}")
+    public ResponseEntity<ApiResponse<NotificationResponseDto>> debugCreateNotification(
+            @PathVariable Long userId,
+            @RequestBody(required = false) Map<String, String> body
+    ) {
+        String typeStr = body != null ? body.get("type") : null;
+        NotificationType type = typeStr != null
+                ? NotificationType.valueOf(typeStr)
+                : NotificationType.GENERAL;
+
+        String title   = (body != null && body.get("title")   != null) ? body.get("title")   : type.getDefaultTitle();
+        String message = (body != null && body.get("message") != null) ? body.get("message") : "Debug notification";
+
+        var notification = notificationDispatcher.dispatchToUser(userId, title, message, type);
+        return ResponseEntity.ok(ResponseUtil.success("Debug notification created",
+                notificationMapper.toResponseDto(notification), null));
+    }
+
+    @Hidden
+    @PostMapping("/debug/weekly-summary/process")
+    public ResponseEntity<ApiResponse<Map<String, String>>> debugProcessWeeklySummaries() {
+        weeklySummaryService.processWeeklySummaries();
+        return ResponseEntity.ok(ResponseUtil.success(
+                "Weekly summary processing triggered for today's scheduled users", null, null));
+    }
+
+    @Hidden
+    @PostMapping("/debug/weekly-summary/send/{userId}")
+    public ResponseEntity<ApiResponse<Map<String, String>>> debugSendWeeklySummary(
+            @PathVariable Long userId) {
+        weeklySummaryService.sendWeeklySummaryToUser(userId);
+        return ResponseEntity.ok(ResponseUtil.success(
+                "Weekly summary sent to user " + userId, null, null));
     }
 
     @Hidden

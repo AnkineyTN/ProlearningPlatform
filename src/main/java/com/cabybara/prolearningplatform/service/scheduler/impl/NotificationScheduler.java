@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.service.scheduler.impl;
 
 import com.cabybara.prolearningplatform.service.notification.DueCardReminderService;
 import com.cabybara.prolearningplatform.service.notification.NotificationService;
+import com.cabybara.prolearningplatform.service.notification.WeeklySummaryService;
 import com.cabybara.prolearningplatform.service.scheduler.NotificationSchedulerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ public class NotificationScheduler implements NotificationSchedulerService {
 
     private final DueCardReminderService dueCardReminderService;
     private final NotificationService notificationService;
+    private final WeeklySummaryService weeklySummaryService;
 
     @Value("${notification.cleanup.days-old:30}")
     private int cleanupDaysOld;
@@ -29,12 +31,21 @@ public class NotificationScheduler implements NotificationSchedulerService {
         }
     }
 
-    @Scheduled(cron = "${notification.evening-reminder.cron:0 0 19 * * *}")
-    public void sendEveningStudyReminders() {
+//    @Scheduled(cron = "${notification.evening-reminder.cron:0 0 19 * * *}")
+//    public void sendEveningStudyReminders() {
+//        try {
+//            dueCardReminderService.sendEveningStudyReminders();
+//        } catch (Exception e) {
+//            log.error("Error in scheduled job (due card reminders): {}", e.getMessage(), e);
+//        }
+//    }
+
+    @Scheduled(cron = "${notification.weekly-summary.cron:0 0 9 * * *}")
+    public void processWeeklySummaries() {
         try {
-            dueCardReminderService.sendEveningStudyReminders();
+            weeklySummaryService.processWeeklySummaries();
         } catch (Exception e) {
-            log.error("Error in scheduled job (due card reminders): {}", e.getMessage(), e);
+            log.error("Error in scheduled job (weekly summaries): {}", e.getMessage(), e);
         }
     }
 

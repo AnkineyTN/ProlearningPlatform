@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.dto.helper.UserDueStatDto;
 import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
 import com.cabybara.prolearningplatform.enums.NotificationType;
 import com.cabybara.prolearningplatform.repository.CardItemRepository;
+import com.cabybara.prolearningplatform.repository.NotificationPreferenceRepository;
 import com.cabybara.prolearningplatform.service.notification.DueCardReminderService;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -22,11 +24,21 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
 
     private final NotificationDispatcher notificationDispatcher;
     private final CardItemRepository cardItemRepository;
+    private final NotificationPreferenceRepository notificationPreferenceRepository;
 
     @Override
     public void sendDueCardReminders() {
-        LocalDateTime now = LocalDateTime.now();
-        List<UserDueStatDto> usersWithDueCards = cardItemRepository.findUsersWithDueCards(now);
+        Set<Long> enabledUserIds = Set.copyOf(
+                notificationPreferenceRepository.findUserIdsWithDueCardReminderEnabled());
+
+        if (enabledUserIds.isEmpty()) {
+            return;
+        }
+
+        List<UserDueStatDto> usersWithDueCards = cardItemRepository.findUsersWithDueCards(LocalDateTime.now())
+                .stream()
+                .filter(stat -> enabledUserIds.contains(stat.getUserId()))
+                .toList();
 
         if (usersWithDueCards.isEmpty()) {
             return;
@@ -41,16 +53,17 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
 
     @Override
     public void sendEveningStudyReminders() {
-        LocalDateTime now = LocalDateTime.now();
-        List<UserDueStatDto> usersWithDueCards = cardItemRepository.findUsersWithDueCards(now);
+        Set<Long> enabledUserIds = Set.copyOf(
+                notificationPreferenceRepository.findUserIdsWithDueCardReminderEnabled());
 
-        if (usersWithDueCards.isEmpty()) {
-            log.info("No users with due cards for evening reminder");
+        if (enabledUserIds.isEmpty()) {
+            log.info("No users with due card reminder enabled for evening reminder");
             return;
         }
 
-        List<CreateNotificationDto> notifications = usersWithDueCards.stream()
-                .filter(stat -> stat.getDueCount() >= 5)
+        List<CreateNotificationDto> notifications = cardItemRepository.findUsersWithDueCards(LocalDateTime.now())
+                .stream()
+                .filter(stat -> enabledUserIds.contains(stat.getUserId()) && stat.getDueCount() >= 5)
                 .map(stat -> buildDueCardNotification(stat, "evening"))
                 .toList();
 
