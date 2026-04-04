@@ -9,6 +9,7 @@ import com.cabybara.prolearningplatform.dto.request.user.RegisterRequestDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.exception.AuthException;
+import com.cabybara.prolearningplatform.exception.BadRequestException;
 import com.cabybara.prolearningplatform.mapper.UserMapper;
 import com.cabybara.prolearningplatform.model.Authority;
 import com.cabybara.prolearningplatform.model.User;
@@ -21,6 +22,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -48,6 +50,11 @@ public class UserServiceImpl implements UserService {
     public UserResponseDto loadUserByEmail(String email) {
         Optional<User> user = userRepository.findByEmail(email);
         return userMapper.toUserResponseDto(user.orElseThrow(() -> new UsernameNotFoundException("User with username: " + email + " not found!")));
+    }
+
+    @Override
+    public UserResponseDto loadUserProfileById(Long userId) {
+        return userMapper.toUserResponseDto(getUserById(userId));
     }
 
     @Override
@@ -81,7 +88,18 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " not found!"));
 
+        if (StringUtils.hasText(userUpdatingRequestDto.getEmail())) {
+            String trimmed = userUpdatingRequestDto.getEmail().trim();
+            userRepository.findByEmail(trimmed)
+                    .filter(u -> !u.getId().equals(userId))
+                    .ifPresent(u -> {
+                        throw new AuthException(HttpStatus.CONFLICT, "Email is already in use");
+                    });
+            userUpdatingRequestDto.setEmail(trimmed);
+        }
+
         userMapper.updateUserFromDto(userUpdatingRequestDto, user);
+        applyPasswordChangeFromProfile(user, userUpdatingRequestDto.getCurrentPassword(), userUpdatingRequestDto.getNewPassword());
 
         userRepository.save(user);
 
@@ -89,24 +107,40 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUserPassword(String email, ChangePasswordRequestDto changePasswordRequestDto) {
-        User existedUser = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User with username: " + email + " not found!"));
-
-        String encodedNewPassword = passwordEncoder.encode(changePasswordRequestDto.getNewPassword());
-
-        if (!passwordEncoder.matches(changePasswordRequestDto.getOldPassword(), existedUser.getPassword())) {
-            throw new AuthException(HttpStatus.CONFLICT, "Old password is not match");
-        } new AuthException(HttpStatus.CONFLICT, "Password is equal to old password");
-
-        existedUser.setPassword(encodedNewPassword);
+    public void updateUserPassword(Long userId, ChangePasswordRequestDto changePasswordRequestDto) {
+        User existedUser = getUserById(userId);
+        applyPasswordChangeFromProfile(
+                existedUser,
+                changePasswordRequestDto.getOldPassword(),
+                changePasswordRequestDto.getNewPassword());
         userRepository.save(existedUser);
     }
 
     @Override
-    public void deleteUser(String email) {
-        User existedUser = userRepository.findByEmail(email).orElseThrow(() -> new UsernameNotFoundException("User with username: " + email + " not found!"));
-
+    public void deleteUser(Long userId) {
+        User existedUser = getUserById(userId);
         userRepository.delete(existedUser);
+    }
+
+    private void applyPasswordChangeFromProfile(User user, String currentPassword, String newPassword) {
+        if (!StringUtils.hasText(newPassword)) {
+            if (StringUtils.hasText(currentPassword)) {
+                throw new BadRequestException("newPassword is required when currentPassword is provided");
+            }
+            return;
+        }
+        if (user.getPassword() != null) {
+            if (!StringUtils.hasText(currentPassword)) {
+                throw new BadRequestException("currentPassword is required to change password");
+            }
+            if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+                throw new AuthException(HttpStatus.CONFLICT, "Current password does not match");
+            }
+            if (passwordEncoder.matches(newPassword, user.getPassword())) {
+                throw new AuthException(HttpStatus.CONFLICT, "New password must differ from current password");
+            }
+        }
+        user.setPassword(passwordEncoder.encode(newPassword));
     }
 
     @Override
