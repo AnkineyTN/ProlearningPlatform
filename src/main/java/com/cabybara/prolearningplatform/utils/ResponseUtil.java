@@ -18,6 +18,10 @@ public class ResponseUtil {
         return new ApiResponse<>("error", message, data, metadata);
     }
 
+    public static <T> ApiResponse<T> error(String message, T data, String code, String path) {
+        return new ApiResponse<>("error", message, data, new ErrorMetadata(code, path));
+    }
+
     public static ResponseEntity<ApiResponse<?>> toPaginationedResponse(String message, Pageable pageable, List<SearchResponseDto> searchResponseDtos) {
         int totalItems = searchResponseDtos.size();
         int pageSize = pageable.getPageSize();

@@ -31,4 +31,10 @@ public interface UserService extends UserDetailsService {
     User findOrCreateFromGoogle(GoogleUserInfoDto googleUserInfoDto);
 
     User getUserById(Long userId);
+
+    void verifyEmail(Long userId);
+
+    User getUserByEmail(String email);
+
+    void resetPassword(Long userId, String newPassword);
 }

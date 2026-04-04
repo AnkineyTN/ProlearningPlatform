@@ -6,11 +6,15 @@ import com.cabybara.prolearningplatform.dto.response.user.RegisterResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.exception.AuthException;
+import com.cabybara.prolearningplatform.exception.EmailNotVerifiedException;
+import com.cabybara.prolearningplatform.exception.OtpException;
 import com.cabybara.prolearningplatform.mapper.GoogleAuthItemMapper;
 import com.cabybara.prolearningplatform.mapper.UserMapper;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.service.auth.AuthService;
 import com.cabybara.prolearningplatform.service.auth.JwtService;
+import com.cabybara.prolearningplatform.service.email.EmailService;
+import com.cabybara.prolearningplatform.service.otp.OtpService;
 import com.cabybara.prolearningplatform.service.redis.RedisService;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
@@ -22,6 +26,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +46,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
     private String REDIRECT_URI;
+
+    private final OtpService     otpService;
+    private final EmailService   emailService;
 
     @Override
     public LoginResponseDto authenticateAndGenerateToken(String email, String password) {
@@ -63,12 +71,17 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public RegisterResponseDto registerUser(RegisterRequestDto registerRequestDto) throws Exception {
         Role role = Role.valueOf(registerRequestDto.getRole());
         UserResponseDto userResponseDto = userService.addUser(
                 registerRequestDto,
                 role
         );
+
+        String otp = otpService.generateVerifyOtp(userResponseDto.getId());
+        String fullName = userResponseDto.getFirstName() + " " + userResponseDto.getLastName();
+        emailService.sendVerifyOtp(userResponseDto.getEmail(), fullName, otp);
 
         return RegisterResponseDto.builder()
                 .id(userResponseDto.getId())
@@ -91,5 +104,50 @@ public class AuthServiceImpl implements AuthService {
                 .firstName(userResponseDto.getFirstName())
                 .lastName(userResponseDto.getLastName())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void verifyEmail(String email, String inputOtp) {
+        User user = userService.getUserByEmail(email);
+
+        otpService.verifyVerifyOtp(user.getId(), inputOtp);
+
+        userService.verifyEmail(user.getId());
+    }
+
+    @Override
+    public void forgotPassword(String email) {
+        User user = userService.getUserByEmail(email);
+
+        if (!user.isEmailVerified()) {
+            String otp = otpService.generateVerifyOtp(user.getId());
+            emailService.sendVerifyOtp(user.getEmail(), user.getUsername(), otp);
+            throw new EmailNotVerifiedException();
+        }
+
+        String otp = otpService.generateResetOtp(user.getId());
+        emailService.sendResetOtp(user.getEmail(), user.getUsername(), otp);
+    }
+
+    @Override
+    public String verifyResetOtp(String email, String inputOtp) {
+        User user = userService.getUserByEmail(email);
+
+        otpService.verifyResetOtp(user.getId(), inputOtp);
+
+        return otpService.generateResetToken(user.getId());
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String resetToken, String newPassword) {
+        Long userId = otpService.validateAndConsumeResetToken(resetToken);
+
+        User user = userService.getUserById(userId);
+
+        userService.resetPassword(userId, newPassword);
+
+        emailService.sendPasswordChangedNotification(user.getEmail(), user.getUsername());
     }
 }
