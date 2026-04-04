@@ -17,7 +17,5 @@ public class OnboardingSubmissionResponseDto {
     private Long id;
     private Instant submittedAt;
     private Long userId;
-    private String email;
-    private String displayName;
     private OnboardingDataResponseDto data;
 }
