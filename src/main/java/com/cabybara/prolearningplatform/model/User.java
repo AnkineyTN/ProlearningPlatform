@@ -40,6 +40,10 @@ public class User extends AbstractEntity implements UserDetails {
     @Column()
     private String password;
 
+    @Column(name = "is_email_verified")
+    @ColumnDefault("false")
+    private boolean isEmailVerified;
+
     @Column(columnDefinition = "user_language")
     @Enumerated(EnumType.STRING)
     @ColumnDefault("'vi'")

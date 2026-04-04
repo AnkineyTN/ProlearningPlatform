@@ -1,120 +1,161 @@
 aiservice:
-  api: ${AI_SERVICE_BASE_API:https://prolearning-ai-service-dev.onrender.com/api/v1}
+    api: ${AI_SERVICE_BASE_API:https://prolearning-ai-service-dev.onrender.com/api/v1}
 
 firebase:
-  googleCredentials: ${FIREBASE_CONFIG_PATH:prolearningplatform-bc37d-firebase-adminsdk-fbsvc-5dfd0cf044.json}
+    googleCredentials: ${FIREBASE_CONFIG_PATH:prolearningplatform-bc37d-firebase-adminsdk-fbsvc-5dfd0cf044.json}
 
 notification:
-  due-card-reminder:
-    cron: "0 0 8 * * *"
-  evening-reminder:
-    cron: "0 0 19 * * *"
-  cleanup:
-    cron: "0 0 2 * * SUN"
-    days-old: 30
+    due-card-reminder:
+        cron: "0 0 8 * * *"
+    evening-reminder:
+        cron: "0 0 19 * * *"
+    cleanup:
+        cron: "0 0 2 * * SUN"
+        days-old: 30
 
 server:
-  forward-headers-strategy: framework
-  frontend_host_dev: ${FRONTEND_HOST_DEV:http://localhost:3000}
-  frontend_host_prod: ${FRONTEND_HOST_PROD:http://localhost:3001}
-  port: ${SERVER_PORT:8080}
-  servlet:
-    context-path: /api
-    application-display-name: ${spring.application.name}
+    forward-headers-strategy: framework
+    frontend_host_dev: ${FRONTEND_HOST_DEV:http://localhost:3000}
+    frontend_host_prod: ${FRONTEND_HOST_PROD:http://localhost:3001}
+    port: ${SERVER_PORT:8080}
+    servlet:
+        context-path: /api
+        application-display-name: ${spring.application.name}
 
 cloud:
-  cloudinary:
-    name: ${CLOUD_CLOUDINARY_NAME}
-    apiKey: ${CLOUD_CLOUDINARY_API_KEY}
-    apiSecret: ${CLOUD_CLOUDINARY_API_SECRET}
-    image_preset: ${CLOUD_CLOUDINARY_IMAGE_PRESET}
-    document_preset: ${CLOUD_CLOUDINARY_DOCUMENT_PRESET}
+    cloudinary:
+        name: ${CLOUD_CLOUDINARY_NAME}
+        apiKey: ${CLOUD_CLOUDINARY_API_KEY}
+        apiSecret: ${CLOUD_CLOUDINARY_API_SECRET}
+        image_preset: ${CLOUD_CLOUDINARY_IMAGE_PRESET}
+        document_preset: ${CLOUD_CLOUDINARY_DOCUMENT_PRESET}
 
 spring:
-  profiles:
-    active: ${PROFILE:dev}
+    profiles:
+        active: ${PROFILE:dev}
 
-  application:
-    name: Prolearning Platform
+    application:
+        name: Prolearning Platform
 
-  datasource:
-    url: ${POSTGRES_URL}
-    username: ${POSTGRES_USERNAME}
-    password: ${POSTGRES_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: ${DB_POOL_SIZE:4}
-      minimum-idle: 1
-      connection-timeout: 20000
-      idle-timeout: 240000
-      max-lifetime: 840000
-      keepalive-time: 180000
-      validation-timeout: 5000
+    datasource:
+        url: ${POSTGRES_URL}
+        username: ${POSTGRES_USERNAME}
+        password: ${POSTGRES_PASSWORD}
+        driver-class-name: org.postgresql.Driver
+        hikari:
+            maximum-pool-size: ${DB_POOL_SIZE:4}
+            minimum-idle: 1
+            connection-timeout: 20000
+            idle-timeout: 240000
+            max-lifetime: 840000
+            keepalive-time: 180000
+            validation-timeout: 5000
 
-  jpa:
-    hibernate:
-      ddl-auto: none
-    properties:
-      hibernate:
-        format_sql: true
-        jdbc:
-          batch_size: 20
-        order_updates: true
-    database: postgresql
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
-    show-sql: ${SHOW_SQL_QUERY:false}
+    jpa:
+        hibernate:
+            ddl-auto: none
+        properties:
+            hibernate:
+                format_sql: true
+                jdbc:
+                    batch_size: 20
+                order_updates: true
+        database: postgresql
+        database-platform: org.hibernate.dialect.PostgreSQLDialect
+        show-sql: ${SHOW_SQL_QUERY:false}
 
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      ttl-ms: ${REDIS_TTL_MS}
+    data:
+        redis:
+            host: ${REDIS_HOST}
+            port: ${REDIS_PORT}
+            ttl-ms: ${REDIS_TTL_MS}
 
-  security:
-    jwt:
-      secret: fee55fe254d24a95863994171c5e5404AKN0108cigquahfdja
-      access-ttl-ms: ${JWT_EXPIRATION_MS:1800000}
-      refresh-ttl-ms: 604800000
-    refresh-cookie:
-      name: refresh_token
-      secure: false
-      http-only: true
-      path: /auth
-      same-site: Strict
-    oauth2:
-      client:
-        frontend_dashboard_url: ${FRONTEND_DASHBOARD_URL}
-        frontend_login_google_failure_url: ${FRONTEND_LOGIN_FAILURE_URL}
-        registration:
-          google:
-            client-id: ${OAUTH2_GOOGLE_CLIENT_ID}
-            client-secret: ${OAUTH2_GOOGLE_CLIENT_SECRET}
-            redirect-uri: ${GOOGLE_REDIRECT_URI}
-            scope: "email,profile,openid"
+    security:
+        jwt:
+            secret: fee55fe254d24a95863994171c5e5404AKN0108cigquahfdja
+            access-ttl-ms: ${JWT_EXPIRATION_MS:1800000}
+            refresh-ttl-ms: 604800000
+        refresh-cookie:
+            name: refresh_token
+            secure: false
+            http-only: true
+            path: /auth
+            same-site: Strict
+        oauth2:
+            client:
+                frontend_dashboard_url: ${FRONTEND_DASHBOARD_URL}
+                frontend_login_google_failure_url: ${FRONTEND_LOGIN_FAILURE_URL}
+                registration:
+                    google:
+                        client-id: ${OAUTH2_GOOGLE_CLIENT_ID}
+                        client-secret: ${OAUTH2_GOOGLE_CLIENT_SECRET}
+                        redirect-uri: ${GOOGLE_REDIRECT_URI}
+                        scope: "email,profile,openid"
 
-  springdoc:
-    swagger-ui:
-      path: api-docs
+    springdoc:
+        swagger-ui:
+            path: api-docs
 ---
 spring:
-  config:
-    activate:
-      on-profile: dev
+    config:
+        activate:
+            on-profile: dev
 
 logging:
-  level:
-    root: INFO
-    com.cabybara.prolearningplatform.service: DEBUG
+    level:
+        root: INFO
+        com.cabybara.prolearningplatform.service: DEBUG
 #    org.springframework.security: TRACE
 
 ---
 spring:
-  config:
-    activate:
-      on-profile: prod
+    config:
+        activate:
+            on-profile: prod
 
 logging:
-  level:
-    root: INFO
+    level:
+        root: INFO
 
+---
+spring:
+    rabbitmq:
+        host: ${RABBITMQ_HOST:localhost}
+        port: ${RABBITMQ_PORT:5672}
+        username: ${RABBITMQ_USERNAME:guest}
+        password: ${RABBITMQ_PASSWORD:guest}
+        listener:
+            simple:
+                acknowledge-mode: manual
+                retry:
+                    enabled: true
+                    max-attempts: 3
+                    initial-interval: 2000
+                    multiplier: 2.0
 
+    mail:
+        host: ${MAIL_HOST:smtp-relay.brevo.com}
+        port: ${MAIL_PORT:587}
+        username: ${MAIL_USERNAME}
+        password: ${MAIL_PASSWORD}
+        properties:
+            mail.smtp.auth: true
+            mail.smtp.starttls.enable: true
+            mail.smtp.starttls.required: true
+            mail.smtp.connectiontimeout: 5000
+            mail.smtp.timeout: 5000
+
+app:
+    mail:
+        from: ${MAIL_FROM:noreply@prolearning.com}
+        from-name: ${MAIL_FROM_NAME:ProLearning}
+    rabbitmq:
+        exchange: email.exchange
+        queues:
+            transactional: email.transactional
+            dead-letter: email.dead-letter
+    frontend-url: ${FRONTEND_URL:http://localhost:3000}
+    token:
+        verify-expiry-minutes: 10
+        reset-expiry-minutes: 15
+        reset-token-expiry-minutes: 5

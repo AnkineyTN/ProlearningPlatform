@@ -113,6 +113,22 @@ public class GlobalExceptionHandler {
                 "An unexpected error occurred", request);
     }
 
+    @ExceptionHandler(OtpException.class)
+    public ResponseEntity<?> handleOtpException(OtpException ex, WebRequest request) {
+        log.error("OTP error: {}", ex.getMessage(), ex);
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
+    }
+
+   @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleEmailNotVerified(EmailNotVerifiedException ex, WebRequest request) {
+        log.warn("Email not verified | {}", ex.getMessage());
+        String path = request.getDescription(false).replace("uri=", "");
+        ApiResponse<Object> body = ResponseUtil.error(
+                ex.getMessage(), null, "EMAIL_NOT_VERIFIED", path
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
     // ---- Helper ----
 
     private ResponseEntity<ApiResponse<Object>> buildResponse(

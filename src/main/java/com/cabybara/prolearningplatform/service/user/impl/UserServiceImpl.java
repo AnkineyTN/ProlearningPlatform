@@ -155,4 +155,28 @@ public class UserServiceImpl implements UserService {
                 });
     }
 
+    @Override
+    public void verifyEmail(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " not found!"));
+
+        if (user.isEmailVerified()) {
+            throw new AuthException(HttpStatus.BAD_REQUEST, "Email has been verified!");
+        }
+
+        user.setEmailVerified(true);
+        userRepository.save(user);
+    }
+
+    @Override
+    public User getUserByEmail(String email) {
+        return userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User with email: " + email + " not found!"));
+    }
+
+    @Override
+    public void resetPassword(Long userId, String newPassword) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " not found!"));
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
 }
