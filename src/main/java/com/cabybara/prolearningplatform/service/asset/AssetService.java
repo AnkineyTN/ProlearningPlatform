@@ -16,11 +16,11 @@ public interface AssetService {
 
     AssetUrlUploadResponseDto uploadAssetFromUrl(AssetUrlUploadRequestDto request);
 
+    void updateUploadedAssetSigned(UpdateUploadedAssetRequestDto updateUploadedAssetRequestDto);
+
     Map<Long, Asset> findAndActivateAssets(List<Long> assetIds, Long userId);
 
     Asset findAndActivateAsset(Long assetId, Long userId);
-
-    void updateUploadedAssetSigned(UpdateUploadedAssetRequestDto updateUploadedAssetRequestDto);
 
     List<Asset> findAssetsToCleanup(OffsetDateTime cutoffTime);
 

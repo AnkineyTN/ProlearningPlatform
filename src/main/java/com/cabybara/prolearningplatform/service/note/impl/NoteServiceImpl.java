@@ -97,7 +97,7 @@ public class NoteServiceImpl implements NoteService {
         log.info("✅ Save document in note with noteId {} and assetId {}", note.getTitle(), asset.getId());
     }
 
-    // [DELETE]: /api/note/delete-doc
+    // [DELETE]: /sets/{setId}/notes/delete-doc
     @Override
     public void deleteDocInNote(DeleteNoteDocRequestDTO request) {
         // Mark status "DELETED" in asset table
@@ -108,22 +108,23 @@ public class NoteServiceImpl implements NoteService {
         NoteDocsId noteDocsId = new NoteDocsId(request.getNoteId(), request.getAssetId());
         noteDocsRepository.deleteById(noteDocsId);
 
-        log.info("🐳️ Delete doc in note with noteId {} and assetId {}", request.getNoteId(), request.getAssetId());
+        log.info("✅ Delete doc in note with noteId {} and assetId {}", request.getNoteId(), request.getAssetId());
     }
 
-    // [POST]: /api/note/save-img
+    // [POST]: /sets/{setId}/notes/save-img
     @Override
-    public void saveImgInNote(SaveImgInNoteRequestDto request) {
-        Note note = getNoteById(request.getNoteId());
+    public void saveImgInNote(Long setId, SaveImgInNoteRequestDto request) {
+        Long userId = authenticationContext.getCurrentUserId();
+        Note note = getNoteByIdAndUserIdAndSetId(request.getNoteId(), userId, setId);
         Asset asset = getAssetById(request.getAssetId());
 
         NoteImgs noteImgs = new NoteImgs(note, asset);
 
         noteImgsRepository.save(noteImgs);
-        log.info("🐳️ Save image in note with noteId {} and assetId {}", note.getTitle(), asset.getId());
+        log.info("✅ Save image in note with noteId {} and assetId {}", note.getTitle(), asset.getId());
     }
 
-    // [DELETE]: /api/note/delete-img
+    // [DELETE]: /sets/{setId}/notes/delete-img
     @Override
     public void deleteImgInNote(DeleteNoteImgRequestDTO request) {
         // Mark status "DELETED" in asset table
@@ -134,41 +135,10 @@ public class NoteServiceImpl implements NoteService {
         NoteImgsId noteImgsId = new NoteImgsId(request.getNoteId(), asset.getId());
         noteImgsRepository.deleteById(noteImgsId);
 
-        log.info("🐳️ Delete img in note with noteId {} and assetId {}", request.getNoteId(), asset.getId());
+        log.info("✅ Delete img in note with noteId {} and assetId {}", request.getNoteId(), asset.getId());
     }
 
-    // [GET]: /api/note/all/{setId}
-    @Override
-    public PageResponseDetail<?> getAllNotesOfSet(int pageNo, int pageSize, Long setId) {
-        int page = 0;
-        if (pageNo > 0) {
-            page = pageNo - 1;
-        }
-
-        Pageable pageable = PageRequest.of(page, pageSize, Sort.by("createdAt").descending());
-        Page<Note> notesPage = noteRepository.findNotesBySetId(setId, pageable);
-
-        List<GetAllNotesResponseDTO> noteDTOs = notesPage.getContent().stream()
-                .map(note -> GetAllNotesResponseDTO.builder()
-                        .id(note.getId())
-                        .title(note.getTitle())
-                        .description(note.getDescription())
-                        .privacy(note.getPrivacy())
-                        .created_at(note.getCreatedAt() != null ? note.getCreatedAt().toString() : null)
-                        .updated_at(note.getUpdatedAt() != null ? note.getUpdatedAt().toString() : null)
-                        .build())
-                .toList();
-
-        log.info("🐳️ Get all note of set with setId {}", setId);
-        return PageResponseDetail.builder()
-                .pageNo(pageNo)
-                .pageSize(pageSize)
-                .totalPage(notesPage.getTotalPages())
-                .totalElements(notesPage.getTotalElements())
-                .items(noteDTOs)
-                .build();
-    }
-
+    // [GET]: /sets/{setId}/notes/all
     @Override
     public Page<GetAllNotesResponseDTO> getAllNotes(Long setId, String q, Privacy privacy, Pageable pageable) {
         Long userId = authenticationContext.getCurrentUserId();
@@ -199,12 +169,12 @@ public class NoteServiceImpl implements NoteService {
                 .build());
     }
 
-    // [GET]: /api/note/{noteId}
+    // [GET]: /sets/{setId}/notes/{noteId}
     @Override
-    public GetDetailNoteResponseDTO getDetailNote(Long noteId) {
-        Note note = getNoteById(noteId);
+    public GetDetailNoteResponseDTO getDetailNote(Long setId, Long noteId) {
+        Long userId = authenticationContext.getCurrentUserId();
+        Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
 
-        log.info("🐳️ Get detail of note with noteId", noteId);
         return GetDetailNoteResponseDTO.builder()
                 .id(note.getId())
                 .title(note.getTitle())
@@ -228,10 +198,12 @@ public class NoteServiceImpl implements NoteService {
                 .build();
     }
 
-    // [PATCH]: /api/note/update/{noteId}
+    // [PATCH]: /sets/{setId}/notes/update/{noteId}
     @Override
-    public void updateNote(Long noteId, UpdateNoteRequestDTO request) {
-        Note note = getNoteById(noteId);
+    public void updateNote(Long setId, Long noteId, UpdateNoteRequestDTO request) {
+        Long userId = authenticationContext.getCurrentUserId();
+        Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
+
         note.setTitle(request.getTitle());
         note.setPrivacy(request.getPrivacy());
         note.setDescription(request.getDescription());
@@ -240,8 +212,9 @@ public class NoteServiceImpl implements NoteService {
 
     // [DELETE]: /api/note/delete/{noteId}
     @Override
-    public void deleteNote(Long noteId) {
-        Note note = getNoteById(noteId);
+    public void deleteNote(Long setId, Long noteId) {
+        Long userId = authenticationContext.getCurrentUserId();
+        Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
 
         List<NoteDocs> noteDocs = new ArrayList<>(note.getNoteDocs());
         for (NoteDocs noteDoc : noteDocs) {
