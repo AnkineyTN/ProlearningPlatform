@@ -6,7 +6,6 @@ import com.cabybara.prolearningplatform.enums.UserHearAppFrom;
 import com.cabybara.prolearningplatform.enums.UserLanguage;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -17,13 +16,6 @@ public class OnboardingSubmissionRequestDto {
     @NotNull
     @Schema(example = "59")
     private Long userId;
-
-    @NotBlank
-    @Schema(example = "example@gmail.com")
-    private String email;
-
-    @Schema(example = "Example User")
-    private String displayName;
 
     @Valid
     @NotNull

@@ -38,16 +38,11 @@ public class OnboardingSubmissionServiceImpl implements OnboardingSubmissionServ
         User user = userRepository.findById(authenticatedUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + authenticatedUserId + " not found"));
 
-        if (!user.getEmail().equalsIgnoreCase(request.getEmail().trim())) {
-            throw new BadRequestException("email must match the authenticated user's email");
-        }
-
         OnboardingSubmissionRequestDto.DataPayload d = request.getData();
         user.setLanguage(d.getLanguage());
         user.setEducation(d.getEducation());
         user.setHearAppFrom(d.getHearAppFrom());
         user.setAccountType(d.getAccountType());
-        applyDisplayName(user, request.getDisplayName());
 
         User saved = userRepository.save(user);
         return toResponse(saved);
@@ -138,8 +133,6 @@ public class OnboardingSubmissionServiceImpl implements OnboardingSubmissionServ
                 .id(user.getId())
                 .submittedAt(submittedAt)
                 .userId(user.getId())
-                .email(user.getEmail())
-                .displayName(displayNameOf(user))
                 .data(toDataOrNull(user))
                 .build();
     }
@@ -154,21 +147,5 @@ public class OnboardingSubmissionServiceImpl implements OnboardingSubmissionServ
                 .hearAppFrom(user.getHearAppFrom())
                 .accountType(user.getAccountType())
                 .build();
-    }
-
-    private static void applyDisplayName(User user, String displayName) {
-        if (displayName == null || displayName.isBlank()) {
-            return;
-        }
-        String[] parts = displayName.trim().split("\\s+", 2);
-        user.setFirstName(parts[0]);
-        user.setLastName(parts.length > 1 ? parts[1] : parts[0]);
-    }
-
-    private static String displayNameOf(User user) {
-        String fn = user.getFirstName() != null ? user.getFirstName() : "";
-        String ln = user.getLastName() != null ? user.getLastName() : "";
-        String joined = (fn + " " + ln).trim();
-        return joined.isEmpty() ? null : joined;
     }
 }

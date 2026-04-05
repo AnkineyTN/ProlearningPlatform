@@ -16,17 +16,27 @@ public interface UserService extends UserDetailsService {
 
     UserResponseDto loadUserByEmail(String email);
 
+    UserResponseDto loadUserProfileById(Long userId);
+
     UserResponseDto addUser(RegisterRequestDto registerRequestDto, Role role) throws Exception;
 
-    void deleteUser(String email);
+    void deleteUser(Long userId);
 
     UserResponseDto updateUser(Long userId, UserUpdatingRequestDto userUpdatingRequestDto);
 
-    void updateUserPassword(String email, ChangePasswordRequestDto changePasswordRequestDto);
+    void updateUserPassword(Long userId, ChangePasswordRequestDto changePasswordRequestDto);
 
     User findOrCreateFromGoogle(Userinfo userInfo);
 
     User findOrCreateFromGoogle(GoogleUserInfoDto googleUserInfoDto);
 
     User getUserById(Long userId);
+
+    void verifyEmail(Long userId);
+
+    User getUserByEmail(String email);
+
+    void resetPassword(Long userId, String newPassword);
+
+    void resendVerifyOtp(Long userId);
 }

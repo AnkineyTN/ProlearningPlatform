@@ -21,7 +21,10 @@ public interface UserMapper {
     @Mapping(source = "roles", target = "roles", qualifiedByName = "mapAuthoritiesToStrings")
     UserResponseDto toUserResponseDto(User user);
 
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @BeanMapping(
+            nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+            ignoreUnmappedSourceProperties = {"currentPassword", "newPassword"}
+    )
     void updateUserFromDto(UserUpdatingRequestDto userUpdatingRequestDto, @MappingTarget User user);
 
     @Named("mapAuthoritiesToStrings")
