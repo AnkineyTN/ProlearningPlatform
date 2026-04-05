@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class WeeklySummaryServiceImpl implements WeeklySummaryService {
+    private static final ZoneId SUMMARY_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+
     private final NotificationPreferenceRepository notificationPreferenceRepository;
     private final StudySessionReviewLogRepository studySessionReviewLogRepository;
     private final NotificationDispatcher notificationDispatcher;
@@ -32,7 +34,7 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
 
     @Override
     public void processWeeklySummaries() {
-        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        DayOfWeek today = LocalDate.now(SUMMARY_ZONE).getDayOfWeek();
         int todayValue = today.getValue();
 
         List<NotificationPreference> preferences = notificationPreferenceRepository.findEnabledByWeeklySummaryDay(todayValue);
@@ -72,10 +74,8 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
     protected boolean processSingleUser(NotificationPreference pref) {
         Long userId = pref.getUser().getId();
 
-        ZoneId zone = ZoneId.of("Asia/Ho_Chi_Minh");
-
-        OffsetDateTime periodFrom = calculatePeriodStart(pref).atZoneSameInstant(zone).toOffsetDateTime();
-        OffsetDateTime periodTo   = OffsetDateTime.now(zone).toZonedDateTime().toOffsetDateTime();
+        OffsetDateTime periodFrom = calculatePeriodStart(pref).atZoneSameInstant(SUMMARY_ZONE).toOffsetDateTime();
+        OffsetDateTime periodTo = OffsetDateTime.now(SUMMARY_ZONE).toZonedDateTime().toOffsetDateTime();
 
         long incorrectCount = studySessionReviewLogRepository.countDistinctIncorrectCards(userId, periodFrom, periodTo);
 
