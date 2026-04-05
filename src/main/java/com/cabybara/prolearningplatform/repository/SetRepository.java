@@ -22,6 +22,8 @@ public interface SetRepository extends JpaRepository<Set, Long> {
 
     Page<Set> findAllByUserId(Long userId, Pageable pageable);
 
+    Optional<Set> findByIdAndUserId(Long setId, Long userId);
+
     boolean existsByTitleAndIdNot(String title, Long id);
 
     @Modifying

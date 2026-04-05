@@ -30,11 +30,18 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class AssetServiceImpl implements AssetService {
-    private final CloudinaryService cloudinaryService;
-    private final UserService userService;
+    // ##################################################
+    // #################  PREPARATION  ##################
+    // ##################################################
     private final AssetRepository assetRepository;
     private final AuthenticationContext authenticationContext;
 
+    private final CloudinaryService cloudinaryService;
+    private final UserService userService;
+
+    // ##################################################
+    // #################  MAIN METHOD  ##################
+    // ##################################################
     @Override
     @Transactional
     public AssetSignatureResponseDto generateUploadSignature(AssetType assetType) {
@@ -97,6 +104,21 @@ public class AssetServiceImpl implements AssetService {
 
     @Override
     @Transactional
+    public void updateUploadedAssetSigned(UpdateUploadedAssetRequestDto updateUploadedAssetRequestDto) {
+        Asset asset = assetRepository.findById(updateUploadedAssetRequestDto.getAssetId())
+                .orElseThrow(() -> new ResourceNotFoundException("Asset ID: " + updateUploadedAssetRequestDto.getAssetId() + " not found."));
+
+        String url = updateUploadedAssetRequestDto.getUrl();
+        asset.setPublicId(updateUploadedAssetRequestDto.getPublicId());
+        asset.setStatus(AssetStatus.ACTIVE);
+        asset.setUrl(url);
+        asset.setFileName(updateUploadedAssetRequestDto.getFileName());
+
+        assetRepository.save(asset);
+    }
+
+    @Override
+    @Transactional
     public Map<Long, Asset> findAndActivateAssets(List<Long> assetIds, Long userId) {
         if (assetIds == null || assetIds.isEmpty()) {
             return Collections.emptyMap();
@@ -138,21 +160,6 @@ public class AssetServiceImpl implements AssetService {
         assetRepository.save(asset);
 
         return asset;
-    }
-
-    @Override
-    @Transactional
-    public void updateUploadedAssetSigned(UpdateUploadedAssetRequestDto updateUploadedAssetRequestDto) {
-        Asset asset = assetRepository.findById(updateUploadedAssetRequestDto.getAssetId())
-                .orElseThrow(() -> new ResourceNotFoundException("Asset ID: " + updateUploadedAssetRequestDto.getAssetId() + " not found."));
-
-        String url = updateUploadedAssetRequestDto.getUrl();
-        asset.setPublicId(updateUploadedAssetRequestDto.getPublicId());
-        asset.setStatus(AssetStatus.ACTIVE);
-        asset.setUrl(url);
-        asset.setFileName(updateUploadedAssetRequestDto.getFileName());
-
-        assetRepository.save(asset);
     }
 
     @Override

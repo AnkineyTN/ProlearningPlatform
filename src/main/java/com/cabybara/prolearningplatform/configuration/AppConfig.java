@@ -20,11 +20,15 @@ public class AppConfig implements WebMvcConfigurer {
                 .allowCredentials(true) // Allow to send cookie or authorization token
                 .allowedOrigins(
                         "http://localhost:3000",
+                        "http://localhost:8000",
+                        "http://127.0.0.1:8000",
                         FRONTEND_HOST_DEV,
                         FRONTEND_HOST_PROD,
-                        "http://localhost:64310"
+                        "http://localhost:64310",
+                        "http://localhost:5173"
                 )
-                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE")
-                .allowedHeaders("*");
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD")
+                .allowedHeaders("*")
+                .maxAge(3600);
     }
 }

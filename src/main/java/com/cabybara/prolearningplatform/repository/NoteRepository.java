@@ -19,6 +19,8 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
             """)
     Page<Note> findNotesBySetId(@Param("setId") Long setId, Pageable pageable);
 
+    Optional<Note> findByIdAndUserIdAndSetId(Long noteId, Long userId, Long setId);
+
     @Query("""
                 SELECT n FROM Note n
                 LEFT JOIN FETCH n.noteDocs

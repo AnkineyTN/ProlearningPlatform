@@ -10,6 +10,8 @@ public interface JwtService {
 
     String extractEmail(String token);
 
+    Long extractUserId(String token);
+
     Boolean validateToken(String token);
 
     void blacklistToken(String token);

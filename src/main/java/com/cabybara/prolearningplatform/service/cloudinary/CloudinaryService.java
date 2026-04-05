@@ -18,8 +18,4 @@ public interface CloudinaryService {
     Map uploadResourceFromUrl(String url, AssetType type) throws IOException;
 
     void deleteAssets(List<AssetToDeleteDto> assetToDeleteDtos) throws Exception;
-
-    public CloudinaryResponseDTO uploadMultipartFile(MultipartFile file, String fileName, String extension, String subject) throws IOException;
-
-    public void deleteFile(String publicId, String type) throws IOException;
 }

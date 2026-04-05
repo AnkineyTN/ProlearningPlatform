@@ -25,7 +25,7 @@ public class NormalizeDtoAspect {
 
         for (int i = 0; i < args.length; i++) {
             Object arg = args[i];
-            if (arg != null && !arg.getClass().isPrimitive() && !(arg instanceof String)) {
+            if (arg != null && !isPrimitiveOrSpringFramework(arg)) {
                 Object normalized = normalizeObject(arg);
                 args[i] = normalized;
             }
@@ -34,8 +34,32 @@ public class NormalizeDtoAspect {
         return joinPoint.proceed(args);
     }
 
+    private boolean isPrimitiveOrSpringFramework(Object obj) {
+        Class<?> clazz = obj.getClass();
+        
+        // Skip primitives, strings, and Spring framework classes
+        if (clazz.isPrimitive() || obj instanceof String) {
+            return true;
+        }
+        
+        // Skip Spring framework classes
+        String className = clazz.getName();
+        if (className.startsWith("org.springframework") || 
+            className.startsWith("org.apache") ||
+            className.startsWith("java.")) {
+            return true;
+        }
+        
+        return false;
+    }
+
     private Object normalizeObject(Object target) throws Exception {
         Class<?> clazz = target.getClass();
+
+        // Skip if not a DTO class (simple heuristic)
+        if (!clazz.getName().contains("dto") && !clazz.getName().contains("DTO")) {
+            return target;
+        }
 
         // Nếu là record
         if (clazz.isRecord()) {
@@ -63,11 +87,22 @@ public class NormalizeDtoAspect {
 
         // Nếu không phải record → vẫn dùng reflection set như cũ
         for (Field field : clazz.getDeclaredFields()) {
+            // Skip static/final fields
+            if (field.isEnumConstant() || java.lang.reflect.Modifier.isStatic(field.getModifiers()) || 
+                java.lang.reflect.Modifier.isFinal(field.getModifiers())) {
+                continue;
+            }
+            
             if (field.getType().equals(String.class) && !field.getName().equals("password")) {
-                field.setAccessible(true);
-                String value = (String) field.get(target);
-                if (value != null) {
-                    field.set(target, value.trim());
+                try {
+                    field.setAccessible(true);
+                    String value = (String) field.get(target);
+                    if (value != null) {
+                        field.set(target, value.trim());
+                    }
+                } catch (IllegalAccessException e) {
+                    // Skip fields that can't be accessed
+                    continue;
                 }
             }
         }

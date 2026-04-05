@@ -12,25 +12,23 @@ import org.springframework.data.domain.Pageable;
 import java.io.IOException;
 
 public interface NoteService {
-    public CreateNoteResponseDTO createNote(CreateNoteRequestDTO request);
+    public CreateNoteResponseDTO createNote(Long setId, CreateNoteRequestDTO request);
 
-    public void saveNote(Long noteId, SaveNoteRequestDTO request);
+    public void saveNote(Long setId, Long noteId, SaveNoteRequestDTO request);
 
-    public void saveDocInNote(SaveDocInNoteRequestDto request);
-
-    public void saveImgInNote(SaveImgInNoteRequestDto request);
-
-    public PageResponseDetail<?> getAllNotesOfSet(int pageNo, int pageSize, Long setId);
-
-    public GetDetailNoteResponseDTO getDetailNote(Long noteId);
+    public void saveDocInNote(Long setId, SaveDocInNoteRequestDto request);
 
     public void deleteDocInNote(DeleteNoteDocRequestDTO request);
 
+    public void saveImgInNote(Long setId, SaveImgInNoteRequestDto request);
+
     public void deleteImgInNote(DeleteNoteImgRequestDTO request) throws IOException;
 
-    public void updateNote(Long noteId, UpdateNoteRequestDTO request);
-
-    public void deleteNote(Long noteId) throws IOException;
-
     Page<GetAllNotesResponseDTO> getAllNotes(Long setId, String q, Privacy privacy, Pageable pageable);
+
+    public GetDetailNoteResponseDTO getDetailNote(Long setId, Long noteId);
+
+    public void updateNote(Long setId, Long noteId, UpdateNoteRequestDTO request);
+
+    public void deleteNote(Long setId, Long noteId) throws IOException;
 }

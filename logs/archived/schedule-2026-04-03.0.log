@@ -1,6 +1,6 @@
-2026-04-04T08:00:00.078+07:00 ERROR 17084 --- [Prolearning Platform] [scheduling-1] c.c.p.s.s.impl.NotificationScheduler     : Error in scheduled job (due card reminders): Argument [2026-04-04T08:00:00.005427400] of type [java.time.LocalDateTime] did not match parameter type [java.time.OffsetDateTime (n/a)]
+2026-04-03T08:00:00.057+07:00 ERROR 28076 --- [Prolearning Platform] [scheduling-1] c.c.p.s.s.impl.NotificationScheduler     : Error in scheduled job (due card reminders): Argument [2026-04-03T08:00:00.005533300] of type [java.time.LocalDateTime] did not match parameter type [java.time.OffsetDateTime (n/a)]
 
-org.springframework.dao.InvalidDataAccessApiUsageException: Argument [2026-04-04T08:00:00.005427400] of type [java.time.LocalDateTime] did not match parameter type [java.time.OffsetDateTime (n/a)]
+org.springframework.dao.InvalidDataAccessApiUsageException: Argument [2026-04-03T08:00:00.005533300] of type [java.time.LocalDateTime] did not match parameter type [java.time.OffsetDateTime (n/a)]
 	at org.springframework.orm.jpa.EntityManagerFactoryUtils.convertJpaAccessExceptionIfPossible(EntityManagerFactoryUtils.java:371)
 	at org.springframework.orm.jpa.vendor.HibernateJpaDialect.translateExceptionIfPossible(HibernateJpaDialect.java:246)
 	at org.springframework.orm.jpa.AbstractEntityManagerFactoryBean.translateExceptionIfPossible(AbstractEntityManagerFactoryBean.java:550)
@@ -30,7 +30,7 @@ org.springframework.dao.InvalidDataAccessApiUsageException: Argument [2026-04-04
 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
 	at java.base/java.lang.Thread.run(Thread.java:1583)
-Caused by: org.hibernate.query.QueryArgumentException: Argument [2026-04-04T08:00:00.005427400] of type [java.time.LocalDateTime] did not match parameter type [java.time.OffsetDateTime (n/a)]
+Caused by: org.hibernate.query.QueryArgumentException: Argument [2026-04-03T08:00:00.005533300] of type [java.time.LocalDateTime] did not match parameter type [java.time.OffsetDateTime (n/a)]
 	at org.hibernate.query.spi.QueryParameterBindingValidator.validate(QueryParameterBindingValidator.java:85)
 	at org.hibernate.query.spi.QueryParameterBindingValidator.validate(QueryParameterBindingValidator.java:32)
 	at org.hibernate.query.internal.QueryParameterBindingImpl.validate(QueryParameterBindingImpl.java:362)

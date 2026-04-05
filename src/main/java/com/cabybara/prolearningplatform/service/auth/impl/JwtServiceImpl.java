@@ -81,6 +81,17 @@ public class JwtServiceImpl implements JwtService {
                 .getSubject();
     }
 
+    @Override
+    public Long extractUserId(String token) {
+        JwtParser jwtParser = Jwts.parser()
+                .setSigningKey(getSignKey())
+                .build();
+
+        return jwtParser.parseClaimsJws(token)
+                .getBody()
+                .get("id", Long.class);
+    }
+
     private Date extractExpiration(String token) {
         JwtParser jwtParser = Jwts.parser()
                 .setSigningKey(getSignKey())

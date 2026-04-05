@@ -13,6 +13,4 @@ public class CreateNoteRequestDTO {
     private String title;
     private Privacy privacy;
     private String description;
-    @NotNull
-    private Long setId;
 }

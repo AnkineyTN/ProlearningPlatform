@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,19 +23,25 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 @Tag(name = "Asset upload")
 public class AssetUploadController {
+    // ##################################################
+    // #################  PREPARATION  ##################
+    // ##################################################
     private final AssetService assetService;
 
+    // ##################################################
+    // ###################  MAIN API  ###################
+    // ##################################################
     @Operation(
             summary = "Get signature to upload asset (from file)",
             description = "This endpoint will return an (presigned signature) and the parameters. " +
                     "Client using these params to upload file directly to Cloudinary/S3. "
     )
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/signature/{type}")
     public ResponseEntity<ApiResponse<AssetSignatureResponseDto>> getUploadSignature(
             @PathVariable AssetType type
     ) {
         AssetSignatureResponseDto assetSignatureResponseDto = assetService.generateUploadSignature(type);
-
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully", assetSignatureResponseDto, null));
@@ -45,6 +52,7 @@ public class AssetUploadController {
             description = "This endpoint used to upload file from url. " +
                     "It will return uploaded url and assetId (will be used after)"
     )
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/upload-from-url")
     public ResponseEntity<ApiResponse<AssetUrlUploadResponseDto>> uploadFromUrl(
             @RequestBody AssetUrlUploadRequestDto request
@@ -61,6 +69,7 @@ public class AssetUploadController {
             description = "FORCE: After client upload file success (using /signature), " +
                     "client have to call this endpoint to send final URL (secure_url) returning from Cloudinary. "
     )
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/update-uploaded-asset")
     public ResponseEntity<ApiResponse<String>> updateUploadedImageSigned(
             @RequestBody UpdateUploadedAssetRequestDto updateUploadedAssetRequestDto
