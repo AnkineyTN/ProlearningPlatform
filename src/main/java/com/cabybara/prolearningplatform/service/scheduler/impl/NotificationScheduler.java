@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class NotificationScheduler implements NotificationSchedulerService {
+    private static final String SCHEDULER_TIME_ZONE = "Asia/Ho_Chi_Minh";
 
     private final DueCardReminderService dueCardReminderService;
     private final NotificationService notificationService;
@@ -22,7 +23,7 @@ public class NotificationScheduler implements NotificationSchedulerService {
     @Value("${notification.cleanup.days-old:30}")
     private int cleanupDaysOld;
 
-    @Scheduled(cron = "${notification.due-card-reminder.cron:0 0 8 * * *}")
+    @Scheduled(cron = "${notification.due-card-reminder.cron:0 0 8 * * *}", zone = SCHEDULER_TIME_ZONE)
     public void sendDueCardReminders() {
         try {
             dueCardReminderService.sendDueCardReminders();
@@ -31,7 +32,7 @@ public class NotificationScheduler implements NotificationSchedulerService {
         }
     }
 
-//    @Scheduled(cron = "${notification.evening-reminder.cron:0 0 19 * * *}")
+//    @Scheduled(cron = "${notification.evening-reminder.cron:0 0 19 * * *}", zone = SCHEDULER_TIME_ZONE)
 //    public void sendEveningStudyReminders() {
 //        try {
 //            dueCardReminderService.sendEveningStudyReminders();
@@ -39,8 +40,8 @@ public class NotificationScheduler implements NotificationSchedulerService {
 //            log.error("Error in scheduled job (due card reminders): {}", e.getMessage(), e);
 //        }
 //    }
-
-    @Scheduled(cron = "${notification.weekly-summary.cron:0 0 9 * * *}")
+    
+    @Scheduled(cron = "${notification.weekly-summary.cron:0 0 9 * * *}", zone = SCHEDULER_TIME_ZONE)
     public void processWeeklySummaries() {
         try {
             weeklySummaryService.processWeeklySummaries();
@@ -49,7 +50,7 @@ public class NotificationScheduler implements NotificationSchedulerService {
         }
     }
 
-    @Scheduled(cron = "${notification.cleanup.cron:0 0 2 * * SUN}")
+    @Scheduled(cron = "${notification.cleanup.cron:0 0 2 * * SUN}", zone = SCHEDULER_TIME_ZONE)
     public void cleanupOldNotifications() {
         try {
             int deleted = notificationService.cleanupOldNotifications(cleanupDaysOld);

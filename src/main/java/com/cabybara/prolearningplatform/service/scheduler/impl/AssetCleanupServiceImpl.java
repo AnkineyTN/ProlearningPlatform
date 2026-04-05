@@ -20,11 +20,13 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class AssetCleanupServiceImpl implements AssetCleanupService {
+    private static final String SCHEDULER_TIME_ZONE = "Asia/Ho_Chi_Minh";
+
     private final AssetService assetService;
     private final CloudinaryService cloudinaryService;
     private final AssetMapper assetMapper;
 
-    @Scheduled(cron = "0 0 3 * * ?")
+    @Scheduled(cron = "0 0 3 * * ?", zone = SCHEDULER_TIME_ZONE)
     @Async("heavyTaskExecutor")
     @Transactional
     public void cleanupAssets() {
