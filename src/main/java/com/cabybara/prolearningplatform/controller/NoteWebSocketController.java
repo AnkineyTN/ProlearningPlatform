@@ -18,6 +18,13 @@ import org.springframework.stereotype.Controller;
 
 import java.util.Map;
 
+// ##################################################
+// #################  PREPARATION  ##################
+// ##################################################
+
+// ##################################################
+// ###################  MAIN API  ###################
+// ##################################################
 /**
  * WebSocket controller for real-time note collaboration
  * Handles STOMP messages for real-time editing

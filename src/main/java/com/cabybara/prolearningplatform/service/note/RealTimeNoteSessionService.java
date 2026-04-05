@@ -15,7 +15,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @Slf4j
 public class RealTimeNoteSessionService {
-
+    // ##################################################
+    // #################  PREPARATION  ##################
+    // ##################################################
     /**
      * Structure: noteId -> Map<sessionId, ActiveUserDTO>
      */
@@ -27,6 +29,9 @@ public class RealTimeNoteSessionService {
      */
     private final ConcurrentHashMap<String, Set<String>> sessionNoteMapping = new ConcurrentHashMap<>();
 
+    // ##################################################
+    // #################  MAIN METHOD  ##################
+    // ##################################################
     /**
      * Add a user session to a note
      */
