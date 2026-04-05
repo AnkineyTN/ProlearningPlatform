@@ -40,7 +40,7 @@ public class NotificationScheduler implements NotificationSchedulerService {
 //            log.error("Error in scheduled job (due card reminders): {}", e.getMessage(), e);
 //        }
 //    }
-
+    
     @Scheduled(cron = "${notification.weekly-summary.cron:0 0 9 * * *}", zone = SCHEDULER_TIME_ZONE)
     public void processWeeklySummaries() {
         try {

@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class WeeklySummaryServiceImpl implements WeeklySummaryService {
+
     private static final ZoneId SUMMARY_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
 
     private final NotificationPreferenceRepository notificationPreferenceRepository;
