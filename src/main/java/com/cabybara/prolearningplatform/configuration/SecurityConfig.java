@@ -51,6 +51,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // CORS is already handled by AppConfig.addCorsMappings()
+        
         http.authorizeHttpRequests((authorize) -> authorize
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
@@ -60,6 +62,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/register/**").permitAll()
                 .requestMatchers("/auth/login/**").permitAll()
                 .requestMatchers("/auth/google/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
                 .anyRequest().authenticated()
         );
 
