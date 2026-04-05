@@ -10,7 +10,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -52,7 +51,7 @@ public interface CardItemRepository extends JpaRepository<CardItem, Long> {
             "FROM CardItem c " +
             "WHERE c.nextReviewAt <= :now " +
             "GROUP BY c.flashcard.user.id")
-    List<UserDueStatDto> findUsersWithDueCards(@Param("now") LocalDateTime now);
+    List<UserDueStatDto> findUsersWithDueCards(@Param("now") OffsetDateTime now);
 
     @Query("SELECT c FROM CardItem c WHERE c.flashcard.id = :flashcardId ORDER BY c.id ASC")
     List<CardItem> findAllByFlashcardId(@Param("flashcardId") Long flashcardId);
