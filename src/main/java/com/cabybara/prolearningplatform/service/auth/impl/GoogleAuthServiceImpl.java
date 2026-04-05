@@ -102,6 +102,9 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
         if (googleFlow.loadCredential(user.getId().toString()) == null) {
             googleFlow.getCredentialDataStore().set(String.valueOf(user.getId()), tempCredential);
         }
+
+        userService.verifyEmail(user.getId());
+
         googleFlow.getCredentialDataStore().delete(state);
 
         String accessToken = jwtService.generateToken(userInfo.getEmail());
@@ -123,6 +126,9 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                 .build();
 
         User user = userService.findOrCreateFromGoogle(googleUserInfoDto);
+
+        userService.verifyEmail(user.getId());
+
         UserResponseDto userResponseDto = userMapper.toUserResponseDto(user);
         String accessToken = jwtService.generateToken(user.getEmail());
         return LoginResponseDto.builder()
