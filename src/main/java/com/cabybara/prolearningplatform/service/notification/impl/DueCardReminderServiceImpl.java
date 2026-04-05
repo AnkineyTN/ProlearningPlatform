@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +35,7 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
             return;
         }
 
-        List<UserDueStatDto> usersWithDueCards = cardItemRepository.findUsersWithDueCards(LocalDateTime.now())
+        List<UserDueStatDto> usersWithDueCards = cardItemRepository.findUsersWithDueCards(OffsetDateTime.now())
                 .stream()
                 .filter(stat -> enabledUserIds.contains(stat.getUserId()))
                 .toList();
@@ -61,7 +61,7 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
             return;
         }
 
-        List<CreateNotificationDto> notifications = cardItemRepository.findUsersWithDueCards(LocalDateTime.now())
+        List<CreateNotificationDto> notifications = cardItemRepository.findUsersWithDueCards(OffsetDateTime.now())
                 .stream()
                 .filter(stat -> enabledUserIds.contains(stat.getUserId()) && stat.getDueCount() >= 5)
                 .map(stat -> buildDueCardNotification(stat, "evening"))
