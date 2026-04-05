@@ -37,4 +37,6 @@ public interface UserService extends UserDetailsService {
     User getUserByEmail(String email);
 
     void resetPassword(Long userId, String newPassword);
+
+    void resendVerifyOtp(Long userId);
 }

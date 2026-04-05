@@ -76,4 +76,13 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully", null, null));
     }
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/me/resend-verify-otp")
+    public ResponseEntity<ApiResponse<String>> resendVerifyOtp(@AuthenticationPrincipal Jwt jwt) {
+        userService.resendVerifyOtp(userIdFromJwt(jwt));
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("OTP resent successfully", null, null));
+    }
 }

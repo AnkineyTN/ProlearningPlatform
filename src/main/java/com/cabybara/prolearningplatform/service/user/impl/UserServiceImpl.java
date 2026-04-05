@@ -14,6 +14,8 @@ import com.cabybara.prolearningplatform.mapper.UserMapper;
 import com.cabybara.prolearningplatform.model.Authority;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.repository.UserRepository;
+import com.cabybara.prolearningplatform.service.email.EmailService;
+import com.cabybara.prolearningplatform.service.otp.OtpService;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import com.google.api.services.oauth2.model.Userinfo;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +35,8 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final EmailService emailService;
+    private final OtpService otpService;
 
     @Override
     public User getUserById(Long userId) {
@@ -212,5 +216,18 @@ public class UserServiceImpl implements UserService {
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    @Override
+    public void resendVerifyOtp(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("User with id: " + userId + " not found!"));
+
+        if (user.isEmailVerified()) {
+            return;
+        }
+
+        String otp = otpService.generateVerifyOtp(userId);
+
+        emailService.sendVerifyOtp(user.getEmail(), user.getUsername(), otp);
     }
 }
