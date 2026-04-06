@@ -5,6 +5,9 @@ import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardB
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.ResponseData;
 import com.cabybara.prolearningplatform.dto.response.ResponseError;
+import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptDto;
+import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptResultDto;
+import com.cabybara.prolearningplatform.dto.response.exam.ExamQuestionViewDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
@@ -12,6 +15,7 @@ import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.service.ai.AIExamService;
+import com.cabybara.prolearningplatform.service.exam.ExamAttemptService;
 import com.cabybara.prolearningplatform.service.exam.QuestionService;
 import com.cabybara.prolearningplatform.service.exam.ExamService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
@@ -52,6 +56,7 @@ public class ExamController {
     private final ExamService examService;
     private final QuestionService questionService;
     private final AIExamService aiExamService;
+    private final ExamAttemptService examAttemptService;
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping()
@@ -127,6 +132,18 @@ public class ExamController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Delete exam successfully", null, null));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/{examId}/questions/take")
+    public ResponseEntity<ApiResponse<List<ExamQuestionViewDto>>> getQuestionsForTaking(
+            @PathVariable Long setId,
+            @PathVariable Long examId
+    ) {
+        List<ExamQuestionViewDto> questions = questionService.getQuestionsForTaking(examId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Get questions successfully", questions, null));
     }
 
     @GetMapping("/{examId}/questions")
@@ -214,6 +231,73 @@ public class ExamController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Delete question successfully", null, null));
+    }
+
+    @Operation(
+            summary = "Start a new exam attempt",
+            description = "Initializes a new attempt record for the specified exam and returns the initial attempt data."
+    )
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/{examId}/attempts")
+    public ResponseEntity<ApiResponse<ExamAttemptDto>> startAttempt(
+            @PathVariable Long setId,
+            @PathVariable Long examId
+    ) {
+        ExamAttemptDto attempt = examAttemptService.startAttempt(examId);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ResponseUtil.success("Attempt started", attempt, null));
+    }
+
+    @Operation(
+            summary = "Submit an exam attempt",
+            description = "Submits the user's answers, calculates the score, and marks the attempt as completed."
+    )
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/{examId}/attempts/{attemptId}/submit")
+    public ResponseEntity<ApiResponse<ExamAttemptResultDto>> submitAttempt(
+            @PathVariable Long setId,
+            @PathVariable Long examId,
+            @PathVariable Long attemptId,
+            @RequestBody @Valid SubmitExamRequestDto request
+    ) {
+        ExamAttemptResultDto result = examAttemptService.submitAttempt(examId, attemptId, request);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Attempt submitted", result, null));
+    }
+
+    @Operation(
+            summary = "Get attempt history",
+            description = "Retrieves a list of all previous attempts made by the current user for this specific exam."
+    )
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/{examId}/attempts")
+    public ResponseEntity<ApiResponse<List<ExamAttemptDto>>> getAttemptHistory(
+            @PathVariable Long setId,
+            @PathVariable Long examId
+    ) {
+        List<ExamAttemptDto> history = examAttemptService.getAttemptHistory(examId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Successfully", history, null));
+    }
+
+    @Operation(
+            summary = "Get attempt details",
+            description = "Fetches detailed results, including scoring and feedback, for a specific attempt ID."
+    )
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/{examId}/attempts/{attemptId}")
+    public ResponseEntity<ApiResponse<ExamAttemptResultDto>> getAttemptDetail(
+            @PathVariable Long setId,
+            @PathVariable Long examId,
+            @PathVariable Long attemptId
+    ) {
+        ExamAttemptResultDto result = examAttemptService.getAttemptDetail(examId, attemptId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Successfully", result, null));
     }
 
     // =============================================
