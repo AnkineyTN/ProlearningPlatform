@@ -53,10 +53,19 @@ import static jakarta.servlet.RequestDispatcher.ERROR_MESSAGE;
 @Validated
 @Slf4j
 public class ExamController {
+
+    // ##################################################
+    // #################  PREPARATION  ##################
+    // ##################################################
+
     private final ExamService examService;
     private final QuestionService questionService;
     private final AIExamService aiExamService;
     private final ExamAttemptService examAttemptService;
+
+    // ##################################################
+    // ###################  MAIN API  ###################
+    // ##################################################
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping()
@@ -300,9 +309,10 @@ public class ExamController {
                 .body(ResponseUtil.success("Successfully", result, null));
     }
 
-    // =============================================
-    // ==== AI API
-    // =============================================
+    // ##################################################
+    // ###################  AI API  #####################
+    // ##################################################
+
     @Operation(method = "POST", summary = "Generate exam by files with AI", description = "Generate exam by file with AI")
     @PostMapping(value = "/ai-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseData<GenerateExamByAIResponseDto> generateExamByFile(
@@ -354,4 +364,5 @@ public class ExamController {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate exam by web with AI fail");
         }
     }
+    
 }

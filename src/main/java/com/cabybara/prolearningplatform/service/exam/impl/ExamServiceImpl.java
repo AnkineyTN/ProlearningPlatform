@@ -34,13 +34,23 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class ExamServiceImpl implements ExamService {
+
+    // ##################################################
+    // #################  PREPARATION  ##################
+    // ##################################################
+
+    private final FileService fileService;
+    private final AIExamService aiExamService;
+
     private final AuthenticationContext authenticationContext;
     private final ExamRepository examRepository;
     private final SetRepository setRepository;
     private final NoteRepository noteRepository;
     private final ExamMapper examMapper;
-    private final FileService fileService;
-    private final AIExamService aiExamService;
+
+    // ##################################################
+    // #################  MAIN METHOD  ##################
+    // ##################################################
 
     @Override
 //    @CacheEvict(value = "set_exams", key = "'set' + #setId")
@@ -139,4 +149,9 @@ public class ExamServiceImpl implements ExamService {
                 request.getLanguage()
         );
     }
+
+    // ##################################################
+    // #################  UTILS METHOD  #################
+    // ##################################################
+    
 }

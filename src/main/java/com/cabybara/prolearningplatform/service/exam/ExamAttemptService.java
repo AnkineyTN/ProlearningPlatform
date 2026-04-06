@@ -15,4 +15,5 @@ public interface ExamAttemptService {
     List<ExamAttemptDto> getAttemptHistory(Long examId);
 
     ExamAttemptResultDto getAttemptDetail(Long examId, Long attemptId);
+
 }

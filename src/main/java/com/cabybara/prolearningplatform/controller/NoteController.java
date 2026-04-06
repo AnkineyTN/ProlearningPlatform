@@ -36,9 +36,11 @@ import java.util.List;
 @Tag(name = "Note APIs")
 @RequiredArgsConstructor
 public class NoteController {
+
     // ##################################################
     // #################  PREPARATION  ##################
     // ##################################################
+
     private static final String ERROR_MESSAGE = "errorMessage={}";
     private final NoteService noteService;
     private final AINoteService aiNoteService;
@@ -46,6 +48,7 @@ public class NoteController {
     // ##################################################
     // ###################  MAIN API  ###################
     // ##################################################
+
     @Operation(method = "POST", summary = "Create new note", description = "Create new note")
     @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "")
@@ -237,6 +240,7 @@ public class NoteController {
     // ##################################################
     // ###################  AI API  #####################
     // ##################################################
+
     @Operation(method = "POST", summary = "Convert file to vector DB", description = "Convert file to vector DB to query when explaining with AI")
     @PostMapping(value = "/convert-to-vectordb")
     public ResponseData<Void> convertFileToVector(@Valid @RequestBody ConvertFileToVectorRequestDTO request) {
@@ -275,4 +279,5 @@ public class NoteController {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Summarize file with AI fail");
         }
     }
+    
 }

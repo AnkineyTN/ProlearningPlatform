@@ -34,10 +34,18 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ExamAttemptServiceImpl implements ExamAttemptService {
 
+    // ##################################################
+    // #################  PREPARATION  ##################
+    // ##################################################
+
     private final AuthenticationContext authenticationContext;
     private final ExamRepository examRepository;
     private final ExamQuestionRepository examQuestionRepository;
     private final ExamAttemptRepository examAttemptRepository;
+
+    // ##################################################
+    // #################  MAIN METHOD  ##################
+    // ##################################################
 
     @Override
     @Transactional
@@ -160,6 +168,10 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
         return toAttemptResultDto(attempt);
     }
 
+    // ##################################################
+    // #################  UTILS METHOD  #################
+    // ##################################################
+
     // Returns true if the selected option is marked correct for this question
     private boolean gradeObjectiveAnswer(ExamQuestion examQuestion, Long selectedOptionId) {
         if (selectedOptionId == null) {
@@ -204,4 +216,5 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
                 answerDtos
         );
     }
+    
 }
