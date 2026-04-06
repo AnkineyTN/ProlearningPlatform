@@ -1,6 +1,8 @@
 package com.cabybara.prolearningplatform.mapper;
 
 import com.cabybara.prolearningplatform.dto.request.exam.*;
+import com.cabybara.prolearningplatform.dto.response.exam.ExamOptionViewDto;
+import com.cabybara.prolearningplatform.dto.response.exam.ExamQuestionViewDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
 import com.cabybara.prolearningplatform.model.exam.ExamQuestion;
@@ -34,9 +36,21 @@ public interface ExamMapper {
     @Mapping(target = ".", source = "question")
     QuestionResponseDto toQuestionResponseDto(ExamQuestion examQuestion);
 
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "optionText", source = "optionText")
+    @Mapping(target = "isCorrect", source = "isCorrect")
     QuestionOptionDto toQuestionOptionDto(QuestionOption questionOption);
 
     List<QuestionOptionDto> toQuestionOptionDtoList(List<QuestionOption> options);
+
+    ExamOptionViewDto toExamOptionViewDto(QuestionOption questionOption);
+
+    @Mapping(target = "id", source = "question.id")
+    @Mapping(target = "content", source = "question.content")
+    @Mapping(target = "type", source = "question.type")
+    @Mapping(target = "points", source = "points")
+    @Mapping(target = "options", source = "question.options")
+    ExamQuestionViewDto toExamQuestionViewDto(ExamQuestion examQuestion);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "question", ignore = true)

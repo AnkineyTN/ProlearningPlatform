@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.service.exam.impl;
 
 import com.cabybara.prolearningplatform.dto.request.exam.CreateQuestionRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.UpdateQuestionRequestDto;
+import com.cabybara.prolearningplatform.dto.response.exam.ExamQuestionViewDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
@@ -127,6 +128,18 @@ public class QuestionServiceImpl implements QuestionService {
 
         examQuestionRepository.deleteByExamIdAndQuestionId(examId, questionId);
         questionRepository.deleteById(questionId);
+    }
+
+    @Override
+    public List<ExamQuestionViewDto> getQuestionsForTaking(Long examId) {
+        if (!examRepository.existsById(examId)) {
+            throw new ResourceNotFoundException("Exam not found");
+        }
+
+        return examQuestionRepository.findAllByExamId(examId)
+                .stream()
+                .map(examMapper::toExamQuestionViewDto)
+                .toList();
     }
 
     private void validateExamQuestionRelation(Long examId, Long questionId) {

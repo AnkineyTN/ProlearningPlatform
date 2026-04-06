@@ -10,11 +10,11 @@ import java.util.Optional;
 public interface ExamQuestionRepository extends JpaRepository<ExamQuestion, Long> {
 
     @Query("""
-    SELECT qq FROM ExamQuestion qq
-    JOIN FETCH qq.question q
+    SELECT eq FROM ExamQuestion eq
+    JOIN FETCH eq.question q
     LEFT JOIN FETCH q.options
-    WHERE qq.exam.id = :examId
-    ORDER BY qq.orderIndex
+    WHERE eq.exam.id = :examId
+    ORDER BY eq.orderIndex
     """)
     List<ExamQuestion> findAllByExamId(Long examId);
 
