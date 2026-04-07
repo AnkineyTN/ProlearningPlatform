@@ -62,6 +62,10 @@ public class SecurityConfig {
                 .requestMatchers("/auth/register/**").permitAll()
                 .requestMatchers("/auth/login/**").permitAll()
                 .requestMatchers("/auth/google/**").permitAll()
+                .requestMatchers("/auth/verify-email/**").permitAll()
+                .requestMatchers("/auth/forgot-password/**").permitAll()
+                .requestMatchers("/auth/verify-reset-otp/**").permitAll()
+                .requestMatchers("/auth/reset-password/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .anyRequest().authenticated()
         );
