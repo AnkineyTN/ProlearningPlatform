@@ -5,5 +5,7 @@ public record ExamAnswerResultDto(
         Long selectedOptionId,
         String essayAnswer,
         Boolean isCorrect,
-        String expectedAnswer
+        String expectedAnswer,
+        Integer earnedPoints,
+        String feedback
 ) {}
