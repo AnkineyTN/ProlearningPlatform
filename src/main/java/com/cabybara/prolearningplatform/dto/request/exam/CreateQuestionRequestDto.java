@@ -17,5 +17,8 @@ public record CreateQuestionRequestDto(
         @Min(value = 1, message = "Points must be at least 1")
         Integer point,
 
-        List<QuestionOptionDto> options
+        List<QuestionOptionDto> options,
+
+        // Only applicable for ESSAY type questions
+        String expectedAnswer
 ) {}

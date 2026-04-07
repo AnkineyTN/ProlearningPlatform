@@ -9,6 +9,8 @@ import java.util.List;
 public record UpdateQuestionRequestDto(
         String content,
         QuestionType type,
-        List<QuestionOptionDto> options
+        List<QuestionOptionDto> options,
+        // Only applicable for ESSAY type questions
+        String expectedAnswer
 ) {}
 

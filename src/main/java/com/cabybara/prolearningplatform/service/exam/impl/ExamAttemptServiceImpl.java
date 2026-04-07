@@ -1,7 +1,9 @@
 package com.cabybara.prolearningplatform.service.exam.impl;
 
 import com.cabybara.prolearningplatform.dto.request.exam.AnswerSubmissionDto;
+import com.cabybara.prolearningplatform.dto.request.exam.EssayGradingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.SubmitExamRequestDto;
+import com.cabybara.prolearningplatform.dto.response.exam.EssayGradingResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamAnswerResultDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptResultDto;
@@ -13,10 +15,10 @@ import com.cabybara.prolearningplatform.model.exam.Exam;
 import com.cabybara.prolearningplatform.model.exam.ExamAnswer;
 import com.cabybara.prolearningplatform.model.exam.ExamAttempt;
 import com.cabybara.prolearningplatform.model.exam.ExamQuestion;
-import com.cabybara.prolearningplatform.model.exam.QuestionOption;
 import com.cabybara.prolearningplatform.repository.ExamAttemptRepository;
 import com.cabybara.prolearningplatform.repository.ExamQuestionRepository;
 import com.cabybara.prolearningplatform.repository.ExamRepository;
+import com.cabybara.prolearningplatform.service.ai.AIExamService;
 import com.cabybara.prolearningplatform.service.exam.ExamAttemptService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +40,7 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
     private final ExamRepository examRepository;
     private final ExamQuestionRepository examQuestionRepository;
     private final ExamAttemptRepository examAttemptRepository;
+    private final AIExamService aiExamService;
 
     @Override
     @Transactional
@@ -80,23 +83,18 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
             throw new BadRequestException("Exam time has expired");
         }
 
-        // Load all questions for exam
-        Map<Long, ExamQuestion> examQuestionsMap = new java.util.HashMap<>();
-        for (ExamQuestion eq : examQuestionRepository.findAllByExamId(examId)) {
-            examQuestionsMap.put(eq.getQuestion().getId(), eq);
-        }
+        Map<Long, ExamQuestion> examQuestionsMap = examQuestionRepository.findAllByExamId(examId)
+                .stream()
+                .collect(Collectors.toMap(eq -> eq.getQuestion().getId(), eq -> eq));
 
         int totalPoints = examQuestionsMap.values().stream()
                 .mapToInt(eq -> eq.getPoints() != null ? eq.getPoints() : 1)
                 .sum();
 
         List<ExamAnswer> examAnswers = new ArrayList<>();
-        BigDecimal score = BigDecimal.ZERO;
 
         for (AnswerSubmissionDto submission : request.answers()) {
             ExamQuestion examQuestion = examQuestionsMap.get(submission.questionId());
-
-            // Skip if question does not exist
             if (examQuestion == null) {
                 continue;
             }
@@ -109,28 +107,26 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
 
             QuestionType type = examQuestion.getQuestion().getType();
             if (type == QuestionType.ESSAY) {
-                // Graded by AI service
-                answer.setIsCorrect(null);
+                gradeEssayAnswer(answer, attempt, examQuestion, submission);
             } else {
-                boolean correct = gradeObjectiveAnswer(examQuestion, submission.selectedOptionId());
-                answer.setIsCorrect(correct);
-                if (correct) {
-                    int points = examQuestion.getPoints() != null ? examQuestion.getPoints() : 1;
-                    score = score.add(BigDecimal.valueOf(points));
-                }
+                gradeObjectiveAnswer(answer, examQuestion, submission.selectedOptionId());
             }
 
             examAnswers.add(answer);
         }
 
+        int totalEarnedPoints = examAnswers.stream()
+                .mapToInt(a -> a.getEarnedPoints() != null ? a.getEarnedPoints() : 0)
+                .sum();
+
         attempt.getAnswers().addAll(examAnswers);
         attempt.setStatus(ExamAttemptStatus.SUBMITTED);
         attempt.setSubmittedAt(LocalDateTime.now());
-        attempt.setScore(score);
+        attempt.setScore(BigDecimal.valueOf(totalEarnedPoints));
         attempt.setTotalPoints(totalPoints);
 
         ExamAttempt saved = examAttemptRepository.save(attempt);
-        return toAttemptResultDto(saved);
+        return toAttemptResultDto(saved, examQuestionsMap);
     }
 
     @Override
@@ -157,16 +153,44 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
             throw new BadRequestException("Attempt does not belong to exam with id: " + examId);
         }
 
-        return toAttemptResultDto(attempt);
+        Map<Long, ExamQuestion> examQuestionsMap = examQuestionRepository.findAllByExamId(examId)
+                .stream()
+                .collect(Collectors.toMap(eq -> eq.getQuestion().getId(), eq -> eq));
+
+        return toAttemptResultDto(attempt, examQuestionsMap);
     }
 
-    // Returns true if the selected option is marked correct for this question
-    private boolean gradeObjectiveAnswer(ExamQuestion examQuestion, Long selectedOptionId) {
+    private void gradeEssayAnswer(ExamAnswer answer, ExamAttempt attempt, ExamQuestion examQuestion, AnswerSubmissionDto submission) {
+        int maxPoints = examQuestion.getPoints() != null ? examQuestion.getPoints() : 1;
+
+        EssayGradingRequestDto gradingRequest = new EssayGradingRequestDto(
+                attempt.getId(),
+                submission.questionId(),
+                examQuestion.getQuestion().getContent(),
+                examQuestion.getQuestion().getExpectedAnswer(),
+                submission.essayAnswer(),
+                maxPoints
+        );
+
+        EssayGradingResponseDto gradingResult = aiExamService.gradeEssay(gradingRequest);
+
+        answer.setIsCorrect(null);
+        answer.setEarnedPoints(gradingResult.score());
+        answer.setFeedback(gradingResult.feedback());
+    }
+
+    private void gradeObjectiveAnswer(ExamAnswer answer, ExamQuestion examQuestion, Long selectedOptionId) {
         if (selectedOptionId == null) {
-            return false;
+            answer.setIsCorrect(false);
+            answer.setEarnedPoints(0);
+            return;
         }
-        return examQuestion.getQuestion().getOptions().stream()
+
+        boolean correct = examQuestion.getQuestion().getOptions().stream()
                 .anyMatch(opt -> opt.getId().equals(selectedOptionId) && Boolean.TRUE.equals(opt.getIsCorrect()));
+
+        answer.setIsCorrect(correct);
+        answer.setEarnedPoints(correct ? (examQuestion.getPoints() != null ? examQuestion.getPoints() : 1) : 0);
     }
 
     private ExamAttemptDto toAttemptDto(ExamAttempt attempt) {
@@ -182,14 +206,21 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
         );
     }
 
-    private ExamAttemptResultDto toAttemptResultDto(ExamAttempt attempt) {
+    private ExamAttemptResultDto toAttemptResultDto(ExamAttempt attempt, Map<Long, ExamQuestion> examQuestionsMap) {
         List<ExamAnswerResultDto> answerDtos = attempt.getAnswers().stream()
-                .map(a -> new ExamAnswerResultDto(
-                        a.getQuestionId(),
-                        a.getSelectedOptionId(),
-                        a.getEssayAnswer(),
-                        a.getIsCorrect()
-                ))
+                .map(a -> {
+                    ExamQuestion eq = examQuestionsMap.get(a.getQuestionId());
+                    String expectedAnswer = (eq != null) ? eq.getQuestion().getExpectedAnswer() : null;
+                    return new ExamAnswerResultDto(
+                            a.getQuestionId(),
+                            a.getSelectedOptionId(),
+                            a.getEssayAnswer(),
+                            a.getIsCorrect(),
+                            expectedAnswer,
+                            a.getEarnedPoints(),
+                            a.getFeedback()
+                    );
+                })
                 .toList();
 
         return new ExamAttemptResultDto(

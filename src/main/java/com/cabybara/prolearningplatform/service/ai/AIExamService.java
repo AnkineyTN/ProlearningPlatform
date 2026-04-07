@@ -1,7 +1,9 @@
 package com.cabybara.prolearningplatform.service.ai;
 
+import com.cabybara.prolearningplatform.dto.request.exam.EssayGradingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByFileRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByWebRequestDto;
+import com.cabybara.prolearningplatform.dto.response.exam.EssayGradingResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.enums.Language;
@@ -15,4 +17,6 @@ public interface AIExamService {
     public GenerateExamByAIResponseDto generateExamByNotes(List<String> contents, Map<String, Integer> questions, Map<String, Double> difficulty, String freeText, Language language);
 
     public GenerateExamByAIResponseDto generateExamByWeb(GenerateExamByWebRequestDto request);
+
+    EssayGradingResponseDto gradeEssay(EssayGradingRequestDto request);
 }

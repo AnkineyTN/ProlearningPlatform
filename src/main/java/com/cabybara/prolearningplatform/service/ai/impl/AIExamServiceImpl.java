@@ -1,6 +1,8 @@
 package com.cabybara.prolearningplatform.service.ai.impl;
+import com.cabybara.prolearningplatform.dto.request.exam.EssayGradingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByFileRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByWebRequestDto;
+import com.cabybara.prolearningplatform.dto.response.exam.EssayGradingResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.enums.Language;
 import com.cabybara.prolearningplatform.service.ai.AIExamService;
@@ -128,5 +130,17 @@ public class AIExamServiceImpl implements AIExamService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Exam by Web", e);
         }
+    }
+
+    @Override
+    public EssayGradingResponseDto gradeEssay(EssayGradingRequestDto request) {
+        // TODO: implement actual HTTP call to AI service when endpoint is ready
+        return new EssayGradingResponseDto(
+                request.attemptId(),
+                request.questionId(),
+                Math.max(request.maxPoints() - 1, 0),
+                request.maxPoints(),
+                "Pending AI grading"
+        );
     }
 }
