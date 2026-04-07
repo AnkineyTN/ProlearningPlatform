@@ -29,6 +29,7 @@ public interface ExamMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "options", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "expectedAnswer", source = "expectedAnswer")
     Question toQuestion(CreateQuestionRequestDto createQuestionRequestDto);
 
     QuestionResponseDto toQuestionResponseDto(Question question);

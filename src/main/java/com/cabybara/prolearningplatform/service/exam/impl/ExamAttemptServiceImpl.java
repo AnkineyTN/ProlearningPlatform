@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -130,7 +131,7 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
         attempt.setTotalPoints(totalPoints);
 
         ExamAttempt saved = examAttemptRepository.save(attempt);
-        return toAttemptResultDto(saved);
+        return toAttemptResultDto(saved, examQuestionsMap);
     }
 
     @Override
@@ -157,7 +158,11 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
             throw new BadRequestException("Attempt does not belong to exam with id: " + examId);
         }
 
-        return toAttemptResultDto(attempt);
+        Map<Long, ExamQuestion> examQuestionsMap = examQuestionRepository.findAllByExamId(examId)
+                .stream()
+                .collect(Collectors.toMap(eq -> eq.getQuestion().getId(), eq -> eq));
+
+        return toAttemptResultDto(attempt, examQuestionsMap);
     }
 
     // Returns true if the selected option is marked correct for this question
@@ -182,14 +187,19 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
         );
     }
 
-    private ExamAttemptResultDto toAttemptResultDto(ExamAttempt attempt) {
+    private ExamAttemptResultDto toAttemptResultDto(ExamAttempt attempt, Map<Long, ExamQuestion> examQuestionsMap) {
         List<ExamAnswerResultDto> answerDtos = attempt.getAnswers().stream()
-                .map(a -> new ExamAnswerResultDto(
-                        a.getQuestionId(),
-                        a.getSelectedOptionId(),
-                        a.getEssayAnswer(),
-                        a.getIsCorrect()
-                ))
+                .map(a -> {
+                    ExamQuestion eq = examQuestionsMap.get(a.getQuestionId());
+                    String expectedAnswer = (eq != null) ? eq.getQuestion().getExpectedAnswer() : null;
+                    return new ExamAnswerResultDto(
+                            a.getQuestionId(),
+                            a.getSelectedOptionId(),
+                            a.getEssayAnswer(),
+                            a.getIsCorrect(),
+                            expectedAnswer
+                    );
+                })
                 .toList();
 
         return new ExamAttemptResultDto(
