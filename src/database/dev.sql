@@ -300,6 +300,7 @@ CREATE TABLE questions (
     content TEXT NOT NULL,
     type question_type NOT NULL,
     created_by INTEGER NOT NULL ,
+    expected_answer TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

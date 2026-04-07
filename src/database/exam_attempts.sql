@@ -41,6 +41,8 @@ CREATE TABLE exam_answers (
     question_id        BIGINT NOT NULL,
     selected_option_id BIGINT,
     essay_answer       TEXT,
+    earned_points      INTEGER,
+    feedback           TEXT,
     is_correct         BOOLEAN,
 
     CONSTRAINT fk_answer_attempt

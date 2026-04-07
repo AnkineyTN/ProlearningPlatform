@@ -30,6 +30,9 @@ public class Question {
     @Column(name = "created_by")
     private Long createdBy;
 
+    @Column(name = "expected_answer", columnDefinition = "TEXT")
+    private String expectedAnswer;
+
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuestionOption> options = new ArrayList<>();
 }

@@ -32,4 +32,10 @@ public class ExamAnswer {
     // NULL = pending AI grading (ESSAY type). TRUE/FALSE others.
     @Column(name = "is_correct")
     private Boolean isCorrect;
+
+    @Column(name = "earned_points")
+    private Integer earnedPoints;
+
+    @Column(name = "feedback", columnDefinition = "TEXT")
+    private String feedback;
 }
