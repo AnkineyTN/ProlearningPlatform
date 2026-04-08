@@ -9,6 +9,7 @@ import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptResultDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamQuestionViewDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
+import com.cabybara.prolearningplatform.dto.response.exam.ExplainWrongAnswerResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
@@ -362,6 +363,19 @@ public class ExamController {
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e);
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate exam by web with AI fail");
+        }
+    }
+
+    @Operation(method = "POST", summary = "Explain wrong answer with AI", description = "Get AI explanation for an incorrect answer")
+    @PostMapping(value = "/ai-explain-wrong-answer")
+    public ResponseData<ExplainWrongAnswerResponseDto> explainWrongAnswer(@Valid @RequestBody ExplainWrongAnswerRequestDto request) {
+        log.info("Explain wrong answer with AI");
+        try {
+            ExplainWrongAnswerResponseDto response = aiExamService.explainWrongAnswer(request);
+            return new ResponseData<>(HttpStatus.OK.value(), "Explain wrong answer successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Explain wrong answer fail");
         }
     }
     

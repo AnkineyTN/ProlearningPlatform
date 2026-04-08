@@ -1,8 +1,11 @@
 package com.cabybara.prolearningplatform.service.ai.impl;
+
 import com.cabybara.prolearningplatform.dto.request.exam.EssayGradingRequestDto;
+import com.cabybara.prolearningplatform.dto.request.exam.ExplainWrongAnswerRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByFileRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByWebRequestDto;
 import com.cabybara.prolearningplatform.dto.response.exam.EssayGradingResponseDto;
+import com.cabybara.prolearningplatform.dto.response.exam.ExplainWrongAnswerResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.enums.Language;
 import com.cabybara.prolearningplatform.service.ai.AIExamService;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +36,9 @@ public class AIExamServiceImpl implements AIExamService {
 
     private static final String GENERATE_EXAM_BY_FILE_PATH = "/tests/from-file";
     private static final String GENERATE_EXAM_BY_NOTE_PATH = "/tests/from-note";
-    private static final String GENERATE_EXAM_BY_WEB_PATH  = "/tests/from-web";
+    private static final String GENERATE_EXAM_BY_WEB_PATH = "/tests/from-web";
+    private static final String GRADE_ESSAY_PATH = "/tests/grade-essay";
+    private static final String EXPLAIN_WRONG_ANSWER_PATH = "/tests/explain-answer";
 
     private final RestHttpClientUtil restHttpClientUtil;
     private final ObjectMapper objectMapper;
@@ -134,13 +140,64 @@ public class AIExamServiceImpl implements AIExamService {
 
     @Override
     public EssayGradingResponseDto gradeEssay(EssayGradingRequestDto request) {
-        // TODO: implement actual HTTP call to AI service when endpoint is ready
-        return new EssayGradingResponseDto(
-                request.attemptId(),
-                request.questionId(),
-                Math.max(request.maxPoints() - 1, 0),
-                request.maxPoints(),
-                "Pending AI grading"
-        );
+        try {
+            Map<String, Object> body = new HashMap<>();
+            body.put("question_content", request.questionContent());
+            body.put("expected_answer", request.expectedAnswer());
+            body.put("student_answer", request.studentAnswer());
+            body.put("language", "English");
+            body.put("max_score", request.maxPoints());
+
+            String raw = restHttpClientUtil.post(
+                    aiServiceBaseApi + GRADE_ESSAY_PATH,
+                    body,
+                    String.class
+            );
+
+            // Parse the AI service response
+            Map<String, Object> responseData = objectMapper.readValue(raw, Map.class);
+
+            Double score = ((Number) responseData.get("score")).doubleValue();
+            String feedback = (String) responseData.get("feedback");
+
+            return new EssayGradingResponseDto(
+                    request.attemptId(),
+                    request.questionId(),
+                    score,
+                    request.maxPoints(),
+                    feedback
+            );
+
+        } catch (Exception e) {
+            log.error("Failed to call AI service for grading essay", e);
+            throw new RuntimeException("Failed to call AI service for grading essay", e);
+        }
+    }
+
+    @Override
+    public ExplainWrongAnswerResponseDto explainWrongAnswer(ExplainWrongAnswerRequestDto request) {
+        try {
+            Map<String, Object> body = new HashMap<>();
+            body.put("question", request.question());
+            body.put("correct_answer", request.correctAnswer());
+            body.put("user_answer", request.userAnswer());
+            body.put("language", request.language() != null ? request.language() : "English");
+
+            String raw = restHttpClientUtil.post(
+                    aiServiceBaseApi + EXPLAIN_WRONG_ANSWER_PATH,
+                    body,
+                    String.class
+            );
+
+            // Parse the AI service response
+            Map<String, Object> responseData = objectMapper.readValue(raw, Map.class);
+            String explanation = (String) responseData.get("explanation");
+
+            return new ExplainWrongAnswerResponseDto(explanation);
+
+        } catch (Exception e) {
+            log.error("Failed to call AI service for explaining wrong answer", e);
+            throw new RuntimeException("Failed to call AI service for explaining wrong answer", e);
+        }
     }
 }

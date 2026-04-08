@@ -25,7 +25,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -123,14 +122,14 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
             examAnswers.add(answer);
         }
 
-        int totalEarnedPoints = examAnswers.stream()
-                .mapToInt(a -> a.getEarnedPoints() != null ? a.getEarnedPoints() : 0)
+        Double totalEarnedPoints = examAnswers.stream()
+                .mapToDouble(a -> a.getEarnedPoints() != null ? (a.getEarnedPoints() instanceof Double ? (Double) a.getEarnedPoints() : ((Number) a.getEarnedPoints()).doubleValue()) : 0.0)
                 .sum();
 
         attempt.getAnswers().addAll(examAnswers);
         attempt.setStatus(ExamAttemptStatus.SUBMITTED);
         attempt.setSubmittedAt(LocalDateTime.now());
-        attempt.setScore(BigDecimal.valueOf(totalEarnedPoints));
+        attempt.setScore(totalEarnedPoints);
         attempt.setTotalPoints(totalPoints);
 
         ExamAttempt saved = examAttemptRepository.save(attempt);
@@ -190,7 +189,7 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
     private void gradeObjectiveAnswer(ExamAnswer answer, ExamQuestion examQuestion, Long selectedOptionId) {
         if (selectedOptionId == null) {
             answer.setIsCorrect(false);
-            answer.setEarnedPoints(0);
+            answer.setEarnedPoints(0.0);
             return;
         }
 
@@ -198,7 +197,7 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
                 .anyMatch(opt -> opt.getId().equals(selectedOptionId) && Boolean.TRUE.equals(opt.getIsCorrect()));
 
         answer.setIsCorrect(correct);
-        answer.setEarnedPoints(correct ? (examQuestion.getPoints() != null ? examQuestion.getPoints() : 1) : 0);
+        answer.setEarnedPoints(correct ? (double) (examQuestion.getPoints() != null ? examQuestion.getPoints() : 1) : 0.0);
     }
 
     private ExamAttemptDto toAttemptDto(ExamAttempt attempt) {

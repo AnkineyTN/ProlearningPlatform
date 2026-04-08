@@ -13,7 +13,7 @@ public record ExamAttemptResultDto(
         LocalDateTime startedAt,
         LocalDateTime deadlineAt,
         LocalDateTime submittedAt,
-        BigDecimal score,
+        Double score,
         Integer totalPoints,
         List<ExamAnswerResultDto> answers
 ) {}

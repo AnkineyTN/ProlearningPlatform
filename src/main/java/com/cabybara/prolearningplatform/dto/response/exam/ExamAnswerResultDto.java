@@ -6,6 +6,6 @@ public record ExamAnswerResultDto(
         String essayAnswer,
         Boolean isCorrect,
         String expectedAnswer,
-        Integer earnedPoints,
+        Double earnedPoints,
         String feedback
 ) {}

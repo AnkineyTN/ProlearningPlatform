@@ -12,6 +12,6 @@ public record ExamAttemptDto(
         LocalDateTime startedAt,
         LocalDateTime deadlineAt,
         LocalDateTime submittedAt,
-        BigDecimal score,
+        Double score,
         Integer totalPoints
 ) {}

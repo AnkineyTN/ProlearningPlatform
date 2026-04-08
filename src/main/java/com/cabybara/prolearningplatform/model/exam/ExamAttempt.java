@@ -8,7 +8,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,8 +44,8 @@ public class ExamAttempt {
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
 
-    @Column(name = "score", precision = 5, scale = 2)
-    private BigDecimal score;
+    @Column(name = "score")
+    private Double score;
 
     @Column(name = "total_points", nullable = false)
     private Integer totalPoints = 0;
