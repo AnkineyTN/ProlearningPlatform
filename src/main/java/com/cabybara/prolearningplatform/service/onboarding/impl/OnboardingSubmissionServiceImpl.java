@@ -3,23 +3,20 @@ package com.cabybara.prolearningplatform.service.onboarding.impl;
 import com.cabybara.prolearningplatform.dto.request.onboarding.OnboardingSubmissionRequestDto;
 import com.cabybara.prolearningplatform.dto.response.onboarding.ChartBucketResponseDto;
 import com.cabybara.prolearningplatform.dto.response.onboarding.OnboardingAnalyticsResponseDto;
-import com.cabybara.prolearningplatform.dto.response.onboarding.OnboardingDataResponseDto;
 import com.cabybara.prolearningplatform.dto.response.onboarding.OnboardingSubmissionResponseDto;
 import com.cabybara.prolearningplatform.dto.response.onboarding.PremiumAccountStatsResponseDto;
 import com.cabybara.prolearningplatform.exception.BadRequestException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.repository.UserRepository;
+import com.cabybara.prolearningplatform.service.onboarding.OnboardingProfileHelper;
 import com.cabybara.prolearningplatform.service.onboarding.OnboardingSubmissionService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -46,12 +43,6 @@ public class OnboardingSubmissionServiceImpl implements OnboardingSubmissionServ
 
         User saved = userRepository.save(user);
         return toResponse(saved);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<OnboardingSubmissionResponseDto> listAll(Pageable pageable) {
-        return userRepository.findAll(pageable).map(this::toResponse);
     }
 
     @Override
@@ -126,26 +117,11 @@ public class OnboardingSubmissionServiceImpl implements OnboardingSubmissionServ
     }
 
     private OnboardingSubmissionResponseDto toResponse(User user) {
-        Instant submittedAt = user.getUpdatedAt() != null
-                ? user.getUpdatedAt().toInstant()
-                : Instant.now();
         return OnboardingSubmissionResponseDto.builder()
                 .id(user.getId())
-                .submittedAt(submittedAt)
+                .submittedAt(OnboardingProfileHelper.lastProfileUpdateInstant(user))
                 .userId(user.getId())
-                .data(toDataOrNull(user))
-                .build();
-    }
-
-    private static OnboardingDataResponseDto toDataOrNull(User user) {
-        if (user.getLanguage() == null && user.getEducation() == null && user.getHearAppFrom() == null) {
-            return null;
-        }
-        return OnboardingDataResponseDto.builder()
-                .language(user.getLanguage())
-                .education(user.getEducation())
-                .hearAppFrom(user.getHearAppFrom())
-                .accountType(user.getAccountType())
+                .data(OnboardingProfileHelper.toDataOrNull(user))
                 .build();
     }
 }

@@ -16,6 +16,7 @@ import com.cabybara.prolearningplatform.model.note.NoteDocs;
 import com.cabybara.prolearningplatform.model.note.NoteImgs;
 import com.cabybara.prolearningplatform.repository.*;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
+import com.cabybara.prolearningplatform.service.note.NoteFileRegionCommentService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,7 @@ public class NoteServiceImpl implements NoteService {
 
     private final AssetService assetService;
     private final AuthenticationContext authenticationContext;
+    private final NoteFileRegionCommentService noteFileRegionCommentService;
 
     // ##################################################
     // #################  MAIN METHOD  ##################
@@ -102,6 +104,7 @@ public class NoteServiceImpl implements NoteService {
     // [DELETE]: /sets/{setId}/notes/delete-doc
     @Override
     public void deleteDocInNote(DeleteNoteDocRequestDTO request) {
+        noteFileRegionCommentService.deleteAllForNoteAndAsset(request.getNoteId(), request.getAssetId());
         // Mark status "DELETED" in asset table
         Asset asset = getAssetById(request.getAssetId());
         assetService.markDeletedAsset(asset);
@@ -129,8 +132,9 @@ public class NoteServiceImpl implements NoteService {
     // [DELETE]: /sets/{setId}/notes/delete-img
     @Override
     public void deleteImgInNote(DeleteNoteImgRequestDTO request) {
-        // Mark status "DELETED" in asset table
         Asset asset = assetRepository.findByUrl(request.getFileUrl());
+        noteFileRegionCommentService.deleteAllForNoteAndAsset(request.getNoteId(), asset.getId());
+        // Mark status "DELETED" in asset table
         assetService.markDeletedAsset(asset);
 
         // Delete from note_imgs table
@@ -179,6 +183,7 @@ public class NoteServiceImpl implements NoteService {
 
         return GetDetailNoteResponseDTO.builder()
                 .id(note.getId())
+                .setId(note.getSet() != null ? note.getSet().getId() : null)
                 .title(note.getTitle())
                 .description(note.getDescription())
                 .privacy(note.getPrivacy())
@@ -188,6 +193,19 @@ public class NoteServiceImpl implements NoteService {
                                 .map(doc -> {
                                     Asset asset = doc.getAsset();
 
+                                    return GetDocsInNoteResponseDTO.builder()
+                                            .assetId(asset.getId())
+                                            .fileName(asset.getFileName())
+                                            .fileUrl(asset.getUrl())
+                                            .publicId(asset.getPublicId())
+                                            .build();
+                                })
+                                .toList()
+                )
+                .noteImgs(
+                        note.getNoteImgs().stream()
+                                .map(img -> {
+                                    Asset asset = img.getAsset();
                                     return GetDocsInNoteResponseDTO.builder()
                                             .assetId(asset.getId())
                                             .fileName(asset.getFileName())
@@ -266,6 +284,7 @@ public class NoteServiceImpl implements NoteService {
     }
 
     private void deleteImgInNote(Long noteId, Long assetId) {
+        noteFileRegionCommentService.deleteAllForNoteAndAsset(noteId, assetId);
         // Mark status "DELETED" in asset table
         Asset asset = getAssetById(assetId);
         assetService.markDeletedAsset(asset);

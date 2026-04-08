@@ -14,9 +14,12 @@ import java.util.List;
 @Builder
 public class GetDetailNoteResponseDTO {
     private Long id;
+    /** Owning set — useful for clients calling `/sets/{setId}/notes/...` routes. */
+    private Long setId;
     private String title;
     private String description;
     private Privacy privacy;
     private String content;
     private List<GetDocsInNoteResponseDTO> noteDocs;
+    private List<GetDocsInNoteResponseDTO> noteImgs;
 }

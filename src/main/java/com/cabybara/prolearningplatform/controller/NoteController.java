@@ -5,7 +5,9 @@ import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.*;
 import com.cabybara.prolearningplatform.enums.Privacy;
+import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.service.ai.AINoteService;
+import com.cabybara.prolearningplatform.service.note.NoteFileRegionCommentService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -44,6 +46,7 @@ public class NoteController {
     private static final String ERROR_MESSAGE = "errorMessage={}";
     private final NoteService noteService;
     private final AINoteService aiNoteService;
+    private final NoteFileRegionCommentService noteFileRegionCommentService;
 
     // ##################################################
     // ###################  MAIN API  ###################
@@ -216,6 +219,66 @@ public class NoteController {
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Update note fail");
+        }
+    }
+
+    @Operation(summary = "Add region comment on note file (PDF / image)", description = "Persists a rectangular region comment in percent coordinates (0–100), same model as the note editor UI.")
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/{noteId}/file-region-comments")
+    public ResponseData<NoteFileRegionCommentResponseDTO> createFileRegionComment(
+            @PathVariable Long setId,
+            @PathVariable @Min(1) Long noteId,
+            @Valid @RequestBody CreateNoteFileRegionCommentRequestDTO request
+    ) {
+        log.info("Create file region comment, noteId={}", noteId);
+        try {
+            return new ResponseData<>(HttpStatus.CREATED.value(), "Comment saved",
+                    noteFileRegionCommentService.create(setId, noteId, request));
+        } catch (ResourceNotFoundException e) {
+            return new ResponseError<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return new ResponseError<>(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Save file region comment fail");
+        }
+    }
+
+    @Operation(summary = "List region comments for a note (optional filter by asset)", description = "Returns all comments for the note, or only those on one attachment when assetId is set.")
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/{noteId}/file-region-comments")
+    public ResponseData<List<NoteFileRegionCommentResponseDTO>> listFileRegionComments(
+            @PathVariable Long setId,
+            @PathVariable @Min(1) Long noteId,
+            @RequestParam(required = false) Long assetId
+    ) {
+        try {
+            return new ResponseData<>(HttpStatus.OK.value(), "OK",
+                    noteFileRegionCommentService.list(setId, noteId, assetId));
+        } catch (ResourceNotFoundException e) {
+            return new ResponseError<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
+            return new ResponseError<>(HttpStatus.BAD_REQUEST.value(), "List file region comments fail");
+        }
+    }
+
+    @Operation(summary = "Delete a file region comment")
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/{noteId}/file-region-comments/{commentId}")
+    public ResponseData<Void> deleteFileRegionComment(
+            @PathVariable Long setId,
+            @PathVariable @Min(1) Long noteId,
+            @PathVariable @Min(1) Long commentId
+    ) {
+        try {
+            noteFileRegionCommentService.delete(setId, noteId, commentId);
+            return new ResponseData<>(HttpStatus.NO_CONTENT.value(), "Deleted");
+        } catch (ResourceNotFoundException e) {
+            return new ResponseError<>(HttpStatus.NOT_FOUND.value(), e.getMessage());
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Delete file region comment fail");
         }
     }
 
