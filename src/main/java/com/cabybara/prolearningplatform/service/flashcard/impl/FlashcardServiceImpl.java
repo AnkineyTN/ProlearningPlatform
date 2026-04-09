@@ -125,22 +125,27 @@ public class FlashcardServiceImpl implements FlashcardService {
 
     @Override
     @Transactional
-    public FlashcardResponseDto addFlashcardFromReview(FlashcardCreateRequestDto flashcardCreateRequestDto) {
+    public FlashcardResponseDto addFlashcardFromReview(List<CardItem> sourceCards, String title, String description) {
         Long userId = authenticationContext.getCurrentUserId();
         User user = userService.getUserById(userId);
 
-        Flashcard flashcard = flashcardMapper.toFlashcard(flashcardCreateRequestDto);
-
-        if (flashcardCreateRequestDto.getCards() != null && !flashcardCreateRequestDto.getCards().isEmpty()) {
-            Map<Long, Asset> activatedAssetsMap = activateCardImages(flashcardCreateRequestDto.getCards(), userId);
-            List<CardItem> cardItems = buildCardItemList(flashcardCreateRequestDto.getCards(), flashcard, activatedAssetsMap);
-            flashcard.setCards(cardItems);
-        }
-
+        Flashcard flashcard = new Flashcard();
+        flashcard.setTitle(title);
+        flashcard.setDescription(description);
         flashcard.setUser(user);
         flashcard.setPrivacy(Privacy.PRIVATE);
         flashcard.setSet(null);
-        flashcard.setCreate_method(CreationMethod.REVIEW_AI);
+        flashcard.setCreate_method(CreationMethod.REVIEW);
+
+        List<CardItem> copiedCards = sourceCards.stream()
+                .map(source -> CardItem.builder()
+                        .flashcard(flashcard)
+                        .frontCard(source.getFrontCard())
+                        .backCard(source.getBackCard())
+                        .build())
+                .collect(Collectors.toList());
+
+        flashcard.setCards(copiedCards);
 
         return flashcardMapper.toFlashcardResponseDto(flashcardRepository.save(flashcard));
     }

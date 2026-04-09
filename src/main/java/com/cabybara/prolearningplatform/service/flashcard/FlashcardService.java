@@ -5,10 +5,13 @@ import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardRe
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.enums.Privacy;
+import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 
 public interface FlashcardService {
@@ -18,7 +21,7 @@ public interface FlashcardService {
 
     FlashcardResponseDto addFlashcardManual(Long setId, FlashcardCreateRequestDto flashcardCreateRequestDto);
 
-    FlashcardResponseDto addFlashcardFromReview(FlashcardCreateRequestDto flashcardCreateRequestDto);
+    FlashcardResponseDto addFlashcardFromReview(List<CardItem> sourceCards, String title, String description);
 
     void deleteFlashcard(Long setId, Long flashcardId) throws BadRequestException;
 

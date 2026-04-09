@@ -30,7 +30,7 @@ public class ReviewHubServiceImpl implements ReviewHubService {
     public Page<FlashcardResponseDto> getReviewFlashcards(Pageable pageable) {
         Long userId = authenticationContext.getCurrentUserId();
         return flashcardRepository
-                .findAllByUserIdAndCreateMethod(userId, CreationMethod.REVIEW_AI, pageable)
+                .findAllByUserIdAndCreateMethod(userId, CreationMethod.REVIEW, pageable)
                 .map(flashcardMapper::toFlashcardResponseDto);
     }
 
@@ -39,7 +39,7 @@ public class ReviewHubServiceImpl implements ReviewHubService {
     public Page<ExamResponseDto> getReviewExams(Pageable pageable) {
         Long userId = authenticationContext.getCurrentUserId();
         return examRepository
-                .findAllByCreatedByAndCreationMethod(userId, CreationMethod.REVIEW_AI, pageable)
+                .findAllByCreatedByAndCreationMethod(userId, CreationMethod.REVIEW, pageable)
                 .map(examMapper::toExamResponseDto);
     }
 }

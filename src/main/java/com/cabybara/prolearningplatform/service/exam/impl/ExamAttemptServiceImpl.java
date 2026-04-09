@@ -35,19 +35,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ExamAttemptServiceImpl implements ExamAttemptService {
 
-    // ##################################################
-    // #################  PREPARATION  ##################
-    // ##################################################
-
     private final AuthenticationContext authenticationContext;
     private final ExamRepository examRepository;
     private final ExamQuestionRepository examQuestionRepository;
     private final ExamAttemptRepository examAttemptRepository;
     private final AIExamService aiExamService;
-
-    // ##################################################
-    // #################  MAIN METHOD  ##################
-    // ##################################################
 
     @Override
     @Transactional

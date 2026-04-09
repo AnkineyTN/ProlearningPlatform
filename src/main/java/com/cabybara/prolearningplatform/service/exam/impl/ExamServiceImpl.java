@@ -86,7 +86,7 @@ public class ExamServiceImpl implements ExamService {
         exam.setCreatedBy(userId);
         exam.setSet(null);
         exam.setPrivacy(Privacy.PRIVATE);
-        exam.setCreationMethod(CreationMethod.REVIEW_AI);
+        exam.setCreationMethod(CreationMethod.REVIEW);
 
         Exam savedExam = examRepository.save(exam);
 

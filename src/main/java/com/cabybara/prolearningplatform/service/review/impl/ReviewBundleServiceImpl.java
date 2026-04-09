@@ -2,7 +2,6 @@ package com.cabybara.prolearningplatform.service.review.impl;
 
 import com.cabybara.prolearningplatform.dto.internal.CardContent;
 import com.cabybara.prolearningplatform.dto.request.exam.CreateExamFromReviewRequestDto;
-import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardCreateRequestDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.review.ReviewBundleCardDto;
@@ -13,7 +12,6 @@ import com.cabybara.prolearningplatform.model.review.ReviewBundle;
 import com.cabybara.prolearningplatform.repository.CardItemRepository;
 import com.cabybara.prolearningplatform.repository.ReviewBundleRepository;
 import com.cabybara.prolearningplatform.service.ai.AIExamService;
-import com.cabybara.prolearningplatform.service.ai.AIFlashcardService;
 import com.cabybara.prolearningplatform.service.exam.ExamService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.service.review.ReviewBundleService;
@@ -24,15 +22,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class ReviewBundleServiceImpl implements ReviewBundleService {
 
+    private static final DateTimeFormatter PERIOD_FORMATTER = DateTimeFormatter.ofPattern("dd/MM");
+    private static final DateTimeFormatter PERIOD_FORMATTER_YEAR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
     private final ReviewBundleRepository reviewBundleRepository;
     private final CardItemRepository cardItemRepository;
-    private final AIFlashcardService aiFlashcardService;
     private final AIExamService aiExamService;
     private final FlashcardService flashcardService;
     private final ExamService examService;
@@ -79,16 +80,14 @@ public class ReviewBundleServiceImpl implements ReviewBundleService {
     @Transactional
     public FlashcardResponseDto generateFlashcard(Long bundleId) {
         ReviewBundle bundle = findBundleForCurrentUser(bundleId);
-        List<CardContent> cards = loadCardContents(bundle);
+        List<CardItem> cards = cardItemRepository.findAllById(bundle.getCardIds());
 
-        String aiContent = aiFlashcardService.generateFlashcardFromReview(cards).getContent();
+        String title = String.format("Ôn tập sai: %s – %s",
+                bundle.getPeriodFrom().format(PERIOD_FORMATTER),
+                bundle.getPeriodTo().format(PERIOD_FORMATTER_YEAR));
+        String description = String.format("Tổng hợp %d thẻ trả lời sai trong tuần", cards.size());
 
-        if (aiContent == null || aiContent.isBlank()) {
-            throw new RuntimeException("AI service returned empty response for flashcard generation");
-        }
-
-        FlashcardCreateRequestDto dto = parseJson(aiContent, FlashcardCreateRequestDto.class);
-        return flashcardService.addFlashcardFromReview(dto);
+        return flashcardService.addFlashcardFromReview(cards, title, description);
     }
 
     @Override
