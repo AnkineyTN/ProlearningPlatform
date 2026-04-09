@@ -31,11 +31,19 @@ import java.util.concurrent.atomic.AtomicReference;
 @RequiredArgsConstructor
 public class QuestionServiceImpl implements QuestionService {
 
+    // ##################################################
+    // #################  PREPARATION  ##################
+    // ##################################################
+
     private final ExamRepository examRepository;
     private final QuestionRepository questionRepository;
     private final ExamQuestionRepository examQuestionRepository;
     private final ExamMapper examMapper;
     private final AuthenticationContext authenticationContext;
+
+    // ##################################################
+    // #################  MAIN METHOD  ##################
+    // ##################################################
 
     @Override
     @Transactional
@@ -142,6 +150,10 @@ public class QuestionServiceImpl implements QuestionService {
                 .toList();
     }
 
+    // ##################################################
+    // #################  UTILS METHOD  #################
+    // ##################################################
+
     private void validateExamQuestionRelation(Long examId, Long questionId) {
         if (!examRepository.existsById(examId)) {
             throw new ResourceNotFoundException("Exam not found");
@@ -182,4 +194,5 @@ public class QuestionServiceImpl implements QuestionService {
                 .questions(questionResponseDtos)
                 .build();
     }
+    
 }

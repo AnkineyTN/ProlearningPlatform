@@ -9,6 +9,7 @@ import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
 import java.util.List;
 
 public interface QuestionService {
+
     QuestionListResponseDto createQuestion(Long examId, List<CreateQuestionRequestDto> dto);
 
     // Management view (creator/admin)
@@ -21,4 +22,5 @@ public interface QuestionService {
     void deleteQuestion(Long examId, Long questionId);
 
     List<ExamQuestionViewDto> getQuestionsForTaking(Long examId);
+
 }

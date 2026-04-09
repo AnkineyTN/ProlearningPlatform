@@ -12,14 +12,14 @@ import org.springframework.web.client.RestTemplate;
 public class RestHttpClientUtil {
     private final RestTemplate restTemplate;
 
+    public RestHttpClientUtil(RestTemplateBuilder builder) {
+        this.restTemplate = builder.build();
+    }
+
     private HttpHeaders buildJsonHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         return headers;
-    }
-
-    public RestHttpClientUtil(RestTemplateBuilder builder) {
-        this.restTemplate = builder.build();
     }
 
     public <T, R> R post(String url, T body, Class<R> responseType) {

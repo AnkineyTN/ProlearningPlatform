@@ -32,9 +32,11 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 public class NoteServiceImpl implements NoteService {
+    
     // ##################################################
     // #################  PREPARATION  ##################
     // ##################################################
+
     private final SetRepository setRepository;
     private final NoteRepository noteRepository;
     private final NoteDocsRepository noteDocsRepository;
@@ -233,6 +235,10 @@ public class NoteServiceImpl implements NoteService {
         noteRepository.delete(note);
     }
 
+    // ##################################################
+    // #################  UTILS METHOD  #################
+    // ##################################################
+
     private Set getSetById(Long setId) {
         return setRepository.findById(setId).orElseThrow(() -> new ResourceNotFoundException("Set not found"));
     }
@@ -268,6 +274,7 @@ public class NoteServiceImpl implements NoteService {
         NoteImgsId noteImgsId = new NoteImgsId(assetId, noteId);
         noteImgsRepository.deleteById(noteImgsId);
 
-        log.info("🐳️ Delete img in note with noteId {} and assetId {}", noteId, assetId);
+        log.info("Delete img in note with noteId {} and assetId {}", noteId, assetId);
     }
+
 }

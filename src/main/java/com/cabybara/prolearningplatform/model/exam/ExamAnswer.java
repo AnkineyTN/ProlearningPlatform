@@ -34,7 +34,7 @@ public class ExamAnswer {
     private Boolean isCorrect;
 
     @Column(name = "earned_points")
-    private Integer earnedPoints;
+    private Double earnedPoints;
 
     @Column(name = "feedback", columnDefinition = "TEXT")
     private String feedback;

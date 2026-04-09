@@ -9,6 +9,7 @@ import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptResultDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamQuestionViewDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
+import com.cabybara.prolearningplatform.dto.response.exam.ExplainWrongAnswerResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
@@ -53,10 +54,19 @@ import static jakarta.servlet.RequestDispatcher.ERROR_MESSAGE;
 @Validated
 @Slf4j
 public class ExamController {
+
+    // ##################################################
+    // #################  PREPARATION  ##################
+    // ##################################################
+
     private final ExamService examService;
     private final QuestionService questionService;
     private final AIExamService aiExamService;
     private final ExamAttemptService examAttemptService;
+
+    // ##################################################
+    // ###################  MAIN API  ###################
+    // ##################################################
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping()
@@ -300,9 +310,10 @@ public class ExamController {
                 .body(ResponseUtil.success("Successfully", result, null));
     }
 
-    // =============================================
-    // ==== AI API
-    // =============================================
+    // ##################################################
+    // ###################  AI API  #####################
+    // ##################################################
+
     @Operation(method = "POST", summary = "Generate exam by files with AI", description = "Generate exam by file with AI")
     @PostMapping(value = "/ai-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseData<GenerateExamByAIResponseDto> generateExamByFile(
@@ -354,4 +365,18 @@ public class ExamController {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate exam by web with AI fail");
         }
     }
+
+    @Operation(method = "POST", summary = "Explain wrong answer with AI", description = "Get AI explanation for an incorrect answer")
+    @PostMapping(value = "/ai-explain-wrong-answer")
+    public ResponseData<ExplainWrongAnswerResponseDto> explainWrongAnswer(@Valid @RequestBody ExplainWrongAnswerRequestDto request) {
+        log.info("Explain wrong answer with AI");
+        try {
+            ExplainWrongAnswerResponseDto response = aiExamService.explainWrongAnswer(request);
+            return new ResponseData<>(HttpStatus.OK.value(), "Explain wrong answer successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Explain wrong answer fail");
+        }
+    }
+    
 }
