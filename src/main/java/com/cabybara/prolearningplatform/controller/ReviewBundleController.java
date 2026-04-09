@@ -1,8 +1,7 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.response.ResponseData;
-import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
-import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
+import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.review.ReviewBundleResponseDto;
 import com.cabybara.prolearningplatform.service.review.ReviewBundleService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
@@ -37,23 +36,23 @@ public class ReviewBundleController {
 
     @Operation(summary = "Generate review flashcard", description = "Calls AI to generate a new flashcard set from the incorrect cards in this bundle")
     @PostMapping("/{bundleId}/generate-flashcard")
-    public ResponseEntity<ApiResponse<GenerateFlashcardByAIResponseDto>> generateFlashcard(
+    public ResponseEntity<ApiResponse<FlashcardResponseDto>> generateFlashcard(
             @PathVariable Long bundleId
     ) {
-        GenerateFlashcardByAIResponseDto response = reviewBundleService.generateFlashcard(bundleId);
+        FlashcardResponseDto response = reviewBundleService.generateFlashcard(bundleId);
         return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ResponseUtil.success("Flashcard generation initiated", response, null));
+                .status(HttpStatus.CREATED)
+                .body(ResponseUtil.success("Flashcard created from review bundle", response, null));
     }
 
     @Operation(summary = "Generate review exam", description = "Calls AI to generate a new exam from the incorrect cards in this bundle")
     @PostMapping("/{bundleId}/generate-exam")
-    public ResponseEntity<ApiResponse<GenerateExamByAIResponseDto>> generateExam(
+    public ResponseEntity<ApiResponse<ExamResponseDto>> generateExam(
             @PathVariable Long bundleId
     ) {
-        GenerateExamByAIResponseDto response = reviewBundleService.generateExam(bundleId);
+        ExamResponseDto response = reviewBundleService.generateExam(bundleId);
         return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(ResponseUtil.success("Exam generation initiated", response, null));
+                .status(HttpStatus.CREATED)
+                .body(ResponseUtil.success("Exam created from review bundle", response, null));
     }
 }

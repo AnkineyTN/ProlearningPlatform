@@ -1,11 +1,12 @@
 package com.cabybara.prolearningplatform.service.exam.impl;
 
+import com.cabybara.prolearningplatform.dto.request.exam.CreateExamFromReviewRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.CreateExamRequestDto;
-import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByFileRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.UpdateExamRequestDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
+import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.exception.ResourceAlreadyExistsException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
@@ -18,6 +19,7 @@ import com.cabybara.prolearningplatform.repository.ExamRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
 import com.cabybara.prolearningplatform.service.ai.AIExamService;
 import com.cabybara.prolearningplatform.service.exam.ExamService;
+import com.cabybara.prolearningplatform.service.exam.QuestionService;
 import com.cabybara.prolearningplatform.service.file.FileService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +43,7 @@ public class ExamServiceImpl implements ExamService {
 
     private final FileService fileService;
     private final AIExamService aiExamService;
+    private final QuestionService questionService;
 
     private final AuthenticationContext authenticationContext;
     private final ExamRepository examRepository;
@@ -69,6 +72,30 @@ public class ExamServiceImpl implements ExamService {
         exam.setSet(set);
 
         return examMapper.toExamResponseDto(examRepository.save(exam));
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public ExamResponseDto createExamFromReview(CreateExamFromReviewRequestDto dto) {
+        Long userId = authenticationContext.getCurrentUserId();
+
+        Exam exam = new Exam();
+        exam.setTitle(dto.title());
+        exam.setDescription(dto.description());
+        exam.setDuration(dto.duration());
+        exam.setCreatedBy(userId);
+        exam.setSet(null);
+        exam.setPrivacy(Privacy.PRIVATE);
+        exam.setCreationMethod(CreationMethod.REVIEW_AI);
+
+        Exam savedExam = examRepository.save(exam);
+
+        if (dto.questions() != null && !dto.questions().isEmpty()) {
+            questionService.createQuestion(savedExam.getId(), dto.questions());
+        }
+
+        return examMapper.toExamResponseDto(examRepository.findById(savedExam.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Exam not found after save")));
     }
 
     @Override

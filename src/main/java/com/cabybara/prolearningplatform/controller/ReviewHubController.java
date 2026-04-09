@@ -3,13 +3,8 @@ package com.cabybara.prolearningplatform.controller;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
-import com.cabybara.prolearningplatform.enums.CreationMethod;
-import com.cabybara.prolearningplatform.mapper.ExamMapper;
-import com.cabybara.prolearningplatform.mapper.FlashcardMapper;
-import com.cabybara.prolearningplatform.repository.ExamRepository;
-import com.cabybara.prolearningplatform.repository.FlashcardRepository;
+import com.cabybara.prolearningplatform.service.review.ReviewHubService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
-import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -33,20 +28,13 @@ import java.util.List;
 @PreAuthorize("isAuthenticated()")
 public class ReviewHubController {
 
-    private final FlashcardRepository flashcardRepository;
-    private final ExamRepository examRepository;
-    private final FlashcardMapper flashcardMapper;
-    private final ExamMapper examMapper;
-    private final AuthenticationContext authenticationContext;
+    private final ReviewHubService reviewHubService;
 
     @GetMapping("/flashcards")
     public ResponseEntity<ApiResponse<List<FlashcardResponseDto>>> getReviewFlashcards(
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "createdAt") Pageable pageable
     ) {
-        Long userId = authenticationContext.getCurrentUserId();
-        Page<FlashcardResponseDto> page = flashcardRepository
-                .findAllByUserIdAndCreateMethod(userId, CreationMethod.REVIEW_AI, pageable)
-                .map(flashcardMapper::toFlashcardResponseDto);
+        Page<FlashcardResponseDto> page = reviewHubService.getReviewFlashcards(pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -63,10 +51,7 @@ public class ReviewHubController {
     public ResponseEntity<ApiResponse<List<ExamResponseDto>>> getReviewExams(
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "createdAt") Pageable pageable
     ) {
-        Long userId = authenticationContext.getCurrentUserId();
-        Page<ExamResponseDto> page = examRepository
-                .findAllByCreatedByAndCreationMethod(userId, CreationMethod.REVIEW_AI, pageable)
-                .map(examMapper::toExamResponseDto);
+        Page<ExamResponseDto> page = reviewHubService.getReviewExams(pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
