@@ -18,6 +18,8 @@ public interface FlashcardService {
 
     FlashcardResponseDto addFlashcardManual(Long setId, FlashcardCreateRequestDto flashcardCreateRequestDto);
 
+    FlashcardResponseDto addFlashcardFromReview(FlashcardCreateRequestDto flashcardCreateRequestDto);
+
     void deleteFlashcard(Long setId, Long flashcardId) throws BadRequestException;
 
     Flashcard getFlashcardById(Long flashcardId);

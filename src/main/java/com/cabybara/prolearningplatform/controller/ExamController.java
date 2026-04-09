@@ -55,18 +55,10 @@ import static jakarta.servlet.RequestDispatcher.ERROR_MESSAGE;
 @Slf4j
 public class ExamController {
 
-    // ##################################################
-    // #################  PREPARATION  ##################
-    // ##################################################
-
     private final ExamService examService;
     private final QuestionService questionService;
     private final AIExamService aiExamService;
     private final ExamAttemptService examAttemptService;
-
-    // ##################################################
-    // ###################  MAIN API  ###################
-    // ##################################################
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping()

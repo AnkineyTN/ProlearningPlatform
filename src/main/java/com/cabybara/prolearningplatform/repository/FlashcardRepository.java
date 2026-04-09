@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
@@ -106,4 +107,9 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
     boolean existsBySetIdAndIdAndUserId(@Param("setId") Long setId,
                                         @Param("flashcardId") Long flashcardId,
                                         @Param("userId") Long userId);
+
+    @Query("SELECT f FROM Flashcard f WHERE f.user.id = :userId AND f.create_method = :creationMethod")
+    Page<Flashcard> findAllByUserIdAndCreateMethod(@Param("userId") Long userId,
+                                                   @Param("creationMethod") CreationMethod creationMethod,
+                                                   Pageable pageable);
 }

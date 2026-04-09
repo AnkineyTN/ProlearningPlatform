@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.service.exam;
 
+import com.cabybara.prolearningplatform.dto.request.exam.CreateExamFromReviewRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.CreateExamRequestDto;
-import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByFileRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.UpdateExamRequestDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
@@ -16,6 +16,8 @@ import java.util.List;
 public interface ExamService {
 
     ExamResponseDto createExam(Long setId, CreateExamRequestDto createExamRequestDto);
+
+    ExamResponseDto createExamFromReview(CreateExamFromReviewRequestDto dto);
 
     Page<ExamResponseDto> getExam(Long setId, String q, Privacy privacy, Pageable pageable);
 

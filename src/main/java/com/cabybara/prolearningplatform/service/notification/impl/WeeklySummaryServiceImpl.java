@@ -3,11 +3,14 @@ package com.cabybara.prolearningplatform.service.notification.impl;
 import com.cabybara.prolearningplatform.dto.helper.IncorrectCardsByFlashcard;
 import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
 import com.cabybara.prolearningplatform.enums.NotificationType;
+import com.cabybara.prolearningplatform.model.noti.Notification;
 import com.cabybara.prolearningplatform.model.noti.NotificationPreference;
+import com.cabybara.prolearningplatform.model.review.ReviewBundle;
 import com.cabybara.prolearningplatform.repository.NotificationPreferenceRepository;
 import com.cabybara.prolearningplatform.repository.StudySessionReviewLogRepository;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
 import com.cabybara.prolearningplatform.service.notification.WeeklySummaryService;
+import com.cabybara.prolearningplatform.service.review.ReviewBundleService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +34,7 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
     private final NotificationPreferenceRepository notificationPreferenceRepository;
     private final StudySessionReviewLogRepository studySessionReviewLogRepository;
     private final NotificationDispatcher notificationDispatcher;
+    private final ReviewBundleService reviewBundleService;
     private final AuthenticationContext authenticationContext;
 
     @Override
@@ -53,11 +57,9 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
                 boolean sent = processSingleUser(pref);
                 if (sent) successCount++;
             } catch (Exception e) {
-                log.error("Failed to process weekly summary for user {}",
-                        pref.getUser().getId(), e);
+                log.error("Failed to process weekly summary for user {}", pref.getUser().getId(), e);
             }
         }
-
 
         log.info("Weekly summary completed: {}/{} users notified", successCount, preferences.size());
     }
@@ -81,26 +83,32 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
         long incorrectCount = studySessionReviewLogRepository.countDistinctIncorrectCards(userId, periodFrom, periodTo);
 
         if (incorrectCount == 0) {
-            log.debug("User {} has no incorrect cards in period [{}, {}]",
-                    userId, periodFrom, periodTo);
+            log.debug("User {} has no incorrect cards in period [{}, {}]", userId, periodFrom, periodTo);
             updateLastSummarySentAt(pref, periodTo);
             return false;
         }
 
-        List<IncorrectCardsByFlashcard> breakdown = studySessionReviewLogRepository.findIncorrectCountGroupByFlashcard(userId, periodFrom, periodTo);
+        List<IncorrectCardsByFlashcard> breakdown = studySessionReviewLogRepository
+                .findIncorrectCountGroupByFlashcard(userId, periodFrom, periodTo);
 
         List<Long> incorrectCardIds = studySessionReviewLogRepository
                 .findDistinctIncorrectCardIds(userId, periodFrom, periodTo);
 
-        CreateNotificationDto notification = buildSummaryNotification(
-                userId, incorrectCount, incorrectCardIds, breakdown,
-                periodFrom, periodTo, false);
+        // Create review bundle before dispatching so we can include bundleId in actionUrl
+        OffsetDateTime nextSummaryAt = periodTo.plusWeeks(1);
+        ReviewBundle bundle = reviewBundleService.createBundle(
+                userId, incorrectCardIds, periodFrom, periodTo, nextSummaryAt);
 
-        notificationDispatcher.dispatch(notification);
-        log.info("Sent weekly summary to user {}: {} incorrect cards", userId, incorrectCount);
+        Notification notification = notificationDispatcher.dispatch(
+                buildSummaryNotification(userId, incorrectCount, breakdown, periodFrom, periodTo, bundle.getId()));
+
+        // Link notification back to bundle
+        bundle.setNotificationId(notification.getId());
+
+        log.info("Sent weekly summary to user {}: {} incorrect cards, bundleId={}",
+                userId, incorrectCount, bundle.getId());
 
         updateLastSummarySentAt(pref, periodTo);
-
         return true;
     }
 
@@ -108,7 +116,6 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
         if (pref.getLastSummarySentAt() != null) {
             return pref.getLastSummarySentAt();
         }
-
         return pref.getCreatedAt();
     }
 
@@ -120,15 +127,10 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
     private CreateNotificationDto buildSummaryNotification(
             Long userId,
             long incorrectCount,
-            List<Long> incorrectCardIds,
             List<IncorrectCardsByFlashcard> breakdown,
             OffsetDateTime periodFrom,
             OffsetDateTime periodTo,
-            boolean isPush) {
-
-        if (!isPush) {
-            isPush = true;
-        }
+            Long bundleId) {
 
         String message = String.format(
                 "Trong khoang thoi gian qua, ban da tra loi sai %d the. " +
@@ -144,12 +146,11 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
                 ));
 
         Map<String, Object> data = new HashMap<>();
-        data.put("incorrectCardIds", incorrectCardIds);
+        data.put("bundleId", bundleId);
         data.put("incorrectCount", incorrectCount);
         data.put("flashcardBreakdown", flashcardBreakdown);
         data.put("periodFrom", periodFrom.toString());
         data.put("periodTo", periodTo.toString());
-        data.put("canGenerateReviewSet", false);
 
         return CreateNotificationDto.builder()
                 .userId(userId)
@@ -157,8 +158,8 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
                 .title(NotificationType.WEEKLY_SUMMARY.getDefaultTitle())
                 .message(message)
                 .data(data)
-                .actionUrl("/review/weekly-summary")
-                .sendPush(isPush)
+                .actionUrl("/review-bundles/" + bundleId)
+                .sendPush(true)
                 .build();
     }
 }

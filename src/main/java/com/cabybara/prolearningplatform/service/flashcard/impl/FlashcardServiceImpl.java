@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
 import com.cabybara.prolearningplatform.dto.request.flashcard.*;
+import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.event.model.ChildEntityUpdatedEvent;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
@@ -120,6 +121,28 @@ public class FlashcardServiceImpl implements FlashcardService {
 
         eventPublisher.publishEvent(new ChildEntityUpdatedEvent(savedFlashcard));
         return flashcardMapper.toFlashcardResponseDto(savedFlashcard);
+    }
+
+    @Override
+    @Transactional
+    public FlashcardResponseDto addFlashcardFromReview(FlashcardCreateRequestDto flashcardCreateRequestDto) {
+        Long userId = authenticationContext.getCurrentUserId();
+        User user = userService.getUserById(userId);
+
+        Flashcard flashcard = flashcardMapper.toFlashcard(flashcardCreateRequestDto);
+
+        if (flashcardCreateRequestDto.getCards() != null && !flashcardCreateRequestDto.getCards().isEmpty()) {
+            Map<Long, Asset> activatedAssetsMap = activateCardImages(flashcardCreateRequestDto.getCards(), userId);
+            List<CardItem> cardItems = buildCardItemList(flashcardCreateRequestDto.getCards(), flashcard, activatedAssetsMap);
+            flashcard.setCards(cardItems);
+        }
+
+        flashcard.setUser(user);
+        flashcard.setPrivacy(Privacy.PRIVATE);
+        flashcard.setSet(null);
+        flashcard.setCreate_method(CreationMethod.REVIEW_AI);
+
+        return flashcardMapper.toFlashcardResponseDto(flashcardRepository.save(flashcard));
     }
 
     private Map<Long, Asset> activateCardImages(List<CardItemCreateRequestDto> cardDtos, Long userId) {

@@ -55,6 +55,7 @@ public class Flashcard extends AbstractEntity implements SetChild {
     private Integer remain = 0;
 
     @Column(name = "create_method")
+    @Enumerated(EnumType.STRING)
     @Builder.Default
     private CreationMethod create_method = CreationMethod.MANUAL;
 
