@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.exam.Exam;
@@ -85,4 +86,6 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
     Optional<Exam> findBySetIdAndId(Long setId, Long examId);
 
     boolean existsBySetIdAndId(Long setId, Long examId);
+
+    Page<Exam> findAllByCreatedByAndCreationMethod(Long createdBy, CreationMethod creationMethod, Pageable pageable);
 }

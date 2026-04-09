@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.model.exam;
 
+import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.AbstractEntity;
 import com.cabybara.prolearningplatform.model.Set;
@@ -30,6 +31,10 @@ public class Exam extends AbstractEntity {
 
     @Column(name = "created_by")
     private Long createdBy;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "create_method", nullable = false, length = 50)
+    private CreationMethod creationMethod = CreationMethod.MANUAL;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "set_id")

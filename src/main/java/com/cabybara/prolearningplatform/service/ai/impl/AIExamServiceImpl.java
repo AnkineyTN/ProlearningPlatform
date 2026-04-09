@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.service.ai.impl;
 
+import com.cabybara.prolearningplatform.dto.internal.CardContent;
 import com.cabybara.prolearningplatform.dto.request.exam.EssayGradingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.ExplainWrongAnswerRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByFileRequestDto;
@@ -136,6 +137,13 @@ public class AIExamServiceImpl implements AIExamService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Exam by Web", e);
         }
+    }
+
+    @Override
+    public GenerateExamByAIResponseDto generateExamFromReview(List<CardContent> cards) {
+        // TODO: implement actual HTTP call to AI service when endpoint is ready
+
+        return GenerateExamByAIResponseDto.builder().content("").build();
     }
 
     @Override

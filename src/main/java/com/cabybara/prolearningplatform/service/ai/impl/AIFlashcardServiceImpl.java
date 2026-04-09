@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.service.ai.impl;
 
+import com.cabybara.prolearningplatform.dto.internal.CardContent;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByWebRequestDto;
@@ -133,5 +134,12 @@ public class AIFlashcardServiceImpl implements AIFlashcardService {
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Flashcard by Web", e);
         }
+    }
+
+    @Override
+    public GenerateFlashcardByAIResponseDto generateFlashcardFromReview(List<CardContent> cards) {
+        // TODO: implement actual HTTP call to AI service when endpoint is ready
+
+        return GenerateFlashcardByAIResponseDto.builder().content("").build();
     }
 }
