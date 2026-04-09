@@ -25,11 +25,13 @@ public class NotificationScheduler implements NotificationSchedulerService {
 
     @Scheduled(cron = "${notification.due-card-reminder.cron:0 0 8 * * *}", zone = SCHEDULER_TIME_ZONE)
     public void sendDueCardReminders() {
+        log.info("Starting due card reminder scheduler");
         try {
             dueCardReminderService.sendDueCardReminders();
         } catch (Exception e) {
             log.error("Error in scheduled job (due card reminders): {}", e.getMessage(), e);
         }
+        log.info("Done due card reminder scheduler");
     }
 
 //    @Scheduled(cron = "${notification.evening-reminder.cron:0 0 19 * * *}", zone = SCHEDULER_TIME_ZONE)
@@ -43,11 +45,13 @@ public class NotificationScheduler implements NotificationSchedulerService {
 
     @Scheduled(cron = "${notification.weekly-summary.cron:0 0 9 * * *}", zone = SCHEDULER_TIME_ZONE)
     public void processWeeklySummaries() {
+        log.info("Starting weekly process scheduler");
         try {
             weeklySummaryService.processWeeklySummaries();
         } catch (Exception e) {
             log.error("Error in scheduled job (weekly summaries): {}", e.getMessage(), e);
         }
+        log.info("Done weekly process scheduler");
     }
 
     @Scheduled(cron = "${notification.cleanup.cron:0 0 2 * * SUN}", zone = SCHEDULER_TIME_ZONE)
