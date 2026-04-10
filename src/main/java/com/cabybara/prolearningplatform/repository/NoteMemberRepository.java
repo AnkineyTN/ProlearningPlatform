@@ -31,15 +31,4 @@ public interface NoteMemberRepository extends JpaRepository<NoteMember, Long> {
     @Transactional
     @Query("DELETE FROM NoteMember m WHERE m.note.id = :noteId AND m.user.id = :userId")
     void deleteByNoteIdAndUserId(@Param("noteId") Long noteId, @Param("userId") Long userId);
-
-    Optional<User> findByEmail(String email);
-
-    @Query("""
-        SELECT u FROM User u
-        WHERE LOWER(u.name) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        ORDER BY u.name
-        LIMIT 10
-        """)
-    List<User> searchByNameOrEmail(@Param("keyword") String keyword);
 }

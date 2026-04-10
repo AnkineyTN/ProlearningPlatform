@@ -5,6 +5,9 @@ public enum NotificationType {
     STUDY_SESSION_REMINDER("Time to study!"),
     WEEKLY_SUMMARY("Weekly study summary"),
 
+    NOTE_INVITE("You have been invited to collaborate on a note"),
+    NOTE_INVITE_ACCEPTED("Your invite to a note has been accepted"),
+
     // Social (future)
 //    SET_SHARED("Someone shared a set with you"),
 //    NEW_FOLLOWER("New follower"),

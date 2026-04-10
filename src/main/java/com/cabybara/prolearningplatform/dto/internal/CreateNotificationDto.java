@@ -15,6 +15,9 @@ public class CreateNotificationDto {
     private String message;
     private Map<String, Object> data;
     private String actionUrl;
+    private Long referenceParentId; // e.g. setId for note invite, can be null
+    private Long referenceId; // e.g. noteId for note invite, can be null
+    private String referenceType; // e.g. "NOTE", "SET", etc., can be null
 
     @Builder.Default
     private boolean sendPush = true;
