@@ -49,6 +49,11 @@ public class NoteFileRegionComment extends AbstractEntity {
     @Column(name = "client_comment_id", length = 64)
     private String clientCommentId;
 
+    /** Optional image (screenshot) uploaded via asset pipeline; not the same as {@link #asset} (PDF/page file). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_attachment_asset", referencedColumnName = "id")
+    private Asset attachmentAsset;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_user", nullable = false)
     private User author;

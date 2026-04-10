@@ -32,8 +32,11 @@ public class CreateNoteFileRegionCommentRequestDTO {
     @Valid
     private RectPercentRequestDTO rectPercent;
 
-    @NotBlank
+    /** Plain text; may be empty if {@link #attachmentAssetId} is set. */
     private String content;
+
+    /** Image uploaded via /assets/signature + Cloudinary + /assets/update-uploaded-asset (do not use note save-img). */
+    private Long attachmentAssetId;
 
     private String clientCommentId;
 

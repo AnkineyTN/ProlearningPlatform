@@ -25,3 +25,9 @@ CREATE TABLE IF NOT EXISTS note_file_region_comment
 
 CREATE INDEX IF NOT EXISTS idx_nfrc_note ON note_file_region_comment (id_note);
 CREATE INDEX IF NOT EXISTS idx_nfrc_note_asset ON note_file_region_comment (id_note, id_asset);
+
+ALTER TABLE note_file_region_comment
+    ADD COLUMN IF NOT EXISTS id_attachment_asset BIGINT NULL
+        REFERENCES asset (id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_nfrc_attachment ON note_file_region_comment (id_attachment_asset);

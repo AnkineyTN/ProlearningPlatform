@@ -12,6 +12,4 @@ public interface NoteFileRegionCommentRepository extends JpaRepository<NoteFileR
     List<NoteFileRegionComment> findByNote_IdOrderByCreatedAtAsc(Long noteId);
 
     List<NoteFileRegionComment> findByNote_IdAndAsset_IdOrderByCreatedAtAsc(Long noteId, Long assetId);
-
-    void deleteByNote_IdAndAsset_Id(Long noteId, Long assetId);
 }

@@ -15,6 +15,9 @@ public class NoteFileRegionCommentResponseDTO {
     private int pageNumber;
     private RectPercentResponseDTO rectPercent;
     private String content;
+    /** Optional image embedded in the comment (screenshot). */
+    private Long attachmentAssetId;
+    private String attachmentImageUrl;
     private String clientCommentId;
     /** ISO-8601 */
     private String createdAt;
