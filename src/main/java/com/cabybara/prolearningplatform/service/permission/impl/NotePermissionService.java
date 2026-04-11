@@ -1,7 +1,9 @@
 package com.cabybara.prolearningplatform.service.permission.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -214,6 +216,11 @@ public class NotePermissionService implements ResourcePermissionService  {
             Long noteId,
             Long setId
     ) {
+        Map<String, Object> data = new HashMap<>();
+        
+        data.put("noteId", noteId);
+        data.put("setId", setId);
+        
         List<CreateNotificationDto> notifications = userIds.stream()
             .map(userId -> CreateNotificationDto.builder()
                 .userId(userId)
@@ -224,6 +231,7 @@ public class NotePermissionService implements ResourcePermissionService  {
                 .referenceId(noteId)
                 .referenceParentId(setId)
                 .referenceType("NOTE")
+                .data(data)
                 .build())
             .toList();
 

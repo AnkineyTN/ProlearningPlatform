@@ -186,7 +186,8 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public GetDetailNoteResponseDTO getDetailNote(Long setId, Long noteId) {
         Long userId = authenticationContext.getCurrentUserId();
-        Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
+        // Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
+        Note note = getNoteById(noteId);
 
         return GetDetailNoteResponseDTO.builder()
                 .id(note.getId())

@@ -2,7 +2,7 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.user.ChangePasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.request.user.UserUpdatingRequestDto;
-
+import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
 import com.cabybara.prolearningplatform.service.user.UserService;
@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -92,17 +94,25 @@ public class UserController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Page<UserSearchResponse>>> searchUsers(
+    public ResponseEntity<ApiResponse<List<UserSearchResponse>>> searchUsers(
         @RequestParam String keyword,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size
     ) {
         Page<UserSearchResponse> searchResults = userService.searchUsers(keyword, page, size);
+
+        PaginationResponseDto paginationResponseDto = PaginationResponseDto.builder()
+                .currentPage(searchResults.getNumber())
+                .totalPages(searchResults.getTotalPages())
+                .totalItems(searchResults.getTotalElements())
+                .pageSize(searchResults.getSize())
+                .build();
+
         return ResponseEntity.status(HttpStatus.OK).body(
             ResponseUtil.success(
                 "Search completed",
-                searchResults,
-                null
+                searchResults.getContent(),
+                paginationResponseDto
             )
         );
     }
