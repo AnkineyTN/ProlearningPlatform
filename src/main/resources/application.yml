@@ -5,13 +5,13 @@ firebase:
     googleCredentials: ${FIREBASE_CONFIG_PATH:prolearningplatform-bc37d-firebase-adminsdk-fbsvc-5dfd0cf044.json}
 
 notification:
-  due-card-reminder:
-    cron: "0 0 8 * * *"
-  weekly-summary:
-    cron: "0 0 9 * * *"
-  cleanup:
-    cron: "0 0 2 * * SUN"
-    days-old: 30
+    due-card-reminder:
+        cron: "0 0 8 * * *"
+    weekly-summary:
+        cron: "0 0 9 * * *"
+    cleanup:
+        cron: "0 0 2 * * SUN"
+        days-old: 30
 
 server:
     forward-headers-strategy: framework
@@ -159,3 +159,7 @@ app:
         verify-expiry-minutes: 10
         reset-expiry-minutes: 15
         reset-token-expiry-minutes: 5
+        invite-token-expiry-hours: ${INVITE_TOKEN_EXPIRY_HOURS:72}
+
+internal:
+    service-key: ${INTERNAL_SERVICE_SECRET_KEY}
