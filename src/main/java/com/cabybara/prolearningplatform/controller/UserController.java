@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.user.ChangePasswordRequestDt
 import com.cabybara.prolearningplatform.dto.request.user.UserUpdatingRequestDto;
 
 import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -12,6 +13,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +22,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/users")
@@ -85,4 +89,22 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("OTP resent successfully", null, null));
     }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<Page<UserSearchResponse>>> searchUsers(
+        @RequestParam String keyword,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<UserSearchResponse> searchResults = userService.searchUsers(keyword, page, size);
+        return ResponseEntity.status(HttpStatus.OK).body(
+            ResponseUtil.success(
+                "Search completed",
+                searchResults,
+                null
+            )
+        );
+    }
+    
 }

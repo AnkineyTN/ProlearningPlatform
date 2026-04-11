@@ -1,11 +1,14 @@
 package com.cabybara.prolearningplatform.service.note.impl;
 
 import com.cabybara.prolearningplatform.dto.request.note.*;
+import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.note.CreateNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetAllNotesResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetDetailNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetDocsInNoteResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
+import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.*;
@@ -18,6 +21,7 @@ import com.cabybara.prolearningplatform.repository.*;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
 import com.cabybara.prolearningplatform.service.note.NoteFileRegionCommentService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
+import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +52,7 @@ public class NoteServiceImpl implements NoteService {
     private final AssetService assetService;
     private final AuthenticationContext authenticationContext;
     private final NoteFileRegionCommentService noteFileRegionCommentService;
+    private final NotePermissionService notePermissionService;
 
     // ##################################################
     // #################  MAIN METHOD  ##################
@@ -69,6 +74,8 @@ public class NoteServiceImpl implements NoteService {
                 .build();
         Note saved = noteRepository.save(note);
         log.info("✅ Created note '{}' in set id {} by user {}", note.getTitle(), set.getId(), userId);
+
+        notePermissionService.addOwner(saved.getId(), userId);
 
         return CreateNoteResponseDTO.builder()
                 .noteId(saved.getId())
@@ -296,4 +303,35 @@ public class NoteServiceImpl implements NoteService {
         log.info("Delete img in note with noteId {} and assetId {}", noteId, assetId);
     }
 
+    @Override
+    public List<InviteResultResponse> inviteMembers(Long setId, Long noteId, InviteMemberRequest request) {
+        Long userId = authenticationContext.getCurrentUserId();
+        List<InviteResultResponse> results = notePermissionService.inviteMembers(
+            setId, noteId, request.getTargets(), request.getRole(), userId);
+
+        return results;
+    }
+
+    @Override
+    public List<PendingInviteResponse> getPendingInvites() {
+        Long userId = authenticationContext.getCurrentUserId();
+        List<PendingInviteResponse> responses = notePermissionService.getPendingInvites(userId);
+
+        return responses;
+    }
+
+    @Override
+    public void acceptInvite(Long noteId) {
+        notePermissionService.acceptInvite(noteId, authenticationContext.getCurrentUserId());
+    }
+
+    @Override
+    public void declineInvite(Long noteId) {
+        notePermissionService.declineInvite(noteId, authenticationContext.getCurrentUserId());
+    }
+
+    @Override
+    public void removeMember(Long noteId, Long targetUserId) {
+        notePermissionService.removeMember(noteId, targetUserId, authenticationContext.getCurrentUserId());
+    }
 }

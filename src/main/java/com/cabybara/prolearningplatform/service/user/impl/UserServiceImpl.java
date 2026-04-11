@@ -7,6 +7,7 @@ import com.cabybara.prolearningplatform.dto.request.user.ChangePasswordRequestDt
 import com.cabybara.prolearningplatform.dto.helper.GoogleUserInfoDto;
 import com.cabybara.prolearningplatform.dto.request.user.RegisterRequestDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.exception.AuthException;
 import com.cabybara.prolearningplatform.exception.BadRequestException;
@@ -19,6 +20,9 @@ import com.cabybara.prolearningplatform.service.otp.OtpService;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import com.google.api.services.oauth2.model.Userinfo;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -229,5 +233,15 @@ public class UserServiceImpl implements UserService {
         String otp = otpService.generateVerifyOtp(userId);
 
         emailService.sendVerifyOtp(user.getEmail(), user.getUsername(), otp);
+    }
+
+    @Override
+    public Page<UserSearchResponse> searchUsers(String keyword, int page, int size) {
+        if (!StringUtils.hasText(keyword)) {
+            return Page.empty();
+        }
+
+        return userRepository.searchByNameOrEmail(keyword, PageRequest.of(page, size))
+            .map(UserSearchResponse::from);
     }
 }
