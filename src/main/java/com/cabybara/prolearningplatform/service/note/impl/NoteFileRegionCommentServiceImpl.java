@@ -3,6 +3,7 @@ package com.cabybara.prolearningplatform.service.note.impl;
 import com.cabybara.prolearningplatform.dto.request.note.CreateNoteFileRegionCommentRequestDTO;
 import com.cabybara.prolearningplatform.dto.response.note.NoteFileRegionCommentResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.RectPercentResponseDTO;
+import com.cabybara.prolearningplatform.enums.AssetType;
 import com.cabybara.prolearningplatform.enums.NoteFileAttachmentKind;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.Asset;
@@ -17,6 +18,7 @@ import com.cabybara.prolearningplatform.repository.NoteFileRegionCommentReposito
 import com.cabybara.prolearningplatform.repository.NoteImgsRepository;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
+import com.cabybara.prolearningplatform.service.asset.AssetService;
 import com.cabybara.prolearningplatform.service.note.NoteFileRegionCommentService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +43,7 @@ public class NoteFileRegionCommentServiceImpl implements NoteFileRegionCommentSe
     private final NoteFileRegionCommentRepository commentRepository;
     private final AssetRepository assetRepository;
     private final UserRepository userRepository;
+    private final AssetService assetService;
     private final AuthenticationContext authenticationContext;
 
     @Override
@@ -67,6 +70,25 @@ public class NoteFileRegionCommentServiceImpl implements NoteFileRegionCommentSe
             throw new IllegalArgumentException("publicId does not match asset");
         }
 
+        String content = request.getContent() == null ? "" : request.getContent().trim();
+        Asset attachment = null;
+        if (request.getAttachmentAssetId() != null) {
+            if (request.getAttachmentAssetId().equals(request.getNoteAssetId())) {
+                throw new IllegalArgumentException("attachmentAssetId must not be the same as noteAssetId");
+            }
+            attachment = assetRepository.findById(request.getAttachmentAssetId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Attachment asset not found"));
+            if (attachment.getUser() == null || !attachment.getUser().getId().equals(userId)) {
+                throw new IllegalArgumentException("Attachment asset not owned by user");
+            }
+            if (attachment.getType() != AssetType.IMAGE) {
+                throw new IllegalArgumentException("Attachment must be an image");
+            }
+        }
+        if (content.isEmpty() && attachment == null) {
+            throw new IllegalArgumentException("Comment text or image attachment is required");
+        }
+
         var r = request.getRectPercent();
         NoteFileRegionComment entity = NoteFileRegionComment.builder()
                 .note(note)
@@ -77,7 +99,8 @@ public class NoteFileRegionCommentServiceImpl implements NoteFileRegionCommentSe
                 .rectY(r.getY())
                 .rectWidth(r.getWidth())
                 .rectHeight(r.getHeight())
-                .content(request.getContent().trim())
+                .content(content)
+                .attachmentAsset(attachment)
                 .clientCommentId(trimToNull(request.getClientCommentId()))
                 .author(author)
                 .build();
@@ -111,6 +134,9 @@ public class NoteFileRegionCommentServiceImpl implements NoteFileRegionCommentSe
         if (!c.getNote().getId().equals(note.getId())) {
             throw new ResourceNotFoundException("Comment not found");
         }
+        if (c.getAttachmentAsset() != null) {
+            assetService.markDeletedAsset(c.getAttachmentAsset());
+        }
         commentRepository.delete(c);
         log.info("Deleted file region comment {}", commentId);
     }
@@ -118,7 +144,14 @@ public class NoteFileRegionCommentServiceImpl implements NoteFileRegionCommentSe
     @Override
     @Transactional
     public void deleteAllForNoteAndAsset(Long noteId, Long assetId) {
-        commentRepository.deleteByNote_IdAndAsset_Id(noteId, assetId);
+        List<NoteFileRegionComment> list =
+                commentRepository.findByNote_IdAndAsset_IdOrderByCreatedAtAsc(noteId, assetId);
+        for (NoteFileRegionComment c : list) {
+            if (c.getAttachmentAsset() != null) {
+                assetService.markDeletedAsset(c.getAttachmentAsset());
+            }
+            commentRepository.delete(c);
+        }
     }
 
     private void assertAssetLinkedToNote(Long noteId, Long assetId, NoteFileAttachmentKind kind) {
@@ -161,6 +194,8 @@ public class NoteFileRegionCommentServiceImpl implements NoteFileRegionCommentSe
                         .height(c.getRectHeight())
                         .build())
                 .content(c.getContent())
+                .attachmentAssetId(c.getAttachmentAsset() != null ? c.getAttachmentAsset().getId() : null)
+                .attachmentImageUrl(c.getAttachmentAsset() != null ? c.getAttachmentAsset().getUrl() : null)
                 .clientCommentId(c.getClientCommentId())
                 .createdAt(c.getCreatedAt() != null ? ISO_FMT.format(c.getCreatedAt()) : null)
                 .updatedAt(c.getUpdatedAt() != null ? ISO_FMT.format(c.getUpdatedAt()) : null)
