@@ -1,16 +1,21 @@
 package com.cabybara.prolearningplatform.service.permission.impl;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
+import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
 import com.cabybara.prolearningplatform.enums.NoteMemberStatus;
@@ -20,6 +25,7 @@ import com.cabybara.prolearningplatform.model.note.NoteMember;
 import com.cabybara.prolearningplatform.repository.NoteMemberRepository;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
+import com.cabybara.prolearningplatform.service.email.EmailService;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
 import com.cabybara.prolearningplatform.service.permission.ResourcePermissionService;
 
@@ -35,6 +41,13 @@ public class NotePermissionService implements ResourcePermissionService  {
     private final NoteRepository noteRepository;
     private final UserRepository userRepository;
     private final NotificationDispatcher notificationDispatcher;
+    private final EmailService emailService;
+
+    @Value("${app.frontend-url}")
+    private String frontendUrl;
+
+    @Value("${app.token.invite-token-expiry-hours:72}")
+    private int inviteTokenExpiryHours;
 
     @Override
     public boolean hasAccess(Long userId, Long resourceId) {
@@ -142,6 +155,27 @@ public class NotePermissionService implements ResourcePermissionService  {
     }
 
     @Transactional
+    public AcceptByTokenResponse acceptByToken(String token) {
+        NoteMember member = noteMemberRepository
+            .findByInviteToken(token)
+            .orElseThrow(() -> new EntityNotFoundException("Invalid invite token"));
+
+        if (member.getInviteTokenExpiresAt().isBefore(LocalDateTime.now())) {
+            return new AcceptByTokenResponse(false, "Invite link has expired", null);
+        }
+
+        if (member.getStatus() != NoteMemberStatus.PENDING) {
+            return new AcceptByTokenResponse(false, "Invite already processed", null);
+        }
+
+        member.setStatus(NoteMemberStatus.ACTIVE);
+        member.setInviteToken(null); // xóa token sau khi dùng
+        noteMemberRepository.save(member);
+
+        return new AcceptByTokenResponse(true, null, member.getNote().getId());
+    }
+
+    @Transactional
     public void declineInvite(Long noteId, Long userId) {
         NoteMember member = noteMemberRepository
             .findByNoteIdAndUserId(noteId, userId)
@@ -179,6 +213,9 @@ public class NotePermissionService implements ResourcePermissionService  {
     }
 
      private void doInvite(Long noteId, Long targetUserId, NoteRole role) {
+        String token = UUID.randomUUID().toString().replace("-", "");
+        LocalDateTime expiresAt = LocalDateTime.now().plusHours(inviteTokenExpiryHours);
+
         noteMemberRepository.findByNoteIdAndUserId(noteId, targetUserId)
             .ifPresentOrElse(
                 existing -> {
@@ -188,6 +225,8 @@ public class NotePermissionService implements ResourcePermissionService  {
                     // Re-invite nếu đã decline trước đó
                     existing.setRole(role);
                     existing.setStatus(NoteMemberStatus.PENDING);
+                    existing.setInviteToken(token);
+                    existing.setInviteTokenExpiresAt(expiresAt);
                 },
                 () -> {
                     NoteMember member = new NoteMember();
@@ -195,6 +234,8 @@ public class NotePermissionService implements ResourcePermissionService  {
                     member.setUser(userRepository.getReferenceById(targetUserId));
                     member.setRole(role);
                     member.setStatus(NoteMemberStatus.PENDING);
+                    member.setInviteToken(token);
+                    member.setInviteTokenExpiresAt(expiresAt);
                     noteMemberRepository.save(member);
                 }
             );
@@ -209,7 +250,8 @@ public class NotePermissionService implements ResourcePermissionService  {
             .getId();
     }
 
-    private void sendInviteNotifications(
+    @Async
+    protected void sendInviteNotifications(
             List<Long> userIds,
             String inviterName,
             String noteTitle,
@@ -236,5 +278,21 @@ public class NotePermissionService implements ResourcePermissionService  {
             .toList();
 
         notificationDispatcher.dispatchToMany(notifications);
+
+        userIds.forEach(userId ->
+            noteMemberRepository.findByNoteIdAndUserId(noteId, userId)
+                .ifPresent(member -> {
+                    String acceptUrl = frontendUrl
+                        + "/invites/accept?token=" + member.getInviteToken();
+
+                    emailService.sendNoteInviteNotification(
+                        member.getUser().getEmail(),
+                        inviterName,
+                        noteTitle,
+                        member.getRole().name(),
+                        acceptUrl
+                    );
+                })
+        );
     }
 }

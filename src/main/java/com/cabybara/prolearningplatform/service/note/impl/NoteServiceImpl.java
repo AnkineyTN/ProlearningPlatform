@@ -3,6 +3,7 @@ package com.cabybara.prolearningplatform.service.note.impl;
 import com.cabybara.prolearningplatform.dto.request.note.*;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.*;
+import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.note.CreateNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetAllNotesResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetDetailNoteResponseDTO;
@@ -334,5 +335,12 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public void removeMember(Long noteId, Long targetUserId) {
         notePermissionService.removeMember(noteId, targetUserId, authenticationContext.getCurrentUserId());
+    }
+
+    @Override
+    public AcceptByTokenResponse acceptByToken(String token) {
+        AcceptByTokenResponse response = notePermissionService.acceptByToken(token);
+
+        return response;
     }
 }

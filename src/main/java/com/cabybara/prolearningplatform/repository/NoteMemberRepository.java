@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cabybara.prolearningplatform.enums.NoteMemberStatus;
-import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.model.note.NoteMember;
 
 public interface NoteMemberRepository extends JpaRepository<NoteMember, Long> {
@@ -26,6 +25,8 @@ public interface NoteMemberRepository extends JpaRepository<NoteMember, Long> {
     List<NoteMember> findByNoteId(Long noteId);
 
     List<NoteMember> findByUserIdAndStatus(Long userId, NoteMemberStatus status);
+
+    Optional<NoteMember> findByInviteToken(String inviteToken);
 
     @Modifying
     @Transactional

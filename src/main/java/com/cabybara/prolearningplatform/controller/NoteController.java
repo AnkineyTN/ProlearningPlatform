@@ -37,6 +37,7 @@ import java.util.List;
 
 
 
+
 @RestController
 @RequestMapping("/sets/{setId}/notes")
 @Validated
@@ -405,4 +406,19 @@ public class NoteController {
             ResponseUtil.success("Member removed successfully", null, null)
         );
     }
+
+    @PostMapping("/invites/accept-by-token")
+    public ResponseEntity<ApiResponse<AcceptByTokenResponse>> acceptByToken(
+        @RequestParam String token
+    ) {
+        AcceptByTokenResponse response = noteService.acceptByToken(token);
+        
+        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.GONE)
+            .body(ResponseUtil.success(
+                response.isSuccess() ? "Invite accepted successfully" : "Invite acceptance failed",
+                response,
+                null
+            ));
+    }
+    
 }

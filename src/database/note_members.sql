@@ -22,3 +22,8 @@ WHERE id_user IS NOT NULL
 ON CONFLICT (note_id, user_id) DO NOTHING;
 
 SELECT * FROM note_members
+
+ALTER TABLE note_members
+    ADD COLUMN invite_token VARCHAR(64) UNIQUE,
+    ADD COLUMN invite_token_expires_at TIMESTAMP,
+    ADD COLUMN invited_email VARCHAR(255); -- dùng khi invite email chưa có tài khoản

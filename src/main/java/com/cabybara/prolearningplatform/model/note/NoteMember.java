@@ -37,6 +37,15 @@ public class NoteMember {
     @Column(nullable = false, length = 20)
     private NoteMemberStatus status = NoteMemberStatus.ACTIVE;
 
+    @Column(name = "invite_token", unique = true)
+    private String inviteToken;
+
+    @Column(name = "invite_token_expires_at")
+    private LocalDateTime inviteTokenExpiresAt;
+
+    @Column(name = "invited_email")
+    private String invitedEmail;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

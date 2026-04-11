@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.service.note;
 
 import com.cabybara.prolearningplatform.dto.request.note.*;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
+import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.note.CreateNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetAllNotesResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetDetailNoteResponseDTO;
@@ -45,4 +46,6 @@ public interface NoteService {
     public void declineInvite(Long noteId);
 
     public void removeMember(Long noteId, Long targetUserId);
+
+    public AcceptByTokenResponse acceptByToken(String token);
 }
