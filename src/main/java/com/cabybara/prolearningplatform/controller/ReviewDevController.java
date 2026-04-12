@@ -7,6 +7,7 @@ import com.cabybara.prolearningplatform.service.review.ReviewBundleService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
@@ -29,6 +30,7 @@ import java.util.Map;
 @Tag(name = "[Dev] Review")
 @Profile("dev")
 @PreAuthorize("isAuthenticated()")
+@Hidden
 public class ReviewDevController {
 
     private final WeeklySummaryService weeklySummaryService;

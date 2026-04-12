@@ -3,12 +3,14 @@ package com.cabybara.prolearningplatform.service.notification.impl;
 import com.cabybara.prolearningplatform.dto.helper.IncorrectCardsByFlashcard;
 import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
 import com.cabybara.prolearningplatform.enums.NotificationType;
+import com.cabybara.prolearningplatform.enums.UserLanguage;
 import com.cabybara.prolearningplatform.model.noti.SetNotificationPreference;
 import com.cabybara.prolearningplatform.model.noti.Notification;
 import com.cabybara.prolearningplatform.model.review.ReviewBundle;
 import com.cabybara.prolearningplatform.repository.SetNotificationPreferenceRepository;
 import com.cabybara.prolearningplatform.repository.StudySessionReviewLogRepository;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
+import com.cabybara.prolearningplatform.utils.NotificationMessageResolver;
 import com.cabybara.prolearningplatform.service.notification.WeeklySummaryService;
 import com.cabybara.prolearningplatform.service.review.ReviewBundleService;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
     private final StudySessionReviewLogRepository studySessionReviewLogRepository;
     private final NotificationDispatcher notificationDispatcher;
     private final ReviewBundleService reviewBundleService;
+    private final NotificationMessageResolver messageResolver;
 
     @Override
     public void processWeeklySummaries() {
@@ -110,8 +113,12 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
         ReviewBundle bundle = reviewBundleService.createBundle(
                 userId, setId, incorrectCardIds, periodFrom, periodTo, nextSummaryAt);
 
+        UserLanguage language = pref.getSet().getUser().getLanguage() != null
+                ? pref.getSet().getUser().getLanguage()
+                : UserLanguage.EN;
+
         Notification notification = notificationDispatcher.dispatch(
-                buildSummaryNotification(userId, setId, incorrectCount, breakdown, periodFrom, periodTo, bundle.getId()));
+                buildSummaryNotification(userId, setId, incorrectCount, breakdown, periodFrom, periodTo, bundle.getId(), language));
 
         bundle.setNotificationId(notification.getId());
 
@@ -141,12 +148,8 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
             List<IncorrectCardsByFlashcard> breakdown,
             OffsetDateTime periodFrom,
             OffsetDateTime periodTo,
-            Long bundleId) {
-
-        String message = String.format(
-                "Trong khoang thoi gian qua, ban da tra loi sai %d the. " +
-                        "Hay on lai de cung co kien thuc!",
-                incorrectCount);
+            Long bundleId,
+            UserLanguage language) {
 
         Map<String, Object> flashcardBreakdown = breakdown.stream()
                 .collect(Collectors.toMap(
@@ -167,8 +170,8 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
         return CreateNotificationDto.builder()
                 .userId(userId)
                 .type(NotificationType.WEEKLY_SUMMARY)
-                .title(NotificationType.WEEKLY_SUMMARY.getDefaultTitle())
-                .message(message)
+                .title(messageResolver.resolve("notification.weekly_summary.title", language))
+                .message(messageResolver.resolve("notification.weekly_summary.message", language, incorrectCount))
                 .data(data)
                 .actionUrl("/review-bundles/" + bundleId)
                 .sendPush(true)
