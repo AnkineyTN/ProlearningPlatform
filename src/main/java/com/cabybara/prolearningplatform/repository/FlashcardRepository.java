@@ -112,4 +112,10 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
     Page<Flashcard> findAllByUserIdAndCreateMethod(@Param("userId") Long userId,
                                                    @Param("creationMethod") CreationMethod creationMethod,
                                                    Pageable pageable);
+
+    @Query("SELECT f FROM Flashcard f WHERE f.set.id = :setId AND f.user.id = :userId AND f.create_method = :creationMethod")
+    Page<Flashcard> findAllBySetIdAndUserIdAndCreateMethod(@Param("setId") Long setId,
+                                                           @Param("userId") Long userId,
+                                                           @Param("creationMethod") CreationMethod creationMethod,
+                                                           Pageable pageable);
 }

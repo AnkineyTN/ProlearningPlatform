@@ -23,7 +23,9 @@ public class ReviewBundle {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    // FK to the notification that triggered this bundle (nullable)
+    @Column(name = "set_id")
+    private Long setId;
+
     @Column(name = "notification_id")
     private Long notificationId;
 

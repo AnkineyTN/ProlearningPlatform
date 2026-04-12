@@ -17,6 +17,7 @@ import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.repository.SetRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
+import com.cabybara.prolearningplatform.service.notification.SetNotificationPreferenceService;
 import com.cabybara.prolearningplatform.service.set.SetService;
 
 import jakarta.transaction.Transactional;
@@ -32,6 +33,7 @@ public class SetServiceImpl implements SetService {
     private final UserRepository userRepository;
     private final SetMapper setMapper;
     private final AuthenticationContext authenticationContext;
+    private final SetNotificationPreferenceService setNotificationPreferenceService;
 
     @Override
     public Set getSetById(Long setId) {
@@ -86,6 +88,7 @@ public class SetServiceImpl implements SetService {
         newSet.setFlashcards(new ArrayList<>());
 
         Set savedSet = setRepository.save(newSet);
+        setNotificationPreferenceService.createDefaultForSet(savedSet.getId());
         return setMapper.toSetResponseDto(savedSet);
     }
 

@@ -4,7 +4,7 @@ import com.cabybara.prolearningplatform.dto.helper.UserDueStatDto;
 import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
 import com.cabybara.prolearningplatform.enums.NotificationType;
 import com.cabybara.prolearningplatform.repository.CardItemRepository;
-import com.cabybara.prolearningplatform.repository.NotificationPreferenceRepository;
+import com.cabybara.prolearningplatform.repository.SetNotificationPreferenceRepository;
 import com.cabybara.prolearningplatform.service.notification.DueCardReminderService;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
 import lombok.RequiredArgsConstructor;
@@ -24,12 +24,12 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
 
     private final NotificationDispatcher notificationDispatcher;
     private final CardItemRepository cardItemRepository;
-    private final NotificationPreferenceRepository notificationPreferenceRepository;
+    private final SetNotificationPreferenceRepository setNotificationPreferenceRepository;
 
     @Override
     public void sendDueCardReminders() {
         Set<Long> enabledUserIds = Set.copyOf(
-                notificationPreferenceRepository.findUserIdsWithDueCardReminderEnabled());
+                setNotificationPreferenceRepository.findDistinctUserIdsByDueCardReminderEnabled());
 
         if (enabledUserIds.isEmpty()) {
             return;
@@ -54,7 +54,7 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
     @Override
     public void sendEveningStudyReminders() {
         Set<Long> enabledUserIds = Set.copyOf(
-                notificationPreferenceRepository.findUserIdsWithDueCardReminderEnabled());
+                setNotificationPreferenceRepository.findDistinctUserIdsByDueCardReminderEnabled());
 
         if (enabledUserIds.isEmpty()) {
             log.info("No users with due card reminder enabled for evening reminder");

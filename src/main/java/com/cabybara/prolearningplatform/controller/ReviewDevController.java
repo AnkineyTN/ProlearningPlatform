@@ -49,21 +49,26 @@ public class ReviewDevController {
     }
 
     /**
-     * Create a bundle directly with explicit card IDs — skips the weekly scheduler entirely.
-     * Useful for testing bundle view + generate endpoints with known cards.
-     *
-     * Body: { "cardIds": [1, 2, 3] }
+     * Body: { "setId": 1, "cardIds": [1, 2, 3] }
      */
     @PostMapping("/bundles")
     public ResponseEntity<ApiResponse<Map<String, Object>>> createBundle(
-            @RequestBody Map<String, List<Long>> body
+            @RequestBody Map<String, Object> body
     ) {
         Long userId = authenticationContext.getCurrentUserId();
-        List<Long> cardIds = body.get("cardIds");
+
+        @SuppressWarnings("unchecked")
+        List<Long> cardIds = ((List<Number>) body.get("cardIds")).stream()
+                .map(Number::longValue)
+                .toList();
+        Long setId = body.get("setId") != null
+                ? ((Number) body.get("setId")).longValue()
+                : null;
 
         OffsetDateTime now = OffsetDateTime.now();
         ReviewBundle bundle = reviewBundleService.createBundle(
                 userId,
+                setId,
                 cardIds,
                 now.minusWeeks(1),
                 now,

@@ -16,13 +16,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/review-hub")
+@RequestMapping("/sets/{setId}/review-hub")
 @RequiredArgsConstructor
 @Tag(name = "Review Hub")
 @PreAuthorize("isAuthenticated()")
@@ -32,9 +33,10 @@ public class ReviewHubController {
 
     @GetMapping("/flashcards")
     public ResponseEntity<ApiResponse<List<FlashcardResponseDto>>> getReviewFlashcards(
+            @PathVariable Long setId,
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "createdAt") Pageable pageable
     ) {
-        Page<FlashcardResponseDto> page = reviewHubService.getReviewFlashcards(pageable);
+        Page<FlashcardResponseDto> page = reviewHubService.getReviewFlashcards(setId, pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -49,9 +51,10 @@ public class ReviewHubController {
 
     @GetMapping("/exams")
     public ResponseEntity<ApiResponse<List<ExamResponseDto>>> getReviewExams(
+            @PathVariable Long setId,
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "createdAt") Pageable pageable
     ) {
-        Page<ExamResponseDto> page = reviewHubService.getReviewExams(pageable);
+        Page<ExamResponseDto> page = reviewHubService.getReviewExams(setId, pageable);
 
         return ResponseEntity
                 .status(HttpStatus.OK)

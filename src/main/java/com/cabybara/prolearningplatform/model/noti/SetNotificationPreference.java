@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.model.noti;
 
 import com.cabybara.prolearningplatform.model.AbstractEntity;
-import com.cabybara.prolearningplatform.model.User;
+import com.cabybara.prolearningplatform.model.Set;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -9,19 +9,19 @@ import java.time.DayOfWeek;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "notification_preference")
+@Table(name = "set_notification_preference")
 @Builder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = "user")
-@EqualsAndHashCode(exclude = "user")
-public class NotificationPreference extends AbstractEntity {
+@ToString(exclude = "set")
+@EqualsAndHashCode(exclude = "set")
+public class SetNotificationPreference extends AbstractEntity {
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_user", nullable = false, unique = true)
-    private User user;
+    @JoinColumn(name = "set_id", nullable = false, unique = true)
+    private Set set;
 
     @Builder.Default
     @Column(name = "due_card_reminder_enabled", nullable = false)
@@ -40,9 +40,5 @@ public class NotificationPreference extends AbstractEntity {
 
     public DayOfWeek getWeeklySummaryDayOfWeek() {
         return DayOfWeek.of(weeklySummaryDay);
-    }
-
-    public void setWeeklySummaryDayOfWeek(DayOfWeek day) {
-        this.weeklySummaryDay = day.getValue();
     }
 }

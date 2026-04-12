@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface ReviewBundleService {
 
-    ReviewBundle createBundle(Long userId, List<Long> cardIds,
+    ReviewBundle createBundle(Long userId, Long setId, List<Long> cardIds,
                               OffsetDateTime periodFrom,
                               OffsetDateTime periodTo,
                               OffsetDateTime expiresAt);

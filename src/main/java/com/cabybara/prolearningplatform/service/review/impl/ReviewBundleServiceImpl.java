@@ -16,7 +16,6 @@ import com.cabybara.prolearningplatform.service.exam.ExamService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.service.review.ReviewBundleService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,17 +36,17 @@ public class ReviewBundleServiceImpl implements ReviewBundleService {
     private final AIExamService aiExamService;
     private final FlashcardService flashcardService;
     private final ExamService examService;
-    private final ObjectMapper objectMapper;
     private final AuthenticationContext authenticationContext;
 
     @Override
     @Transactional
-    public ReviewBundle createBundle(Long userId, List<Long> cardIds,
+    public ReviewBundle createBundle(Long userId, Long setId, List<Long> cardIds,
                                      OffsetDateTime periodFrom,
                                      OffsetDateTime periodTo,
                                      OffsetDateTime expiresAt) {
         ReviewBundle bundle = new ReviewBundle();
         bundle.setUserId(userId);
+        bundle.setSetId(setId);
         bundle.setCardIds(cardIds);
         bundle.setPeriodFrom(periodFrom);
         bundle.setPeriodTo(periodTo);
@@ -87,7 +86,7 @@ public class ReviewBundleServiceImpl implements ReviewBundleService {
                 bundle.getPeriodTo().format(PERIOD_FORMATTER_YEAR));
         String description = String.format("Tổng hợp %d thẻ trả lời sai trong tuần", cards.size());
 
-        return flashcardService.addFlashcardFromReview(cards, title, description);
+        return flashcardService.addFlashcardFromReview(cards, title, description, bundle.getSetId());
     }
 
     @Override
@@ -96,14 +95,8 @@ public class ReviewBundleServiceImpl implements ReviewBundleService {
         ReviewBundle bundle = findBundleForCurrentUser(bundleId);
         List<CardContent> cards = loadCardContents(bundle);
 
-        String aiContent = aiExamService.generateExamFromReview(cards).getContent();
-
-        if (aiContent == null || aiContent.isBlank()) {
-            throw new RuntimeException("AI service returned empty response for exam generation");
-        }
-
-        CreateExamFromReviewRequestDto dto = parseJson(aiContent, CreateExamFromReviewRequestDto.class);
-        return examService.createExamFromReview(dto);
+        CreateExamFromReviewRequestDto dto = aiExamService.generateExamFromReview(cards);
+        return examService.createExamFromReview(dto, bundle.getSetId());
     }
 
     private ReviewBundle findBundleForCurrentUser(Long bundleId) {
@@ -119,11 +112,4 @@ public class ReviewBundleServiceImpl implements ReviewBundleService {
                 .toList();
     }
 
-    private <T> T parseJson(String json, Class<T> targetType) {
-        try {
-            return objectMapper.readValue(json, targetType);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to parse AI response as " + targetType.getSimpleName(), e);
-        }
-    }
 }

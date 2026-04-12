@@ -17,7 +17,7 @@ public interface ExamService {
 
     ExamResponseDto createExam(Long setId, CreateExamRequestDto createExamRequestDto);
 
-    ExamResponseDto createExamFromReview(CreateExamFromReviewRequestDto dto);
+    ExamResponseDto createExamFromReview(CreateExamFromReviewRequestDto dto, Long setId);
 
     Page<ExamResponseDto> getExam(Long setId, String q, Privacy privacy, Pageable pageable);
 

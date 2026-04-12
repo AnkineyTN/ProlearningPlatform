@@ -7,7 +7,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface ReviewHubService {
 
-    Page<FlashcardResponseDto> getReviewFlashcards(Pageable pageable);
+    Page<FlashcardResponseDto> getReviewFlashcards(Long setId, Pageable pageable);
 
-    Page<ExamResponseDto> getReviewExams(Pageable pageable);
+    Page<ExamResponseDto> getReviewExams(Long setId, Pageable pageable);
 }

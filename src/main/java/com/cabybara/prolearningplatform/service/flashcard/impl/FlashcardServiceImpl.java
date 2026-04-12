@@ -125,7 +125,7 @@ public class FlashcardServiceImpl implements FlashcardService {
 
     @Override
     @Transactional
-    public FlashcardResponseDto addFlashcardFromReview(List<CardItem> sourceCards, String title, String description) {
+    public FlashcardResponseDto addFlashcardFromReview(List<CardItem> sourceCards, String title, String description, Long setId) {
         Long userId = authenticationContext.getCurrentUserId();
         User user = userService.getUserById(userId);
 
@@ -134,7 +134,7 @@ public class FlashcardServiceImpl implements FlashcardService {
         flashcard.setDescription(description);
         flashcard.setUser(user);
         flashcard.setPrivacy(Privacy.PRIVATE);
-        flashcard.setSet(null);
+        flashcard.setSet(setId != null ? setService.getSetById(setId) : null);
         flashcard.setCreate_method(CreationMethod.REVIEW);
 
         List<CardItem> copiedCards = sourceCards.stream()
