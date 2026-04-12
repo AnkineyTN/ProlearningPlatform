@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.dto.response.note;
 
+import com.cabybara.prolearningplatform.enums.NoteRole;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -20,6 +21,7 @@ public class GetDetailNoteResponseDTO {
     private String description;
     private Privacy privacy;
     private String content;
+    private NoteRole userRole;
     private List<GetDocsInNoteResponseDTO> noteDocs;
     private List<GetDocsInNoteResponseDTO> noteImgs;
 }

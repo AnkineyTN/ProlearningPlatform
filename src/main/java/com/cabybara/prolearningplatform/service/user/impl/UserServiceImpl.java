@@ -236,12 +236,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserSearchResponse> searchUsers(String keyword, int page, int size) {
+    public Page<UserSearchResponse> searchNoteUsers(String keyword, int page, int size, Long noteId) {
         if (!StringUtils.hasText(keyword)) {
             return Page.empty();
         }
 
-        return userRepository.searchByNameOrEmail(keyword, PageRequest.of(page, size))
+        return userRepository.searchByNameOrEmail(keyword, noteId, PageRequest.of(page, size))
             .map(UserSearchResponse::from);
     }
 }

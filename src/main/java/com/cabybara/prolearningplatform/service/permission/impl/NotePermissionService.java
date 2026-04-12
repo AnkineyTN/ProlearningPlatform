@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
+import com.cabybara.prolearningplatform.dto.response.share.NoteMemberResponse;
 import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
 import com.cabybara.prolearningplatform.enums.NoteMemberStatus;
 import com.cabybara.prolearningplatform.enums.NoteRole;
@@ -135,7 +138,8 @@ public class NotePermissionService implements ResourcePermissionService  {
 
         // Gửi notification cho tất cả user được invite thành công
         if (!successUserIds.isEmpty()) {
-            sendInviteNotifications(successUserIds, inviterName, noteTitle, noteId, setId);
+            LocalDateTime expiresAt = LocalDateTime.now().plusHours(inviteTokenExpiryHours);
+            sendInviteNotifications(successUserIds, inviterName, noteTitle, noteId, setId, expiresAt);
         }
 
         return results;
@@ -196,9 +200,37 @@ public class NotePermissionService implements ResourcePermissionService  {
                 m.getNote().getId(),
                 m.getNote().getTitle(),
                 m.getRole().name(),
+                m.getNote().getSet().getId(),
                 m.getCreatedAt()
             ))
             .toList();
+    }
+
+    public Page<NoteMemberResponse> getMembers(Long noteId, Pageable pageable) {
+        return noteMemberRepository
+            .findPagedByNoteId(noteId, pageable)
+            .map(m -> new NoteMemberResponse(
+                m.getUser().getId(),
+                m.getUser().getFirstName(),
+                m.getUser().getLastName(),
+                m.getUser().getEmail(),
+                m.getRole().name(),
+                m.getStatus().name()
+            ));
+    }   
+
+    public Page<NoteMemberResponse> searchMembers(
+        Long noteId, String keyword, Pageable pageable) {
+        return noteMemberRepository
+            .searchMembers(noteId, keyword, pageable)
+            .map(m -> new NoteMemberResponse(
+                m.getUser().getId(),
+                m.getUser().getFirstName(),
+                m.getUser().getLastName(),
+                m.getUser().getEmail(),
+                m.getRole().name(),
+                m.getStatus().name()
+            ));
     }
 
     @Transactional
@@ -211,6 +243,8 @@ public class NotePermissionService implements ResourcePermissionService  {
         }
         noteMemberRepository.deleteByNoteIdAndUserId(noteId, targetUserId);
     }
+
+    
 
      private void doInvite(Long noteId, Long targetUserId, NoteRole role) {
         String token = UUID.randomUUID().toString().replace("-", "");
@@ -241,6 +275,33 @@ public class NotePermissionService implements ResourcePermissionService  {
             );
     }
 
+    public NoteRole getUserRoleInNote(Long noteId, Long userId) {
+        return noteMemberRepository
+            .findByNoteIdAndUserIdAndStatus(noteId, userId, NoteMemberStatus.ACTIVE)
+            .map(NoteMember::getRole)
+            .orElseThrow(() -> new AccessDeniedException(
+                "User " + userId + " has no access to note " + noteId));
+    }
+
+    @Transactional
+    public void updateMemberRole(Long noteId, Long targetUserId, NoteRole newRole, Long requesterId) {
+        if (!isOwner(requesterId, noteId)) {
+            throw new AccessDeniedException("Only owner can change member roles");
+        }
+        if (targetUserId.equals(requesterId)) {
+            throw new IllegalStateException("Cannot change your own role");
+        }
+        if (newRole == NoteRole.OWNER) {
+            throw new IllegalArgumentException("Cannot assign OWNER role");
+        }
+
+        NoteMember member = noteMemberRepository
+            .findByNoteIdAndUserIdAndStatus(noteId, targetUserId, NoteMemberStatus.ACTIVE)
+            .orElseThrow(() -> new EntityNotFoundException("Member not found"));
+
+        member.setRole(newRole);
+    }
+
     private Long resolveUserId(InviteMemberRequest.InviteTarget target) {
         if (target.getUserId() != null) return target.getUserId();
 
@@ -256,13 +317,15 @@ public class NotePermissionService implements ResourcePermissionService  {
             String inviterName,
             String noteTitle,
             Long noteId,
-            Long setId
+            Long setId,
+            LocalDateTime expiresAt
     ) {
         Map<String, Object> data = new HashMap<>();
         
         data.put("noteId", noteId);
         data.put("setId", setId);
-        
+        data.put("expiresAt", expiresAt);
+
         List<CreateNotificationDto> notifications = userIds.stream()
             .map(userId -> CreateNotificationDto.builder()
                 .userId(userId)

@@ -10,6 +10,7 @@ import com.cabybara.prolearningplatform.dto.response.note.GetDetailNoteResponseD
 import com.cabybara.prolearningplatform.dto.response.note.GetDocsInNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
+import com.cabybara.prolearningplatform.enums.NoteRole;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.*;
@@ -190,6 +191,9 @@ public class NoteServiceImpl implements NoteService {
         // Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
         Note note = getNoteById(noteId);
 
+        NoteRole noteRole = notePermissionService.getUserRoleInNote(noteId, userId);
+
+
         return GetDetailNoteResponseDTO.builder()
                 .id(note.getId())
                 .setId(note.getSet() != null ? note.getSet().getId() : null)
@@ -197,6 +201,7 @@ public class NoteServiceImpl implements NoteService {
                 .description(note.getDescription())
                 .privacy(note.getPrivacy())
                 .content(note.getContent())
+                .userRole(noteRole)
                 .noteDocs(
                         note.getNoteDocs().stream()
                                 .map(doc -> {

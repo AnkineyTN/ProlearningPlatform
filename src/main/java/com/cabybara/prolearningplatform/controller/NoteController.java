@@ -6,12 +6,14 @@ import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.*;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
+import com.cabybara.prolearningplatform.dto.response.share.NoteMemberResponse;
 import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.service.ai.AINoteService;
 import com.cabybara.prolearningplatform.service.note.NoteFileRegionCommentService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
+import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -25,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -34,6 +37,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 
 
 
@@ -55,6 +59,7 @@ public class NoteController {
     private final AINoteService aiNoteService;
     private final NoteFileRegionCommentService noteFileRegionCommentService;
     private final AuthenticationContext authContext;
+    private final NotePermissionService notePermissionService;
 
     // ##################################################
     // ###################  MAIN API  ###################
@@ -371,16 +376,11 @@ public class NoteController {
         );
     }
     
-    @GetMapping("/invites/pending")
-    public ResponseEntity<ApiResponse<List<PendingInviteResponse>>> getPendingInvites() {
-        List<PendingInviteResponse> pendingInvites = noteService.getPendingInvites();
-        return ResponseEntity.ok(
-            ResponseUtil.success("Pending invites retrieved successfully", pendingInvites, null)
-        );
-    }
-    
     @PostMapping("/{noteId}/members/accept")
-    public ResponseEntity<ApiResponse<Void>> acceptInvite(@PathVariable Long noteId) {
+    public ResponseEntity<ApiResponse<Void>> acceptInvite(
+        @PathVariable Long setId,
+        @PathVariable Long noteId
+    ) {
         noteService.acceptInvite(noteId);
         return ResponseEntity.ok(
             ResponseUtil.success("Invite accepted successfully", null, null)
@@ -388,7 +388,10 @@ public class NoteController {
     }
 
     @PostMapping("/{noteId}/members/decline")
-    public ResponseEntity<ApiResponse<Void>> declineInvite(@PathVariable Long noteId) {
+    public ResponseEntity<ApiResponse<Void>> declineInvite(
+        @PathVariable Long setId,
+        @PathVariable Long noteId
+    ) {
         noteService.declineInvite(noteId);
         return ResponseEntity.ok(
             ResponseUtil.success("Invite declined successfully", null, null)
@@ -398,6 +401,7 @@ public class NoteController {
     @DeleteMapping("/{noteId}/members/{targetUserId}")
     @PreAuthorize("@notePermissionService.isOwner(@authenticationContext.getCurrentUserId(), #noteId)")
     public ResponseEntity<ApiResponse<Void>> removeMember(
+        @PathVariable Long setId,
         @PathVariable Long noteId,
         @PathVariable Long targetUserId
     ) {
@@ -406,19 +410,35 @@ public class NoteController {
             ResponseUtil.success("Member removed successfully", null, null)
         );
     }
-
-    @PostMapping("/invites/accept-by-token")
-    public ResponseEntity<ApiResponse<AcceptByTokenResponse>> acceptByToken(
-        @RequestParam String token
+    
+    @GetMapping("/{noteId}/members")
+    public ResponseEntity<ApiResponse<List<NoteMemberResponse>>> getMembers(
+        @PathVariable Long setId,
+        @PathVariable Long noteId,
+        @RequestParam(required = false) String keyword,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
     ) {
-        AcceptByTokenResponse response = noteService.acceptByToken(token);
-        
-        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.GONE)
-            .body(ResponseUtil.success(
-                response.isSuccess() ? "Invite accepted successfully" : "Invite acceptance failed",
-                response,
-                null
-            ));
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<NoteMemberResponse> result = (keyword != null && !keyword.isBlank())
+        ? notePermissionService.searchMembers(noteId, keyword, pageable)
+        : notePermissionService.getMembers(noteId, pageable);
+
+        PaginationResponseDto pagination = PaginationResponseDto.builder()
+            .currentPage(result.getNumber())
+            .totalPages(result.getTotalPages())
+            .totalItems(result.getTotalElements())
+            .pageSize(result.getSize())
+            .build();
+
+        return ResponseEntity.ok(
+            ResponseUtil.success(
+                "Members retrieved successfully",
+                result.getContent(),
+                pagination
+            )
+        );
     }
     
 }

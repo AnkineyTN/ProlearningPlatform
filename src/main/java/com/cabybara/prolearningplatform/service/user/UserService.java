@@ -43,5 +43,5 @@ public interface UserService extends UserDetailsService {
 
     void resendVerifyOtp(Long userId);
 
-    Page<UserSearchResponse> searchUsers(String keyword, int page, int size);
+    Page<UserSearchResponse> searchNoteUsers(String keyword, int page, int size, Long noteId);
 }

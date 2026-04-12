@@ -50,13 +50,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
         """)
     List<User> searchByNameOrEmail(@Param("keyword") String keyword);
 
+    // bỏ qua những user đã là member của note đó
     @Query("""
     SELECT u FROM User u
-    WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    WHERE (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%'))
     OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%'))
     OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
-    OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :keyword, '%')))
+    AND u.id NOT IN (
+        SELECT nm.user.id FROM NoteMember nm WHERE nm.note.id = :noteId
+    )
     ORDER BY u.lastName ASC, u.firstName ASC
     """)
-   Page<User> searchByNameOrEmail(@Param("keyword") String keyword, Pageable pageable);
+   Page<User> searchByNameOrEmail(@Param("keyword") String keyword, @Param("noteId") Long noteId, Pageable pageable);
 }

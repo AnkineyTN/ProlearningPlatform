@@ -93,13 +93,14 @@ public class UserController {
     }
 
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("/search")
+    @GetMapping("/notes/{noteId}/search")
     public ResponseEntity<ApiResponse<List<UserSearchResponse>>> searchUsers(
+        @PathVariable Long noteId,
         @RequestParam String keyword,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "10") int size
     ) {
-        Page<UserSearchResponse> searchResults = userService.searchUsers(keyword, page, size);
+        Page<UserSearchResponse> searchResults = userService.searchNoteUsers(keyword, page, size, noteId);
 
         PaginationResponseDto paginationResponseDto = PaginationResponseDto.builder()
                 .currentPage(searchResults.getNumber())

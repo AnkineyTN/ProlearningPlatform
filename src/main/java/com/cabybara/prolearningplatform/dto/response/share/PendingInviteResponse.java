@@ -10,5 +10,6 @@ public class PendingInviteResponse {
     private Long noteId;
     private String noteTitle;
     private String role;
+    private Long setId;
     private LocalDateTime invitedAt;
 }
