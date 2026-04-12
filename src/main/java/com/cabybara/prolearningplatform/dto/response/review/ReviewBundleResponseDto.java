@@ -7,6 +7,10 @@ public record ReviewBundleResponseDto(
         Long id,
         OffsetDateTime periodFrom,
         OffsetDateTime periodTo,
+<<<<<<< HEAD
+=======
+        OffsetDateTime expiresAt,
+>>>>>>> dev
         int cardCount,
         List<ReviewBundleCardDto> cards
 ) {}

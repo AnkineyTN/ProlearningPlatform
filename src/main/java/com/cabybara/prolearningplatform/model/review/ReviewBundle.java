@@ -23,9 +23,13 @@ public class ReviewBundle {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+<<<<<<< HEAD
     @Column(name = "set_id")
     private Long setId;
 
+=======
+    // FK to the notification that triggered this bundle (nullable)
+>>>>>>> dev
     @Column(name = "notification_id")
     private Long notificationId;
 
@@ -39,6 +43,12 @@ public class ReviewBundle {
     @Column(name = "period_to", nullable = false)
     private OffsetDateTime periodTo;
 
+<<<<<<< HEAD
+=======
+    @Column(name = "expires_at", nullable = false)
+    private OffsetDateTime expiresAt;
+
+>>>>>>> dev
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 }

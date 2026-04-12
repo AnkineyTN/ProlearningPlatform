@@ -205,17 +205,42 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
         );
     }
 
+    private String resolveExpectedAnswer(ExamQuestion eq) {
+        if (eq == null) return null;
+        if (eq.getQuestion().getType() == QuestionType.ESSAY) {
+            return eq.getQuestion().getExpectedAnswer();
+        }
+        return eq.getQuestion().getOptions().stream()
+                .filter(opt -> Boolean.TRUE.equals(opt.getIsCorrect()))
+                .map(opt -> opt.getOptionText())
+                .findFirst()
+                .orElse(null);
+    }
+
+    private String resolveStudentAnswer(ExamAnswer a, ExamQuestion eq) {
+        if (a.getEssayAnswer() != null && !a.getEssayAnswer().isBlank()) {
+            return a.getEssayAnswer();
+        }
+        if (a.getSelectedOptionId() == null || eq == null) return null;
+        return eq.getQuestion().getOptions().stream()
+                .filter(opt -> opt.getId().equals(a.getSelectedOptionId()))
+                .map(opt -> opt.getOptionText())
+                .findFirst()
+                .orElse(null);
+    }
+
     private ExamAttemptResultDto toAttemptResultDto(ExamAttempt attempt, Map<Long, ExamQuestion> examQuestionsMap) {
         List<ExamAnswerResultDto> answerDtos = attempt.getAnswers().stream()
                 .map(a -> {
                     ExamQuestion eq = examQuestionsMap.get(a.getQuestionId());
-                    String expectedAnswer = (eq != null) ? eq.getQuestion().getExpectedAnswer() : null;
+                    String questionContent = eq != null ? eq.getQuestion().getContent() : null;
                     return new ExamAnswerResultDto(
                             a.getQuestionId(),
+                            questionContent,
                             a.getSelectedOptionId(),
-                            a.getEssayAnswer(),
+                            resolveStudentAnswer(a, eq),
                             a.getIsCorrect(),
-                            expectedAnswer,
+                            resolveExpectedAnswer(eq),
                             a.getEarnedPoints(),
                             a.getFeedback()
                     );

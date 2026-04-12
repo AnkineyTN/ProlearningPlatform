@@ -21,7 +21,11 @@ public interface FlashcardService {
 
     FlashcardResponseDto addFlashcardManual(Long setId, FlashcardCreateRequestDto flashcardCreateRequestDto);
 
+<<<<<<< HEAD
     FlashcardResponseDto addFlashcardFromReview(List<CardItem> sourceCards, String title, String description, Long setId);
+=======
+    FlashcardResponseDto addFlashcardFromReview(FlashcardCreateRequestDto flashcardCreateRequestDto);
+>>>>>>> dev
 
     void deleteFlashcard(Long setId, Long flashcardId) throws BadRequestException;
 

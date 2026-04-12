@@ -76,7 +76,11 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @org.springframework.transaction.annotation.Transactional
+<<<<<<< HEAD
     public ExamResponseDto createExamFromReview(CreateExamFromReviewRequestDto dto, Long setId) {
+=======
+    public ExamResponseDto createExamFromReview(CreateExamFromReviewRequestDto dto) {
+>>>>>>> dev
         Long userId = authenticationContext.getCurrentUserId();
 
         Exam exam = new Exam();
@@ -84,9 +88,15 @@ public class ExamServiceImpl implements ExamService {
         exam.setDescription(dto.description());
         exam.setDuration(dto.duration());
         exam.setCreatedBy(userId);
+<<<<<<< HEAD
         exam.setSet(setId != null ? setRepository.getReferenceById(setId) : null);
         exam.setPrivacy(Privacy.PRIVATE);
         exam.setCreationMethod(CreationMethod.REVIEW);
+=======
+        exam.setSet(null);
+        exam.setPrivacy(Privacy.PRIVATE);
+        exam.setCreationMethod(CreationMethod.REVIEW_AI);
+>>>>>>> dev
 
         Exam savedExam = examRepository.save(exam);
 

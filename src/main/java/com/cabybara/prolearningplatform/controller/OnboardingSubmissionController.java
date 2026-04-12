@@ -34,7 +34,7 @@ public class OnboardingSubmissionController {
 
     @Operation(
             summary = "Save onboarding submission")
-            @ApiResponses({
+    @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Successfully"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request"),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
