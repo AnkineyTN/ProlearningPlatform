@@ -109,9 +109,8 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
         List<Long> incorrectCardIds = studySessionReviewLogRepository
                 .findDistinctIncorrectCardIdsBySet(userId, setId, periodFrom, periodTo);
 
-        OffsetDateTime nextSummaryAt = periodTo.plusWeeks(1);
         ReviewBundle bundle = reviewBundleService.createBundle(
-                userId, setId, incorrectCardIds, periodFrom, periodTo, nextSummaryAt);
+                userId, setId, incorrectCardIds, periodFrom, periodTo);
 
         UserLanguage language = pref.getSet().getUser().getLanguage() != null
                 ? pref.getSet().getUser().getLanguage()

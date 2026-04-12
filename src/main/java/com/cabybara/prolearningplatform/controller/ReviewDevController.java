@@ -73,8 +73,7 @@ public class ReviewDevController {
                 setId,
                 cardIds,
                 now.minusWeeks(1),
-                now,
-                now.plusWeeks(1)
+                now
         );
 
         return ResponseEntity

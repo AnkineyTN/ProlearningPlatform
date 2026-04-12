@@ -5,6 +5,7 @@ import com.cabybara.prolearningplatform.dto.request.exam.CreateExamFromReviewReq
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.review.ReviewBundleCardDto;
+import com.cabybara.prolearningplatform.dto.response.review.ReviewBundleListItemDto;
 import com.cabybara.prolearningplatform.dto.response.review.ReviewBundleResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
@@ -42,16 +43,37 @@ public class ReviewBundleServiceImpl implements ReviewBundleService {
     @Transactional
     public ReviewBundle createBundle(Long userId, Long setId, List<Long> cardIds,
                                      OffsetDateTime periodFrom,
-                                     OffsetDateTime periodTo,
-                                     OffsetDateTime expiresAt) {
+                                     OffsetDateTime periodTo) {
         ReviewBundle bundle = new ReviewBundle();
         bundle.setUserId(userId);
         bundle.setSetId(setId);
         bundle.setCardIds(cardIds);
         bundle.setPeriodFrom(periodFrom);
         bundle.setPeriodTo(periodTo);
-        bundle.setExpiresAt(expiresAt);
         return reviewBundleRepository.save(bundle);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReviewBundleListItemDto> getBundles() {
+        Long userId = authenticationContext.getCurrentUserId();
+        return reviewBundleRepository.findAllByUserIdOrderByPeriodToDesc(userId)
+                .stream()
+                .map(b -> new ReviewBundleListItemDto(
+                        b.getId(),
+                        b.getSetId(),
+                        b.getPeriodFrom(),
+                        b.getPeriodTo(),
+                        b.getCardIds().size()
+                ))
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public void dismissBundle(Long bundleId) {
+        ReviewBundle bundle = findBundleForCurrentUser(bundleId);
+        reviewBundleRepository.delete(bundle);
     }
 
     @Override
@@ -69,7 +91,6 @@ public class ReviewBundleServiceImpl implements ReviewBundleService {
                 bundle.getId(),
                 bundle.getPeriodFrom(),
                 bundle.getPeriodTo(),
-                bundle.getExpiresAt(),
                 cardDtos.size(),
                 cardDtos
         );

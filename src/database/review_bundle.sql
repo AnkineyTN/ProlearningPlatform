@@ -18,7 +18,6 @@ CREATE TABLE review_bundles (
     card_ids        JSONB                        NOT NULL DEFAULT '[]',
     period_from     TIMESTAMP WITH TIME ZONE     NOT NULL,
     period_to       TIMESTAMP WITH TIME ZONE     NOT NULL,
-    expires_at      TIMESTAMP WITH TIME ZONE     NOT NULL,
     created_at      TIMESTAMP WITH TIME ZONE     NOT NULL DEFAULT NOW(),
     set_id          BIGINT                       NOT NULL,
 
@@ -30,6 +29,5 @@ CREATE TABLE review_bundles (
         FOREIGN KEY (set_id) REFERENCES set(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_review_bundles_user_id   ON review_bundles(user_id);
-CREATE INDEX idx_review_bundles_expires_at ON review_bundles(expires_at);
-CREATE INDEX idx_review_bundles_set_id ON review_bundles(set_id);
+CREATE INDEX idx_review_bundles_user_id ON review_bundles(user_id);
+CREATE INDEX idx_review_bundles_set_id  ON review_bundles(set_id);

@@ -39,9 +39,6 @@ public class ReviewBundle {
     @Column(name = "period_to", nullable = false)
     private OffsetDateTime periodTo;
 
-    @Column(name = "expires_at", nullable = false)
-    private OffsetDateTime expiresAt;
-
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt = OffsetDateTime.now();
 }

@@ -1,12 +1,11 @@
 package com.cabybara.prolearningplatform.dto.response.review;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 
-public record ReviewBundleResponseDto(
+public record ReviewBundleListItemDto(
         Long id,
+        Long setId,
         OffsetDateTime periodFrom,
         OffsetDateTime periodTo,
-        int cardCount,
-        List<ReviewBundleCardDto> cards
+        int cardCount
 ) {}

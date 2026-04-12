@@ -89,7 +89,7 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
                 .title(messageResolver.resolve("notification.due_card.direct.title", UserLanguage.EN))
                 .message(messageResolver.resolve("notification.due_card.direct.message", UserLanguage.EN, dueCount))
                 .data(data)
-                .actionUrl("/study")
+                .actionUrl("/flascards")
                 .sendPush(true)
                 .build();
 
@@ -112,7 +112,7 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
                 .title(messageResolver.resolve(titleKey, language))
                 .message(messageResolver.resolve(messageKey, language, stat.getDueCount()))
                 .data(data)
-                .actionUrl("/study")
+                .actionUrl("/flashcards")
                 .sendPush(true)
                 .build();
     }
