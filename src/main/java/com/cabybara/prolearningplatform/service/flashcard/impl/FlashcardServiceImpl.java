@@ -125,7 +125,6 @@ public class FlashcardServiceImpl implements FlashcardService {
 
     @Override
     @Transactional
-<<<<<<< HEAD
     public FlashcardResponseDto addFlashcardFromReview(List<CardItem> sourceCards, String title, String description, Long setId) {
         Long userId = authenticationContext.getCurrentUserId();
         User user = userService.getUserById(userId);
@@ -147,24 +146,6 @@ public class FlashcardServiceImpl implements FlashcardService {
                 .collect(Collectors.toList());
 
         flashcard.setCards(copiedCards);
-=======
-    public FlashcardResponseDto addFlashcardFromReview(FlashcardCreateRequestDto flashcardCreateRequestDto) {
-        Long userId = authenticationContext.getCurrentUserId();
-        User user = userService.getUserById(userId);
-
-        Flashcard flashcard = flashcardMapper.toFlashcard(flashcardCreateRequestDto);
-
-        if (flashcardCreateRequestDto.getCards() != null && !flashcardCreateRequestDto.getCards().isEmpty()) {
-            Map<Long, Asset> activatedAssetsMap = activateCardImages(flashcardCreateRequestDto.getCards(), userId);
-            List<CardItem> cardItems = buildCardItemList(flashcardCreateRequestDto.getCards(), flashcard, activatedAssetsMap);
-            flashcard.setCards(cardItems);
-        }
-
-        flashcard.setUser(user);
-        flashcard.setPrivacy(Privacy.PRIVATE);
-        flashcard.setSet(null);
-        flashcard.setCreate_method(CreationMethod.REVIEW_AI);
->>>>>>> dev
 
         return flashcardMapper.toFlashcardResponseDto(flashcardRepository.save(flashcard));
     }

@@ -17,11 +17,7 @@ public interface ExamService {
 
     ExamResponseDto createExam(Long setId, CreateExamRequestDto createExamRequestDto);
 
-<<<<<<< HEAD
     ExamResponseDto createExamFromReview(CreateExamFromReviewRequestDto dto, Long setId);
-=======
-    ExamResponseDto createExamFromReview(CreateExamFromReviewRequestDto dto);
->>>>>>> dev
 
     Page<ExamResponseDto> getExam(Long setId, String q, Privacy privacy, Pageable pageable);
 

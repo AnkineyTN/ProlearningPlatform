@@ -141,7 +141,6 @@ public class AIExamServiceImpl implements AIExamService {
     }
 
     @Override
-<<<<<<< HEAD
     public CreateExamFromReviewRequestDto generateExamFromReview(List<CardContent> cards) {
         // TODO: implement actual HTTP call to AI service
 
@@ -151,12 +150,6 @@ public class AIExamServiceImpl implements AIExamService {
                 .duration(0L)
                 .questions(List.of())
                 .build();
-=======
-    public GenerateExamByAIResponseDto generateExamFromReview(List<CardContent> cards) {
-        // TODO: implement actual HTTP call to AI service when endpoint is ready
-
-        return GenerateExamByAIResponseDto.builder().content("").build();
->>>>>>> dev
     }
 
     @Override
