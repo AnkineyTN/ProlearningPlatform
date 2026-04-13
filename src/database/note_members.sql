@@ -21,7 +21,7 @@ FROM note
 WHERE id_user IS NOT NULL
 ON CONFLICT (note_id, user_id) DO NOTHING;
 
-SELECT * FROM note_members
+-- SELECT * FROM note_members
 
 ALTER TABLE note_members
     ADD COLUMN invite_token VARCHAR(64) UNIQUE,

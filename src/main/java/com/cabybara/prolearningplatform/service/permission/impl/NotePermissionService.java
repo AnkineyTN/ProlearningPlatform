@@ -164,6 +164,10 @@ public class NotePermissionService implements ResourcePermissionService  {
             .findByInviteToken(token)
             .orElseThrow(() -> new EntityNotFoundException("Invalid invite token"));
 
+        if (member.getInviteToken() == null || member.getInviteTokenExpiresAt() == null) {
+            return new AcceptByTokenResponse(false, "Invite token has already been used or is invalid", null);
+        }
+
         if (member.getInviteTokenExpiresAt().isBefore(LocalDateTime.now())) {
             return new AcceptByTokenResponse(false, "Invite link has expired", null);
         }
