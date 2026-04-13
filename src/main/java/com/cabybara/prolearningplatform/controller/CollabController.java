@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cabybara.prolearningplatform.dto.request.share.UpdateMemberRoleRequest;
 import com.cabybara.prolearningplatform.dto.request.share.VerifyAccessRequest;
 import com.cabybara.prolearningplatform.dto.request.share.YjsStateSaveRequest;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
-import com.cabybara.prolearningplatform.dto.response.share.UpdateMemberRoleRequest;
 import com.cabybara.prolearningplatform.dto.response.share.VerifyAccessResponse;
 import com.cabybara.prolearningplatform.dto.response.share.YjsStateResponse;
 import com.cabybara.prolearningplatform.service.note.CollabService;
@@ -118,7 +118,6 @@ public class CollabController {
      
     @GetMapping("/notes/invites/pending")
     public ResponseEntity<ApiResponse<List<PendingInviteResponse>>> getPendingInvites(
-        @PathVariable Long setId
     ) {
         List<PendingInviteResponse> pendingInvites = noteService.getPendingInvites();
         return ResponseEntity.ok(
@@ -138,7 +137,7 @@ public class CollabController {
             authenticationContext.getCurrentUserId()
         );
 
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(
+        return ResponseEntity.status(HttpStatus.OK).body(
             ResponseUtil.success("Member role updated successfully", null, request)
         );
     }

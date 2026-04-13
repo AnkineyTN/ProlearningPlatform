@@ -99,4 +99,6 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
 
     @Query("SELECT n.title FROM Note n WHERE n.id = :noteId")
     String findTitleById(@Param("noteId") Long noteId);
+
+    Optional<Note> findByIdAndSetId(Long noteId, Long setId);
 }

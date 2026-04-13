@@ -189,7 +189,7 @@ public class NoteServiceImpl implements NoteService {
     public GetDetailNoteResponseDTO getDetailNote(Long setId, Long noteId) {
         Long userId = authenticationContext.getCurrentUserId();
         // Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
-        Note note = getNoteById(noteId);
+        Note note = getNoteByIdAndSetId(noteId, setId);
 
         NoteRole noteRole = notePermissionService.getUserRoleInNote(noteId, userId);
 
@@ -282,6 +282,11 @@ public class NoteServiceImpl implements NoteService {
 
     private Note getNoteById(Long noteId) {
         return noteRepository.findById(noteId).orElseThrow(() -> new ResourceNotFoundException("Note not found"));
+    }
+
+    private Note getNoteByIdAndSetId(Long noteId, Long setId) {
+        return noteRepository.findByIdAndSetId(noteId, setId)
+                .orElseThrow(() -> new ResourceNotFoundException("Note not found or no permission"));
     }
 
     private Note getNoteByIdAndUserIdAndSetId(Long noteId, Long userId, Long setId) {

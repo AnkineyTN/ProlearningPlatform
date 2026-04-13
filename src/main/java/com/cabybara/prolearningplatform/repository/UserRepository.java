@@ -40,16 +40,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             """, nativeQuery = true)
     List<Object[]> aggregateAccountType();
 
-    @Query("""
-        SELECT u FROM User u
-        WHERE LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
-        ORDER BY u.lastName ASC, u.firstName ASC
-        LIMIT 10
-        """)
-    List<User> searchByNameOrEmail(@Param("keyword") String keyword);
-
     // bỏ qua những user đã là member của note đó
     @Query("""
     SELECT u FROM User u

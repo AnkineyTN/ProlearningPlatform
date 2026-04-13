@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class CollabServiceImp implements CollabService {
+public class CollabServiceImpl implements CollabService {
     private final NotePermissionService notePermissionService;
     private final NoteRepository noteRepository;
 

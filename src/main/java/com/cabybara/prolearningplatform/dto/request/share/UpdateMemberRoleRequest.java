@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.dto.response.share;
+package com.cabybara.prolearningplatform.dto.request.share;
 
 import com.cabybara.prolearningplatform.enums.NoteRole;
 

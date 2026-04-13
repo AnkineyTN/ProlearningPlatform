@@ -58,7 +58,7 @@ public class NoteController {
     private final NoteService noteService;
     private final AINoteService aiNoteService;
     private final NoteFileRegionCommentService noteFileRegionCommentService;
-    private final AuthenticationContext authContext;
+    private final AuthenticationContext authenticationContext;
     private final NotePermissionService notePermissionService;
 
     // ##################################################
@@ -412,6 +412,7 @@ public class NoteController {
     }
     
     @GetMapping("/{noteId}/members")
+    @PreAuthorize("isAuthenticated() and @notePermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #noteId)")
     public ResponseEntity<ApiResponse<List<NoteMemberResponse>>> getMembers(
         @PathVariable Long setId,
         @PathVariable Long noteId,

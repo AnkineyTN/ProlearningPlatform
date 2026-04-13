@@ -5,8 +5,10 @@ import com.cabybara.prolearningplatform.dto.request.user.UserUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
+import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,6 +35,8 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class UserController {
     private final UserService userService;
+    private final AuthenticationContext authenticationContext;
+    private final NotePermissionService notePermissionService;
 
     private static Long userIdFromJwt(Jwt jwt) {
         return Long.parseLong(jwt.getClaims().get("id").toString());
@@ -92,7 +96,7 @@ public class UserController {
                 .body(ResponseUtil.success("OTP resent successfully", null, null));
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @notePermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #noteId)")
     @GetMapping("/notes/{noteId}/search")
     public ResponseEntity<ApiResponse<List<UserSearchResponse>>> searchUsers(
         @PathVariable Long noteId,
