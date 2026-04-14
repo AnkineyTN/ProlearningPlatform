@@ -5,8 +5,8 @@ import lombok.Data;
 
 @Data
 @Builder
-public class NotificationPreferenceResponseDto {
+public class UserNotificationPreferenceResponseDto {
     private boolean dueCardReminderEnabled;
-    private boolean weeklySummaryEnabled;
-    private int weeklySummaryDay;
+    private boolean systemAnnouncementEnabled;
+    private boolean accountActivityEnabled;
 }

@@ -1,7 +1,6 @@
 CREATE TABLE set_notification_preference (
     id                          BIGSERIAL   PRIMARY KEY,
     set_id                      BIGINT      NOT NULL UNIQUE REFERENCES set(id) ON DELETE CASCADE,
-    due_card_reminder_enabled   BOOLEAN     NOT NULL DEFAULT TRUE,
     weekly_summary_enabled      BOOLEAN     NOT NULL DEFAULT TRUE,
     weekly_summary_day          SMALLINT    NOT NULL DEFAULT 7
         CHECK (weekly_summary_day BETWEEN 1 AND 7),

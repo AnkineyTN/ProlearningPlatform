@@ -21,10 +21,4 @@ public interface SetNotificationPreferenceRepository
           AND p.weeklySummaryDay = :dayValue
         """)
     List<SetNotificationPreference> findAllByWeeklySummaryDay(@Param("dayValue") int dayValue);
-
-    @Query("""
-        SELECT DISTINCT p.set.user.id FROM SetNotificationPreference p
-        WHERE p.dueCardReminderEnabled = true
-        """)
-    List<Long> findDistinctUserIdsByDueCardReminderEnabled();
 }

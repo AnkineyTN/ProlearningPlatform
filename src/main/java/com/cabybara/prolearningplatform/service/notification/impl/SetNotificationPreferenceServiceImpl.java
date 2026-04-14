@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.service.notification.impl;
 
-import com.cabybara.prolearningplatform.dto.request.notification.UpdateNotificationPreferenceRequestDto;
-import com.cabybara.prolearningplatform.dto.response.notification.NotificationPreferenceResponseDto;
+import com.cabybara.prolearningplatform.dto.request.notification.UpdateSetNotificationPreferenceRequestDto;
+import com.cabybara.prolearningplatform.dto.response.notification.SetNotificationPreferenceResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.noti.SetNotificationPreference;
@@ -28,13 +28,11 @@ public class SetNotificationPreferenceServiceImpl implements SetNotificationPref
     @Transactional
     public void createDefaultForSet(Long setId) {
         Set setRef = setRepository.getReferenceById(setId);
-        SetNotificationPreference pref = SetNotificationPreference.builder()
+        preferenceRepository.save(SetNotificationPreference.builder()
                 .set(setRef)
-                .dueCardReminderEnabled(true)
                 .weeklySummaryEnabled(true)
                 .weeklySummaryDay(DayOfWeek.SUNDAY.getValue())
-                .build();
-        preferenceRepository.save(pref);
+                .build());
     }
 
     @Override
@@ -42,16 +40,18 @@ public class SetNotificationPreferenceServiceImpl implements SetNotificationPref
     public SetNotificationPreference getBySetId(Long setId) {
         return preferenceRepository.findBySetId(setId)
                 .orElseGet(() -> {
-                    createDefaultForSet(setId);
-                    return preferenceRepository.findBySetId(setId)
-                            .orElseThrow(() -> new ResourceNotFoundException(
-                                    "Notification preference not found for set: " + setId));
+                    Set setRef = setRepository.getReferenceById(setId);
+                    return preferenceRepository.save(SetNotificationPreference.builder()
+                            .set(setRef)
+                            .weeklySummaryEnabled(true)
+                            .weeklySummaryDay(DayOfWeek.SUNDAY.getValue())
+                            .build());
                 });
     }
 
     @Override
     @Transactional
-    public NotificationPreferenceResponseDto getPreferenceForCurrentUser(Long setId) {
+    public SetNotificationPreferenceResponseDto getPreferenceForCurrentUser(Long setId) {
         Long userId = authenticationContext.getCurrentUserId();
         SetNotificationPreference pref = getBySetId(setId);
         validateOwnership(pref, userId);
@@ -60,14 +60,11 @@ public class SetNotificationPreferenceServiceImpl implements SetNotificationPref
 
     @Override
     @Transactional
-    public NotificationPreferenceResponseDto updatePreference(Long setId, UpdateNotificationPreferenceRequestDto request) {
+    public SetNotificationPreferenceResponseDto updatePreference(Long setId, UpdateSetNotificationPreferenceRequestDto request) {
         Long userId = authenticationContext.getCurrentUserId();
         SetNotificationPreference pref = getBySetId(setId);
         validateOwnership(pref, userId);
 
-        if (request.getDueCardReminderEnabled() != null) {
-            pref.setDueCardReminderEnabled(request.getDueCardReminderEnabled());
-        }
         if (request.getWeeklySummaryEnabled() != null) {
             pref.setWeeklySummaryEnabled(request.getWeeklySummaryEnabled());
         }
@@ -85,9 +82,8 @@ public class SetNotificationPreferenceServiceImpl implements SetNotificationPref
         }
     }
 
-    private NotificationPreferenceResponseDto toResponseDto(SetNotificationPreference pref) {
-        return NotificationPreferenceResponseDto.builder()
-                .dueCardReminderEnabled(pref.isDueCardReminderEnabled())
+    private SetNotificationPreferenceResponseDto toResponseDto(SetNotificationPreference pref) {
+        return SetNotificationPreferenceResponseDto.builder()
                 .weeklySummaryEnabled(pref.isWeeklySummaryEnabled())
                 .weeklySummaryDay(pref.getWeeklySummaryDay())
                 .build();
