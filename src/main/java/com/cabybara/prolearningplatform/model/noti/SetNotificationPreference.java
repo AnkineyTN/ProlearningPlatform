@@ -24,10 +24,6 @@ public class SetNotificationPreference extends AbstractEntity {
     private Set set;
 
     @Builder.Default
-    @Column(name = "due_card_reminder_enabled", nullable = false)
-    private boolean dueCardReminderEnabled = true;
-
-    @Builder.Default
     @Column(name = "weekly_summary_enabled", nullable = false)
     private boolean weeklySummaryEnabled = true;
 

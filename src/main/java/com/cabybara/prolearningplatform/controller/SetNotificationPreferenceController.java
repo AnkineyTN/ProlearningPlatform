@@ -1,7 +1,7 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.request.notification.UpdateNotificationPreferenceRequestDto;
-import com.cabybara.prolearningplatform.dto.response.notification.NotificationPreferenceResponseDto;
+import com.cabybara.prolearningplatform.dto.request.notification.UpdateSetNotificationPreferenceRequestDto;
+import com.cabybara.prolearningplatform.dto.response.notification.SetNotificationPreferenceResponseDto;
 import com.cabybara.prolearningplatform.service.notification.SetNotificationPreferenceService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -15,7 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/sets/{setId}/notification-preferences")
+@RequestMapping("/sets/{setId}/notifications/preferences")
 @RequiredArgsConstructor
 @Tag(name = "Set Notification Preferences")
 @PreAuthorize("isAuthenticated()")
@@ -28,10 +28,10 @@ public class SetNotificationPreferenceController {
             summary = "Get notification preferences for a set",
             description = "Returns notification preferences scoped to a specific study set"
     )
-    public ResponseEntity<ApiResponse<NotificationPreferenceResponseDto>> getPreferences(
+    public ResponseEntity<ApiResponse<SetNotificationPreferenceResponseDto>> getPreferences(
             @PathVariable Long setId
     ) {
-        NotificationPreferenceResponseDto response =
+        SetNotificationPreferenceResponseDto response =
                 setNotificationPreferenceService.getPreferenceForCurrentUser(setId);
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -43,11 +43,11 @@ public class SetNotificationPreferenceController {
             summary = "Update notification preferences for a set",
             description = "Updates notification preferences scoped to a specific study set"
     )
-    public ResponseEntity<ApiResponse<NotificationPreferenceResponseDto>> updatePreferences(
+    public ResponseEntity<ApiResponse<SetNotificationPreferenceResponseDto>> updatePreferences(
             @PathVariable Long setId,
-            @Valid @RequestBody UpdateNotificationPreferenceRequestDto request
+            @Valid @RequestBody UpdateSetNotificationPreferenceRequestDto request
     ) {
-        NotificationPreferenceResponseDto response =
+        SetNotificationPreferenceResponseDto response =
                 setNotificationPreferenceService.updatePreference(setId, request);
         return ResponseEntity
                 .status(HttpStatus.OK)

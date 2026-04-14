@@ -135,11 +135,4 @@ public class AIFlashcardServiceImpl implements AIFlashcardService {
             throw new RuntimeException("Failed to call AI service for generating Flashcard by Web", e);
         }
     }
-
-    @Override
-    public GenerateFlashcardByAIResponseDto generateFlashcardFromReview(List<CardContent> cards) {
-        // TODO: implement actual HTTP call to AI service when endpoint is ready
-
-        return GenerateFlashcardByAIResponseDto.builder().content("").build();
-    }
 }

@@ -5,7 +5,7 @@ import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
 import com.cabybara.prolearningplatform.enums.NotificationType;
 import com.cabybara.prolearningplatform.enums.UserLanguage;
 import com.cabybara.prolearningplatform.repository.CardItemRepository;
-import com.cabybara.prolearningplatform.repository.SetNotificationPreferenceRepository;
+import com.cabybara.prolearningplatform.repository.UserNotificationPreferenceRepository;
 import com.cabybara.prolearningplatform.service.notification.DueCardReminderService;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
 import com.cabybara.prolearningplatform.utils.NotificationMessageResolver;
@@ -26,13 +26,13 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
 
     private final NotificationDispatcher notificationDispatcher;
     private final CardItemRepository cardItemRepository;
-    private final SetNotificationPreferenceRepository setNotificationPreferenceRepository;
+    private final UserNotificationPreferenceRepository userNotificationPreferenceRepository;
     private final NotificationMessageResolver messageResolver;
 
     @Override
     public void sendDueCardReminders() {
         Set<Long> enabledUserIds = Set.copyOf(
-                setNotificationPreferenceRepository.findDistinctUserIdsByDueCardReminderEnabled());
+                userNotificationPreferenceRepository.findUserIdsByDueCardReminderEnabled());
 
         if (enabledUserIds.isEmpty()) {
             return;
@@ -57,7 +57,7 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
     @Override
     public void sendEveningStudyReminders() {
         Set<Long> enabledUserIds = Set.copyOf(
-                setNotificationPreferenceRepository.findDistinctUserIdsByDueCardReminderEnabled());
+                userNotificationPreferenceRepository.findUserIdsByDueCardReminderEnabled());
 
         if (enabledUserIds.isEmpty()) {
             log.info("No users with due card reminder enabled for evening reminder");
