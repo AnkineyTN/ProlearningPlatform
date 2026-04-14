@@ -3,10 +3,12 @@ package com.cabybara.prolearningplatform.service.notification.impl;
 import com.cabybara.prolearningplatform.dto.helper.UserDueStatDto;
 import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
 import com.cabybara.prolearningplatform.enums.NotificationType;
+import com.cabybara.prolearningplatform.enums.UserLanguage;
 import com.cabybara.prolearningplatform.repository.CardItemRepository;
-import com.cabybara.prolearningplatform.repository.NotificationPreferenceRepository;
+import com.cabybara.prolearningplatform.repository.SetNotificationPreferenceRepository;
 import com.cabybara.prolearningplatform.service.notification.DueCardReminderService;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
+import com.cabybara.prolearningplatform.utils.NotificationMessageResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,12 +26,13 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
 
     private final NotificationDispatcher notificationDispatcher;
     private final CardItemRepository cardItemRepository;
-    private final NotificationPreferenceRepository notificationPreferenceRepository;
+    private final SetNotificationPreferenceRepository setNotificationPreferenceRepository;
+    private final NotificationMessageResolver messageResolver;
 
     @Override
     public void sendDueCardReminders() {
         Set<Long> enabledUserIds = Set.copyOf(
-                notificationPreferenceRepository.findUserIdsWithDueCardReminderEnabled());
+                setNotificationPreferenceRepository.findDistinctUserIdsByDueCardReminderEnabled());
 
         if (enabledUserIds.isEmpty()) {
             return;
@@ -54,7 +57,7 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
     @Override
     public void sendEveningStudyReminders() {
         Set<Long> enabledUserIds = Set.copyOf(
-                notificationPreferenceRepository.findUserIdsWithDueCardReminderEnabled());
+                setNotificationPreferenceRepository.findDistinctUserIdsByDueCardReminderEnabled());
 
         if (enabledUserIds.isEmpty()) {
             log.info("No users with due card reminder enabled for evening reminder");
@@ -83,10 +86,10 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
         CreateNotificationDto notification = CreateNotificationDto.builder()
                 .userId(userId)
                 .type(NotificationType.CARD_DUE_REMINDER)
-                .title("Cards Due for Review")
-                .message(String.format("You have %d cards waiting for review!", dueCount))
+                .title(messageResolver.resolve("notification.due_card.direct.title", UserLanguage.EN))
+                .message(messageResolver.resolve("notification.due_card.direct.message", UserLanguage.EN, dueCount))
                 .data(data)
-                .actionUrl("/study")
+                .actionUrl("/flascards")
                 .sendPush(true)
                 .build();
 
@@ -94,30 +97,22 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
     }
 
     private CreateNotificationDto buildDueCardNotification(UserDueStatDto stat, String timeOfDay) {
+        UserLanguage language = stat.getUserLanguage() != null ? stat.getUserLanguage() : UserLanguage.EN;
+
         Map<String, Object> data = new HashMap<>();
         data.put("dueCount", stat.getDueCount());
         data.put("reminderType", timeOfDay);
 
-        String message;
-        String title;
-
-        if ("morning".equals(timeOfDay)) {
-            title = "Good Morning!";
-            message = String.format("You have %d cards waiting for review. Start your day with a quick study session!",
-                    stat.getDueCount());
-        } else {
-            title = "Evening Study Reminder";
-            message = String.format("Don't forget! You still have %d cards to review today. Keep your streak going!",
-                    stat.getDueCount());
-        }
+        String titleKey = "notification.due_card." + timeOfDay + ".title";
+        String messageKey = "notification.due_card." + timeOfDay + ".message";
 
         return CreateNotificationDto.builder()
                 .userId(stat.getUserId())
                 .type(NotificationType.CARD_DUE_REMINDER)
-                .title(title)
-                .message(message)
+                .title(messageResolver.resolve(titleKey, language))
+                .message(messageResolver.resolve(messageKey, language, stat.getDueCount()))
                 .data(data)
-                .actionUrl("/study")
+                .actionUrl("/flashcards")
                 .sendPush(true)
                 .build();
     }

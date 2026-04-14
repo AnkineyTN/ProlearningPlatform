@@ -29,6 +29,20 @@ public interface StudySessionReviewLogRepository
             @Param("to") OffsetDateTime to);
 
     @Query("""
+        SELECT DISTINCT rl.card.id
+        FROM StudySessionReviewLog rl
+        WHERE rl.session.user.id = :userId
+          AND rl.session.set.id = :setId
+          AND rl.known = false
+          AND rl.reviewedAt BETWEEN :from AND :to
+        """)
+    List<Long> findDistinctIncorrectCardIdsBySet(
+            @Param("userId") Long userId,
+            @Param("setId") Long setId,
+            @Param("from") OffsetDateTime from,
+            @Param("to") OffsetDateTime to);
+
+    @Query("""
         SELECT rl.card.flashcard.id AS flashcardId, COUNT(DISTINCT rl.card.id) AS incorrectCount
         FROM StudySessionReviewLog rl
         WHERE rl.session.user.id = :userId
@@ -42,6 +56,21 @@ public interface StudySessionReviewLogRepository
             @Param("to") OffsetDateTime to);
 
     @Query("""
+        SELECT rl.card.flashcard.id AS flashcardId, COUNT(DISTINCT rl.card.id) AS incorrectCount
+        FROM StudySessionReviewLog rl
+        WHERE rl.session.user.id = :userId
+          AND rl.session.set.id = :setId
+          AND rl.known = false
+          AND rl.reviewedAt BETWEEN :from AND :to
+        GROUP BY rl.card.flashcard.id
+        """)
+    List<IncorrectCardsByFlashcard> findIncorrectCountGroupByFlashcardAndSet(
+            @Param("userId") Long userId,
+            @Param("setId") Long setId,
+            @Param("from") OffsetDateTime from,
+            @Param("to") OffsetDateTime to);
+
+    @Query("""
         SELECT COUNT(DISTINCT rl.card.id)
         FROM StudySessionReviewLog rl
         WHERE rl.session.user.id = :userId
@@ -50,6 +79,20 @@ public interface StudySessionReviewLogRepository
         """)
     long countDistinctIncorrectCards(
             @Param("userId") Long userId,
+            @Param("from") OffsetDateTime from,
+            @Param("to") OffsetDateTime to);
+
+    @Query("""
+        SELECT COUNT(DISTINCT rl.card.id)
+        FROM StudySessionReviewLog rl
+        WHERE rl.session.user.id = :userId
+          AND rl.session.set.id = :setId
+          AND rl.known = false
+          AND rl.reviewedAt BETWEEN :from AND :to
+        """)
+    long countDistinctIncorrectCardsBySet(
+            @Param("userId") Long userId,
+            @Param("setId") Long setId,
             @Param("from") OffsetDateTime from,
             @Param("to") OffsetDateTime to);
 }

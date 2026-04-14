@@ -47,10 +47,10 @@ public interface CardItemRepository extends JpaRepository<CardItem, Long> {
             "ORDER BY c.id ASC")
     List<CardItem> findNewCards(@Param("flashcardId") Long flashcardId, Pageable pageable);
 
-    @Query("SELECT c.flashcard.user.id as userId, COUNT(c) as dueCount " +
+    @Query("SELECT c.flashcard.user.id as userId, COUNT(c) as dueCount, c.flashcard.user.language as userLanguage " +
             "FROM CardItem c " +
             "WHERE c.nextReviewAt <= :now " +
-            "GROUP BY c.flashcard.user.id")
+            "GROUP BY c.flashcard.user.id, c.flashcard.user.language")
     List<UserDueStatDto> findUsersWithDueCards(@Param("now") OffsetDateTime now);
 
     @Query("SELECT c FROM CardItem c WHERE c.flashcard.id = :flashcardId ORDER BY c.id ASC")

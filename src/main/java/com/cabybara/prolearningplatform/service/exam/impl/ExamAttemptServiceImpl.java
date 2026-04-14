@@ -7,6 +7,8 @@ import com.cabybara.prolearningplatform.dto.response.exam.EssayGradingResponseDt
 import com.cabybara.prolearningplatform.dto.response.exam.ExamAnswerResultDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptResultDto;
+import com.cabybara.prolearningplatform.dto.helper.QuestionErrorStat;
+import com.cabybara.prolearningplatform.dto.response.exam.QuestionErrorStatDto;
 import com.cabybara.prolearningplatform.enums.ExamAttemptStatus;
 import com.cabybara.prolearningplatform.enums.QuestionType;
 import com.cabybara.prolearningplatform.exception.BadRequestException;
@@ -35,19 +37,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ExamAttemptServiceImpl implements ExamAttemptService {
 
-    // ##################################################
-    // #################  PREPARATION  ##################
-    // ##################################################
+    // Essay answers with earned_points / max_points below this threshold are counted as incorrect
+    // in question statistics. Adjust when user-configurable grading is introduced.
+    private static final double ESSAY_CORRECT_THRESHOLD = 0.8;
 
     private final AuthenticationContext authenticationContext;
     private final ExamRepository examRepository;
     private final ExamQuestionRepository examQuestionRepository;
     private final ExamAttemptRepository examAttemptRepository;
     private final AIExamService aiExamService;
-
-    // ##################################################
-    // #################  MAIN METHOD  ##################
-    // ##################################################
 
     @Override
     @Transactional
@@ -145,6 +143,21 @@ public class ExamAttemptServiceImpl implements ExamAttemptService {
                 .findAllByExamIdAndUserIdOrderByStartedAtDesc(examId, userId)
                 .stream()
                 .map(this::toAttemptDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<QuestionErrorStatDto> getQuestionStats(Long examId) {
+        Long userId = authenticationContext.getCurrentUserId();
+        return examAttemptRepository.findQuestionStats(examId, userId, ESSAY_CORRECT_THRESHOLD)
+                .stream()
+                .map(row -> {
+                    int totalAttempts = row.getTotalAttempts().intValue();
+                    int incorrectCount = row.getIncorrectCount().intValue();
+                    double incorrectRate = totalAttempts > 0 ? (double) incorrectCount / totalAttempts : 0.0;
+                    return new QuestionErrorStatDto(row.getQuestionId(), row.getQuestionText(), totalAttempts, totalAttempts - incorrectCount, incorrectCount, incorrectRate);
+                })
                 .toList();
     }
 

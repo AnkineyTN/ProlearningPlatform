@@ -3,6 +3,7 @@ package com.cabybara.prolearningplatform.service.exam;
 import com.cabybara.prolearningplatform.dto.request.exam.SubmitExamRequestDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptResultDto;
+import com.cabybara.prolearningplatform.dto.response.exam.QuestionErrorStatDto;
 
 import java.util.List;
 
@@ -15,5 +16,7 @@ public interface ExamAttemptService {
     List<ExamAttemptDto> getAttemptHistory(Long examId);
 
     ExamAttemptResultDto getAttemptDetail(Long examId, Long attemptId);
+
+    List<QuestionErrorStatDto> getQuestionStats(Long examId);
 
 }

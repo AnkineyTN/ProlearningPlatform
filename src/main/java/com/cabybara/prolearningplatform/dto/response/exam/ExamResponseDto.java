@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.dto.response.exam;
 
+import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import lombok.Builder;
 
@@ -13,5 +14,6 @@ public record ExamResponseDto(
         String description,
         Long duration,
         Long numQuestions,
+        CreationMethod creationMethod,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt) {}
