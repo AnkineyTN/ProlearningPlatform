@@ -30,7 +30,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
             value = """
                 SELECT *
                 FROM flashcard
-                WHERE id_user = :userId AND id_set = :setId
+                WHERE id_user = :userId AND id_set = :setId AND create_method != 'REVIEW'
             """,
             nativeQuery = true)
     Page<Flashcard> findByUserIdAndSetId(Long userId, Long setId, Pageable pageable);
@@ -39,7 +39,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
             value = """
                 SELECT *
                 FROM flashcard
-                WHERE id_user = :userId AND id_set = :setId AND privacy = :privacy
+                WHERE id_user = :userId AND id_set = :setId AND privacy = :privacy AND create_method != 'REVIEW'
             """,
         nativeQuery = true)
     Page<Flashcard> findByUserIdAndSetIdAndPrivacy(Long userId, Long setId, String privacy, Pageable pageable);
@@ -49,6 +49,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
                 SELECT *
                 FROM flashcard
                 WHERE id_user = :userId AND id_set = :setId
+                  AND create_method != 'REVIEW'
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
@@ -56,6 +57,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
                 SELECT count(*)
                 FROM flashcard
                 WHERE id_user = :userId AND id_set = :setId
+                  AND create_method != 'REVIEW'
                   AND (
                         search_vector @@ plainto_tsquery('simple', unaccent(:q))
                         OR (title || ' ' || description) % unaccent(:q))
@@ -70,15 +72,17 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
                 WHERE id_user = :userId
                   AND id_set = :setId
                   AND privacy = :privacy
+                  AND create_method != 'REVIEW'
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             countQuery = """
-                SELECT *
+                SELECT count(*)
                 FROM flashcard
                 WHERE id_user = :userId
                   AND id_set = :setId
                   AND privacy = :privacy
+                  AND create_method != 'REVIEW'
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,

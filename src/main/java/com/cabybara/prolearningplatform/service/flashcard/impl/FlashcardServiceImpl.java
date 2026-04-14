@@ -60,16 +60,18 @@ public class FlashcardServiceImpl implements FlashcardService {
     private final AIFlashcardService aiFlashcardService;
 
     @Override
-    public Page<FlashcardResponseDto> getAllFlashcard(Long setId, String q, Privacy privacy, Pageable pageable) {
+    public Page<FlashcardResponseDto> getAllFlashcard(Long setId, String q, Privacy privacy, CreationMethod createMethod, Pageable pageable) {
         Long userId = authenticationContext.getCurrentUserId();
 
         Page<Flashcard> pagedFlashcard;
 
-        if (q == null || q.isBlank()) {
+        if (createMethod == CreationMethod.REVIEW) {
+            pagedFlashcard = flashcardRepository.findAllBySetIdAndUserIdAndCreateMethod(setId, userId, CreationMethod.REVIEW, pageable);
+        } else if (q == null || q.isBlank()) {
             if (privacy == null) {
                 pagedFlashcard = flashcardRepository.findByUserIdAndSetId(userId, setId, pageable);
             } else {
-                pagedFlashcard = flashcardRepository.findByUserIdAndSetIdAndPrivacy(userId,setId, privacy.name(), pageable);
+                pagedFlashcard = flashcardRepository.findByUserIdAndSetIdAndPrivacy(userId, setId, privacy.name(), pageable);
             }
         } else {
             if (privacy == null) {

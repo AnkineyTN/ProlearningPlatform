@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.service.exam.impl;
 
+import com.cabybara.prolearningplatform.dto.internal.QuestionContent;
 import com.cabybara.prolearningplatform.dto.request.exam.CreateExamFromReviewRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.CreateExamRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByNoteRequestDto;
@@ -8,12 +9,16 @@ import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
+import com.cabybara.prolearningplatform.exception.BadRequestException;
 import com.cabybara.prolearningplatform.exception.ResourceAlreadyExistsException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.ExamMapper;
 import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.exam.Exam;
+import com.cabybara.prolearningplatform.model.exam.ExamQuestion;
+import com.cabybara.prolearningplatform.model.exam.Question;
 import com.cabybara.prolearningplatform.model.note.Note;
+import com.cabybara.prolearningplatform.repository.ExamQuestionRepository;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
 import com.cabybara.prolearningplatform.repository.ExamRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
@@ -26,12 +31,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +48,7 @@ public class ExamServiceImpl implements ExamService {
 
     private final AuthenticationContext authenticationContext;
     private final ExamRepository examRepository;
+    private final ExamQuestionRepository examQuestionRepository;
     private final SetRepository setRepository;
     private final NoteRepository noteRepository;
     private final ExamMapper examMapper;
@@ -67,7 +73,7 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public ExamResponseDto createExamFromReview(CreateExamFromReviewRequestDto dto, Long setId) {
         Long userId = authenticationContext.getCurrentUserId();
 
@@ -92,12 +98,14 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
 //    @Cacheable(value = "set_exams", key = "'set' + #setId")
-    public Page<ExamResponseDto> getExam(Long setId, String q, Privacy privacy, Pageable pageable) {
+    public Page<ExamResponseDto> getExam(Long setId, String q, Privacy privacy, CreationMethod createMethod, Pageable pageable) {
         Long userId = authenticationContext.getCurrentUserId();
 
         Page<Exam> pagedExam;
 
-        if (q == null || q.isBlank()) {
+        if (createMethod == CreationMethod.REVIEW) {
+            pagedExam = examRepository.findAllBySetIdAndCreatedByAndCreationMethod(setId, userId, CreationMethod.REVIEW, pageable);
+        } else if (q == null || q.isBlank()) {
             if (privacy == null) {
                 pagedExam = examRepository.findByCreatedByAndSetId(userId, setId, pageable);
             } else {
@@ -112,6 +120,44 @@ public class ExamServiceImpl implements ExamService {
         }
 
         return pagedExam.map(examMapper::toExamResponseDto);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public ExamResponseDto createReviewExamFromQuestions(Long examId, List<Long> questionIds) {
+        Exam sourceExam = examRepository.findById(examId)
+                .orElseThrow(() -> new ResourceNotFoundException("Exam not found with id: " + examId));
+
+        Long setId = sourceExam.getSet() != null ? sourceExam.getSet().getId() : null;
+
+        Map<Long, ExamQuestion> questionMap = examQuestionRepository.findAllByExamId(examId)
+                .stream()
+                .collect(Collectors.toMap(eq -> eq.getQuestion().getId(), eq -> eq));
+
+        for (Long qId : questionIds) {
+            if (!questionMap.containsKey(qId)) {
+                throw new BadRequestException("Question " + qId + " does not belong to exam " + examId);
+            }
+        }
+
+        List<QuestionContent> contents = questionIds.stream()
+                .map(questionMap::get)
+                .map(eq -> {
+                    Question q = eq.getQuestion();
+                    List<String> options = q.getOptions().stream()
+                            .map(opt -> opt.getOptionText())
+                            .toList();
+                    String correctAnswer = q.getOptions().stream()
+                            .filter(opt -> Boolean.TRUE.equals(opt.getIsCorrect()))
+                            .map(opt -> opt.getOptionText())
+                            .findFirst()
+                            .orElse(q.getExpectedAnswer());
+                    return new QuestionContent(q.getContent(), options, correctAnswer);
+                })
+                .toList();
+
+        CreateExamFromReviewRequestDto dto = aiExamService.generateExamFromQuestions(contents);
+        return createExamFromReview(dto, setId);
     }
 
     @Override

@@ -2,6 +2,8 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.exam.*;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByWebRequestDto;
+import com.cabybara.prolearningplatform.dto.response.exam.QuestionErrorStatDto;
+import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.ResponseData;
 import com.cabybara.prolearningplatform.dto.response.ResponseError;
@@ -48,7 +50,7 @@ import java.util.Map;
 import static jakarta.servlet.RequestDispatcher.ERROR_MESSAGE;
 
 @RestController
-@RequestMapping("/set/{setId}/exams")
+@RequestMapping("/sets/{setId}/exams")
 @RequiredArgsConstructor
 @Tag(name = "Exams")
 @Validated
@@ -67,9 +69,10 @@ public class ExamController {
             @PathVariable Long setId,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Privacy privacy,
+            @RequestParam(required = false) CreationMethod createMethod,
             @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
     ) {
-        Page<ExamResponseDto> examResponseDtos = examService.getExam(setId, q, privacy, pageable);
+        Page<ExamResponseDto> examResponseDtos = examService.getExam(setId, q, privacy, createMethod, pageable);
         PaginationResponseDto paginationResponseDto = PaginationResponseDto.builder()
                 .currentPage(examResponseDtos.getNumber())
                 .totalPages(examResponseDtos.getTotalPages())
@@ -300,6 +303,39 @@ public class ExamController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully", result, null));
+    }
+
+    @Operation(
+            summary = "Get question error statistics",
+            description = "Returns per-question incorrect answer counts across all submitted attempts by the current user for this exam."
+    )
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/{examId}/question-stats")
+    public ResponseEntity<ApiResponse<List<QuestionErrorStatDto>>> getQuestionStats(
+            @PathVariable Long setId,
+            @PathVariable Long examId
+    ) {
+        List<QuestionErrorStatDto> stats = examAttemptService.getQuestionStats(examId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Successfully", stats, null));
+    }
+
+    @Operation(
+            summary = "Generate review exam from selected incorrect questions",
+            description = "Uses AI to generate a new exam with variant questions based on the selected incorrect question IDs. The new exam belongs to the same set as the source exam."
+    )
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/{examId}/generate-review-exam")
+    public ResponseEntity<ApiResponse<ExamResponseDto>> generateReviewExam(
+            @PathVariable Long setId,
+            @PathVariable Long examId,
+            @RequestBody @Valid GenerateReviewExamRequestDto request
+    ) {
+        ExamResponseDto exam = examService.createReviewExamFromQuestions(examId, request.questionIds());
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ResponseUtil.success("Review exam created", exam, null));
     }
 
     // ##################################################
