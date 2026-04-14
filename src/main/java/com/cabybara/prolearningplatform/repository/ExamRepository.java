@@ -25,7 +25,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
             value = """
                 SELECT *
                 FROM exams
-                WHERE created_by = :userId AND set_id = :setId
+                WHERE created_by = :userId AND set_id = :setId AND create_method != 'REVIEW'
             """,
             nativeQuery = true)
     Page<Exam> findByCreatedByAndSetId(Long userId, Long setId, Pageable pageable);
@@ -34,7 +34,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
             value = """
                 SELECT *
                 FROM exams
-                WHERE created_by = :userId AND set_id = :setId AND privacy = :privacy
+                WHERE created_by = :userId AND set_id = :setId AND privacy = :privacy AND create_method != 'REVIEW'
             """,
             nativeQuery = true)
     Page<Exam> findByCreatedByAndSetIdAndPrivacy(Long userId, Long setId, String privacy, Pageable pageable);
@@ -44,6 +44,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
                 SELECT *
                 FROM exams
                 WHERE created_by = :userId AND set_id = :setId
+                  AND create_method != 'REVIEW'
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
@@ -51,6 +52,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
                 SELECT count(*)
                 FROM exams
                 WHERE created_by = :userId AND set_id = :setId
+                  AND create_method != 'REVIEW'
                   AND (
                         search_vector @@ plainto_tsquery('simple', :q)
                         OR (title || ' ' || description) % unaccent(:q))
@@ -62,18 +64,20 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
             value = """
                 SELECT *
                 FROM exams
-                WHERE id_user = :userId
+                WHERE created_by = :userId
                   AND set_id = :setId
                   AND privacy = :privacy
+                  AND create_method != 'REVIEW'
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             countQuery = """
-                SELECT *
+                SELECT count(*)
                 FROM exams
-                WHERE id_user = :userId
+                WHERE created_by = :userId
                   AND set_id = :setId
                   AND privacy = :privacy
+                  AND create_method != 'REVIEW'
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,

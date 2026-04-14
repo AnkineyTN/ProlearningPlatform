@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.service.ai.impl;
 
 import com.cabybara.prolearningplatform.dto.internal.CardContent;
+import com.cabybara.prolearningplatform.dto.internal.QuestionContent;
 import com.cabybara.prolearningplatform.dto.request.exam.EssayGradingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.ExplainWrongAnswerRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.CreateExamFromReviewRequestDto;
@@ -143,7 +144,17 @@ public class AIExamServiceImpl implements AIExamService {
     @Override
     public CreateExamFromReviewRequestDto generateExamFromReview(List<CardContent> cards) {
         // TODO: implement actual HTTP call to AI service
+        return CreateExamFromReviewRequestDto.builder()
+                .title("")
+                .description("")
+                .duration(0L)
+                .questions(List.of())
+                .build();
+    }
 
+    @Override
+    public CreateExamFromReviewRequestDto generateExamFromQuestions(List<QuestionContent> questions) {
+        // TODO: implement actual HTTP call to AI service
         return CreateExamFromReviewRequestDto.builder()
                 .title("")
                 .description("")

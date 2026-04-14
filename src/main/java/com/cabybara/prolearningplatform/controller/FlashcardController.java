@@ -5,6 +5,7 @@ import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
+import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.service.ai.AIFlashcardService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
@@ -55,9 +56,10 @@ public class FlashcardController {
             @PathVariable Long setId,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Privacy privacy,
+            @RequestParam(required = false) CreationMethod createMethod,
             @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
     ) {
-        Page<FlashcardResponseDto> allFlashcardResponseDtos = flashcardService.getAllFlashcard(setId, q, privacy, pageable);
+        Page<FlashcardResponseDto> allFlashcardResponseDtos = flashcardService.getAllFlashcard(setId, q, privacy, createMethod, pageable);
         PaginationResponseDto paginationResponseDto = PaginationResponseDto.builder()
                 .currentPage(allFlashcardResponseDtos.getNumber())
                 .totalPages(allFlashcardResponseDtos.getTotalPages())

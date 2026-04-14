@@ -15,6 +15,4 @@ public interface AIFlashcardService {
     GenerateFlashcardByAIResponseDto generateFlashcardByNotes(List<String> contents, String freeText, Language language);
 
     GenerateFlashcardByAIResponseDto generateFlashcardByWeb(GenerateFlashcardByWebRequestDto request);
-
-    GenerateFlashcardByAIResponseDto generateFlashcardFromReview(List<CardContent> cards);
 }

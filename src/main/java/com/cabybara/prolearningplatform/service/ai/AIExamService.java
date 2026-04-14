@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.service.ai;
 
 import com.cabybara.prolearningplatform.dto.internal.CardContent;
+import com.cabybara.prolearningplatform.dto.internal.QuestionContent;
 import com.cabybara.prolearningplatform.dto.request.exam.EssayGradingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.ExplainWrongAnswerRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByFileRequestDto;
@@ -27,4 +28,6 @@ public interface AIExamService {
     ExplainWrongAnswerResponseDto explainWrongAnswer(ExplainWrongAnswerRequestDto request);
 
     CreateExamFromReviewRequestDto generateExamFromReview(List<CardContent> cards);
+
+    CreateExamFromReviewRequestDto generateExamFromQuestions(List<QuestionContent> questions);
 }

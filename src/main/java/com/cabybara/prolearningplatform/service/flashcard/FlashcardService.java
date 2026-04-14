@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.flashcard.*;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
+import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
@@ -15,7 +16,7 @@ import java.util.List;
 
 
 public interface FlashcardService {
-    Page<FlashcardResponseDto> getAllFlashcard(Long setId, String q, Privacy privacy, Pageable pageable);
+    Page<FlashcardResponseDto> getAllFlashcard(Long setId, String q, Privacy privacy, CreationMethod createMethod, Pageable pageable);
 
     DetailFlashcardResponseDto getDetailFlashcard(Long setId, Long flashcardId);
 
