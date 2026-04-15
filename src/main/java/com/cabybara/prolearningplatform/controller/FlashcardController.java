@@ -1,15 +1,19 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.flashcard.*;
+import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
+import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.service.ai.AIFlashcardService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
+import com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermissionService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import com.cabybara.prolearningplatform.utils.ValidateSort;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,6 +47,8 @@ public class FlashcardController {
 
     private final FlashcardService flashcardService;
     private final AIFlashcardService aIFlashcardService;
+    private final FlashcardPermissionService flashcardPermissionService;
+    private final AuthenticationContext authenticationContext;
 
     @Operation(
             summary = "Get All Flashcards in a Set (Paginated)",
@@ -206,5 +212,60 @@ public class FlashcardController {
             log.error(ERROR_MESSAGE, e);
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate flashcard by web with AI fail");
         }
+    }
+
+    @PostMapping("/{flashcardId}/members/invite")
+    @PreAuthorize("@flashcardPermissionService.isOwner(@authenticationContext.getCurrentUserId(), #flashcardId)")
+    public ResponseEntity<ApiResponse<List<InviteResultResponse>>> inviteMembers(
+        @PathVariable Long setId,
+        @PathVariable Long flashcardId,
+        @RequestBody InviteMemberRequest request
+    ) {
+        List<InviteResultResponse> results = flashcardService.inviteMembers(setId, flashcardId, request);
+
+        boolean hasFailure = results.stream().anyMatch(r -> !r.isSuccess());
+
+        return ResponseEntity.status(hasFailure ? HttpStatus.MULTI_STATUS : HttpStatus.OK).body(
+            ResponseUtil.success(
+                "Invitation process completed",
+                results,
+                null
+            )
+        );
+    }
+    
+    @PostMapping("/{flashcardId}/members/accept")
+    public ResponseEntity<ApiResponse<Void>> acceptInvite(
+        @PathVariable Long setId,
+        @PathVariable Long flashcardId
+    ) {
+        flashcardService.acceptInvite(flashcardId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Invite accepted successfully", null, null)
+        );
+    }
+
+    @PostMapping("/{flashcardId}/members/decline")
+    public ResponseEntity<ApiResponse<Void>> declineInvite(
+        @PathVariable Long setId,
+        @PathVariable Long flashcardId
+    ) {
+        flashcardService.declineInvite(flashcardId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Invite declined successfully", null, null)
+        );
+    }
+
+    @DeleteMapping("/{flashcardId}/members/{targetUserId}")
+    @PreAuthorize("@flashcardPermissionService.isOwner(@authenticationContext.getCurrentUserId(), #flashcardId)")
+    public ResponseEntity<ApiResponse<Void>> removeMember(
+        @PathVariable Long setId,
+        @PathVariable Long flashcardId,
+        @PathVariable Long targetUserId
+    ) {
+        flashcardService.removeMember(flashcardId, targetUserId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Member removed successfully", null, null)
+        );
     }
 }

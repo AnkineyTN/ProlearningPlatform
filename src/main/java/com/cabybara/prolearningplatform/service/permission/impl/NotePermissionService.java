@@ -28,6 +28,7 @@ import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.note.NoteMember;
 import com.cabybara.prolearningplatform.repository.NoteMemberRepository;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
+import com.cabybara.prolearningplatform.repository.NotificationRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.email.EmailService;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
@@ -44,6 +45,7 @@ public class NotePermissionService implements ResourcePermissionService  {
     private final NoteMemberRepository noteMemberRepository;
     private final NoteRepository noteRepository;
     private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
     private final NotificationDispatcher notificationDispatcher;
     private final EmailService emailService;
 
@@ -186,6 +188,13 @@ public class NotePermissionService implements ResourcePermissionService  {
         }
 
         member.setStatus(NoteMemberStatus.ACTIVE);
+        
+        // Delete invite notification
+        notificationRepository.deleteNoteInviteNotification(
+            userId,
+            NotificationType.NOTE_INVITE.name(),
+            noteId.toString()
+        );
     }
 
     @Transactional
@@ -224,6 +233,13 @@ public class NotePermissionService implements ResourcePermissionService  {
         }
 
         member.setStatus(NoteMemberStatus.DECLINED);
+        
+        // Delete invite notification
+        notificationRepository.deleteNoteInviteNotification(
+            userId,
+            NotificationType.NOTE_INVITE.name(),
+            noteId.toString()
+        );
     }
 
     public List<PendingInviteResponse> getPendingInvites(Long userId) {

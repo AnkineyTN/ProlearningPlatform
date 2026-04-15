@@ -27,6 +27,7 @@ import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.exam.ExamMember;
 import com.cabybara.prolearningplatform.repository.ExamMemberRepository;
 import com.cabybara.prolearningplatform.repository.ExamRepository;
+import com.cabybara.prolearningplatform.repository.NotificationRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.email.EmailService;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
@@ -42,6 +43,7 @@ public class ExamPermissionService {
     private final ExamMemberRepository examMemberRepository;
     private final ExamRepository examRepository;
     private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
     private final NotificationDispatcher notificationDispatcher;
     private final EmailService emailService;
 
@@ -120,6 +122,7 @@ public class ExamPermissionService {
 
     @Transactional
     public List<InviteResultResponse> inviteMembers(
+            Long setId,
             Long examId,
             List<InviteMemberRequest.InviteTarget> targets,
             NoteRole role,
@@ -165,7 +168,7 @@ public class ExamPermissionService {
         // Send notifications for successful invites
         if (!successUserIds.isEmpty()) {
             LocalDateTime expiresAt = LocalDateTime.now().plusHours(inviteTokenExpiryHours);
-            sendInviteNotifications(successUserIds, inviterName, examTitle, examId, expiresAt);
+            sendInviteNotifications(successUserIds, inviterName, examTitle, examId, setId, expiresAt);
         }
 
         return results;
@@ -182,6 +185,13 @@ public class ExamPermissionService {
         }
 
         member.setStatus(ExamMemberStatus.ACTIVE);
+        
+        // Delete invite notification
+        notificationRepository.deleteExamInviteNotification(
+            userId,
+            NotificationType.EXAM_INVITE.name(),
+            examId.toString()
+        );
     }
 
     @Transactional
@@ -220,6 +230,13 @@ public class ExamPermissionService {
         }
 
         member.setStatus(ExamMemberStatus.DECLINED);
+        
+        // Delete invite notification
+        notificationRepository.deleteExamInviteNotification(
+            userId,
+            NotificationType.EXAM_INVITE.name(),
+            examId.toString()
+        );
     }
 
     public List<InviteResultResponse.PendingInviteExamResponse> getPendingInvites(Long userId) {
@@ -336,10 +353,12 @@ public class ExamPermissionService {
             String inviterName,
             String examTitle,
             Long examId,
+            Long setId,
             LocalDateTime expiresAt
     ) {
         Map<String, Object> data = new HashMap<>();
         data.put("examId", examId);
+        data.put("setId", setId);
         data.put("expiresAt", expiresAt);
 
         List<CreateNotificationDto> notifications = userIds.stream()

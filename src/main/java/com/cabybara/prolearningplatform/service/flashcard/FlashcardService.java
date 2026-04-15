@@ -1,9 +1,12 @@
 package com.cabybara.prolearningplatform.service.flashcard;
 
 import com.cabybara.prolearningplatform.dto.request.flashcard.*;
+import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
+import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
+import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
@@ -33,4 +36,14 @@ public interface FlashcardService {
     DetailFlashcardResponseDto updateFlashcard(Flashcard newFlashcard);
 
     GenerateFlashcardByAIResponseDto generateFlashcardByNotes(GenerateFlashcardByNoteRequestDto request);
+
+    List<InviteResultResponse> inviteMembers(Long setId, Long flashcardId, InviteMemberRequest request);
+
+    void acceptInvite(Long flashcardId);
+
+    void declineInvite(Long flashcardId);
+
+    void removeMember(Long flashcardId, Long targetUserId);
+
+    AcceptByTokenResponse acceptByToken(String token);
 }

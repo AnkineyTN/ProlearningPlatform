@@ -27,6 +27,7 @@ import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.flashcard.FlashcardMember;
 import com.cabybara.prolearningplatform.repository.FlashcardMemberRepository;
 import com.cabybara.prolearningplatform.repository.FlashcardRepository;
+import com.cabybara.prolearningplatform.repository.NotificationRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.email.EmailService;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
@@ -42,6 +43,7 @@ public class FlashcardPermissionService {
     private final FlashcardMemberRepository flashcardMemberRepository;
     private final FlashcardRepository flashcardRepository;
     private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
     private final NotificationDispatcher notificationDispatcher;
     private final EmailService emailService;
 
@@ -120,6 +122,7 @@ public class FlashcardPermissionService {
 
     @Transactional
     public List<InviteResultResponse> inviteMembers(
+            Long setId,
             Long flashcardId,
             List<InviteMemberRequest.InviteTarget> targets,
             NoteRole role,
@@ -165,7 +168,7 @@ public class FlashcardPermissionService {
         // Send notifications for successful invites
         if (!successUserIds.isEmpty()) {
             LocalDateTime expiresAt = LocalDateTime.now().plusHours(inviteTokenExpiryHours);
-            sendInviteNotifications(successUserIds, inviterName, flashcardTitle, flashcardId, expiresAt);
+            sendInviteNotifications(successUserIds, inviterName, flashcardTitle, flashcardId, setId, expiresAt);
         }
 
         return results;
@@ -182,6 +185,13 @@ public class FlashcardPermissionService {
         }
 
         member.setStatus(FlashcardMemberStatus.ACTIVE);
+        
+        // Delete invite notification
+        notificationRepository.deleteFlashcardInviteNotification(
+            userId,
+            NotificationType.FLASHCARD_INVITE.name(),
+            flashcardId.toString()
+        );
     }
 
     @Transactional
@@ -220,6 +230,13 @@ public class FlashcardPermissionService {
         }
 
         member.setStatus(FlashcardMemberStatus.DECLINED);
+        
+        // Delete invite notification
+        notificationRepository.deleteFlashcardInviteNotification(
+            userId,
+            NotificationType.FLASHCARD_INVITE.name(),
+            flashcardId.toString()
+        );
     }
 
     public List<InviteResultResponse.PendingInviteFlashcardResponse> getPendingInvites(Long userId) {
@@ -336,10 +353,12 @@ public class FlashcardPermissionService {
             String inviterName,
             String flashcardTitle,
             Long flashcardId,
+            Long setId,
             LocalDateTime expiresAt
     ) {
         Map<String, Object> data = new HashMap<>();
         data.put("flashcardId", flashcardId);
+        data.put("setId", setId);
         data.put("expiresAt", expiresAt);
 
         List<CreateNotificationDto> notifications = userIds.stream()

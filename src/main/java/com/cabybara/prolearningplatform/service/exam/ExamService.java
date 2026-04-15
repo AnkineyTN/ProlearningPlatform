@@ -4,8 +4,11 @@ import com.cabybara.prolearningplatform.dto.request.exam.CreateExamFromReviewReq
 import com.cabybara.prolearningplatform.dto.request.exam.CreateExamRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.UpdateExamRequestDto;
+import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
+import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
+import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import jakarta.validation.Valid;
@@ -31,5 +34,15 @@ public interface ExamService {
     void deleteExam(Long setId, Long ExamId);
 
     GenerateExamByAIResponseDto generateExamByNotes(GenerateExamByNoteRequestDto request);
+
+    List<InviteResultResponse> inviteMembers(Long setId, Long examId, InviteMemberRequest request);
+
+    void acceptInvite(Long examId);
+
+    void declineInvite(Long examId);
+
+    void removeMember(Long examId, Long targetUserId);
+
+    AcceptByTokenResponse acceptByToken(String token);
 
 }

@@ -2,7 +2,9 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.exam.*;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByWebRequestDto;
+import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionErrorStatDto;
+import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.ResponseData;
@@ -21,7 +23,9 @@ import com.cabybara.prolearningplatform.service.ai.AIExamService;
 import com.cabybara.prolearningplatform.service.exam.ExamAttemptService;
 import com.cabybara.prolearningplatform.service.exam.QuestionService;
 import com.cabybara.prolearningplatform.service.exam.ExamService;
+import com.cabybara.prolearningplatform.service.permission.impl.ExamPermissionService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import com.cabybara.prolearningplatform.utils.ValidateSort;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -61,6 +65,8 @@ public class ExamController {
     private final QuestionService questionService;
     private final AIExamService aiExamService;
     private final ExamAttemptService examAttemptService;
+    private final ExamPermissionService examPermissionService;
+    private final AuthenticationContext authenticationContext;
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping()
@@ -406,5 +412,59 @@ public class ExamController {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Explain wrong answer fail");
         }
     }
+
+    @PostMapping("/{examId}/members/invite")
+    @PreAuthorize("@examPermissionService.isOwner(@authenticationContext.getCurrentUserId(), #examId)")
+    public ResponseEntity<ApiResponse<List<InviteResultResponse>>> inviteMembers(
+        @PathVariable Long setId,
+        @PathVariable Long examId,
+        @RequestBody InviteMemberRequest request
+    ) {
+        List<InviteResultResponse> results = examService.inviteMembers(setId, examId, request);
+
+        boolean hasFailure = results.stream().anyMatch(r -> !r.isSuccess());
+
+        return ResponseEntity.status(hasFailure ? HttpStatus.MULTI_STATUS : HttpStatus.OK).body(
+            ResponseUtil.success(
+                "Invitation process completed",
+                results,
+                null
+            )
+        );
+    }
     
+    @PostMapping("/{examId}/members/accept")
+    public ResponseEntity<ApiResponse<Void>> acceptInvite(
+        @PathVariable Long setId,
+        @PathVariable Long examId
+    ) {
+        examService.acceptInvite(examId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Invite accepted successfully", null, null)
+        );
+    }
+
+    @PostMapping("/{examId}/members/decline")
+    public ResponseEntity<ApiResponse<Void>> declineInvite(
+        @PathVariable Long setId,
+        @PathVariable Long examId
+    ) {
+        examService.declineInvite(examId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Invite declined successfully", null, null)
+        );
+    }
+
+    @DeleteMapping("/{examId}/members/{targetUserId}")
+    @PreAuthorize("@examPermissionService.isOwner(@authenticationContext.getCurrentUserId(), #examId)")
+    public ResponseEntity<ApiResponse<Void>> removeMember(
+        @PathVariable Long setId,
+        @PathVariable Long examId,
+        @PathVariable Long targetUserId
+    ) {
+        examService.removeMember(examId, targetUserId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Member removed successfully", null, null)
+        );
+    }
 }
