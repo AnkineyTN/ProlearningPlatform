@@ -40,6 +40,9 @@ public class Exam extends AbstractEntity {
     @JoinColumn(name = "set_id")
     private Set set;
 
+    @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<ExamMember> examMembers = new ArrayList<>();
+
     @OneToMany(mappedBy = "exam", cascade = CascadeType.ALL)
     private List<ExamQuestion> examQuestions = new ArrayList<>();
 }

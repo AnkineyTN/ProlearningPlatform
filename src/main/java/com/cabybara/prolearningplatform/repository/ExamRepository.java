@@ -99,4 +99,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
                                                            @Param("userId") Long userId,
                                                            @Param("creationMethod") CreationMethod creationMethod,
                                                            Pageable pageable);
+
+    @Query("SELECT e.privacy FROM Exam e WHERE e.id = :examId")
+    Optional<Privacy> findPrivacyById(@Param("examId") Long examId);
 }

@@ -62,6 +62,9 @@ public class Flashcard extends AbstractEntity implements SetChild {
     @OneToMany(mappedBy = "flashcard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CardItem> cards;
 
+    @OneToMany(mappedBy = "flashcard", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<FlashcardMember> flashcardMembers;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_set", referencedColumnName = "id")
     @JsonIgnore

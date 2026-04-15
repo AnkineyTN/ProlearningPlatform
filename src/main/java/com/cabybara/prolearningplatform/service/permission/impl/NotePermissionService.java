@@ -24,6 +24,7 @@ import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse
 import com.cabybara.prolearningplatform.enums.NoteMemberStatus;
 import com.cabybara.prolearningplatform.enums.NoteRole;
 import com.cabybara.prolearningplatform.enums.NotificationType;
+import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.note.NoteMember;
 import com.cabybara.prolearningplatform.repository.NoteMemberRepository;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
@@ -52,8 +53,24 @@ public class NotePermissionService implements ResourcePermissionService  {
     @Value("${app.token.invite-token-expiry-hours:72}")
     private int inviteTokenExpiryHours;
 
+    /**
+     * Check if a note is PUBLIC
+     * PUBLIC notes allow all users to access with VIEWER role
+     */
+    private boolean isNotePublic(Long noteId) {
+        return noteRepository.findPrivacyById(noteId)
+            .map(p -> p == Privacy.PUBLIC)
+            .orElse(false);
+    }
+
     @Override
     public boolean hasAccess(Long userId, Long resourceId) {
+        // PUBLIC notes: anyone can access (viewer role)
+        if (isNotePublic(resourceId)) {
+            return true;
+        }
+        
+        // PRIVATE notes: only members can access
         return noteMemberRepository.existsByNoteIdAndUserIdAndStatus(
             resourceId, userId, NoteMemberStatus.ACTIVE);
     }
@@ -76,11 +93,24 @@ public class NotePermissionService implements ResourcePermissionService  {
 
     @Override
     public String getRole(Long userId, Long resourceId) {
-        return noteMemberRepository
-            .findByNoteIdAndUserIdAndStatus(resourceId, userId, NoteMemberStatus.ACTIVE)
-            .map(m -> m.getRole().name())
-            .orElseThrow(() -> new AccessDeniedException(
-                "User " + userId + " has no access to note " + resourceId));
+        // 1. Try to find user as a member
+        var optionalMember = noteMemberRepository
+            .findByNoteIdAndUserIdAndStatus(resourceId, userId, NoteMemberStatus.ACTIVE);
+        
+        if (optionalMember.isPresent()) {
+            // User is a member: return their actual role
+            return optionalMember.get().getRole().name();
+        }
+        
+        // 2. User is not a member
+        if (isNotePublic(resourceId)) {
+            // PUBLIC note: non-member = VIEWER role
+            return NoteRole.VIEWER.name();
+        }
+        
+        // PRIVATE note: non-member = AccessDenied
+        throw new AccessDeniedException(
+            "User " + userId + " has no access to note " + resourceId);
     }
 
     @Transactional
