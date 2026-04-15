@@ -10,7 +10,9 @@ import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
+import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
+import com.cabybara.prolearningplatform.enums.NoteRole;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.exception.BadRequestException;
 import com.cabybara.prolearningplatform.exception.ResourceAlreadyExistsException;
@@ -168,10 +170,26 @@ public class ExamServiceImpl implements ExamService {
     @Override
 //    @Cacheable(value = "exam", key = "#examId")
     public ExamResponseDto getExam(Long setId, Long examId) {
+        Long userId = authenticationContext.getCurrentUserId();
+        
         Exam exam = examRepository.findBySetIdAndId(setId, examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cannot find exam with id: " + examId));
 
-        return examMapper.toExamResponseDto(exam);
+        NoteRole userRole = examPermissionService.getUserRoleInExam(examId, userId);
+
+        ExamResponseDto dto = examMapper.toExamResponseDto(exam);
+        return new ExamResponseDto(
+            dto.id(),
+            dto.title(),
+            dto.privacy(),
+            dto.description(),
+            dto.duration(),
+            dto.numQuestions(),
+            dto.creationMethod(),
+            dto.createdAt(),
+            dto.updatedAt(),
+            userRole
+        );
     }
 
     @Override
@@ -249,6 +267,23 @@ public class ExamServiceImpl implements ExamService {
         AcceptByTokenResponse response = examPermissionService.acceptByToken(token);
 
         return response;
+    }
+
+    @Override
+    public List<PendingInviteResponse> getPendingInvites() {
+        Long userId = authenticationContext.getCurrentUserId();
+        List<InviteResultResponse.PendingInviteExamResponse> examResponses = 
+            examPermissionService.getPendingInvites(userId);
+        
+        return examResponses.stream()
+                .map(exam -> new PendingInviteResponse(
+                    exam.getExamId(),
+                    exam.getExamTitle(),
+                    exam.getRole(),
+                    exam.getSetId(),
+                    exam.getInvitedAt()
+                ))
+                .collect(java.util.stream.Collectors.toList());
     }
     
 }

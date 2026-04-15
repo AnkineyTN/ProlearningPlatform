@@ -21,6 +21,8 @@ import com.cabybara.prolearningplatform.dto.response.share.VerifyAccessResponse;
 import com.cabybara.prolearningplatform.dto.response.share.YjsStateResponse;
 import com.cabybara.prolearningplatform.service.note.CollabService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
+import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
+import com.cabybara.prolearningplatform.service.exam.ExamService;
 import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
@@ -40,6 +42,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 public class CollabController {
     private final CollabService collabService;
     private final NoteService noteService;
+    private final FlashcardService flashcardService;
+    private final ExamService examService;
     private final NotePermissionService notePermissionService;
 
     private final AuthenticationContext authenticationContext;
@@ -120,6 +124,52 @@ public class CollabController {
     public ResponseEntity<ApiResponse<List<PendingInviteResponse>>> getPendingInvites(
     ) {
         List<PendingInviteResponse> pendingInvites = noteService.getPendingInvites();
+        return ResponseEntity.ok(
+            ResponseUtil.success("Pending invites retrieved successfully", pendingInvites, null)
+        );
+    }
+
+    @PostMapping("/flashcard-invites/accept-by-token")
+    public ResponseEntity<ApiResponse<AcceptByTokenResponse>> acceptFlashcardByToken(
+        @RequestParam String token
+    ) {
+        AcceptByTokenResponse response = flashcardService.acceptByToken(token);
+        
+        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.GONE)
+            .body(ResponseUtil.success(
+                response.isSuccess() ? "Invite accepted successfully" : "Invite acceptance failed",
+                response,
+                null
+            ));
+    }
+
+    @GetMapping("/flashcards/pending")
+    public ResponseEntity<ApiResponse<List<PendingInviteResponse>>> getPendingFlashcardInvites(
+    ) {
+        List<PendingInviteResponse> pendingInvites = flashcardService.getPendingInvites();
+        return ResponseEntity.ok(
+            ResponseUtil.success("Pending invites retrieved successfully", pendingInvites, null)
+        );
+    }
+
+    @PostMapping("/exam-invites/accept-by-token")
+    public ResponseEntity<ApiResponse<AcceptByTokenResponse>> acceptExamByToken(
+        @RequestParam String token
+    ) {
+        AcceptByTokenResponse response = examService.acceptByToken(token);
+        
+        return ResponseEntity.status(response.isSuccess() ? HttpStatus.OK : HttpStatus.GONE)
+            .body(ResponseUtil.success(
+                response.isSuccess() ? "Invite accepted successfully" : "Invite acceptance failed",
+                response,
+                null
+            ));
+    }
+
+    @GetMapping("/exams/pending")
+    public ResponseEntity<ApiResponse<List<PendingInviteResponse>>> getPendingExamInvites(
+    ) {
+        List<PendingInviteResponse> pendingInvites = examService.getPendingInvites();
         return ResponseEntity.ok(
             ResponseUtil.success("Pending invites retrieved successfully", pendingInvites, null)
         );

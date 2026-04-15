@@ -7,6 +7,7 @@ import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponse
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
+import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
@@ -46,4 +47,6 @@ public interface FlashcardService {
     void removeMember(Long flashcardId, Long targetUserId);
 
     AcceptByTokenResponse acceptByToken(String token);
+
+    List<PendingInviteResponse> getPendingInvites();
 }

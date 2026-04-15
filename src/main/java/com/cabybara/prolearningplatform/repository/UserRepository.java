@@ -53,4 +53,32 @@ public interface UserRepository extends JpaRepository<User, Long> {
     ORDER BY u.lastName ASC, u.firstName ASC
     """)
    Page<User> searchByNameOrEmail(@Param("keyword") String keyword, @Param("noteId") Long noteId, Pageable pageable);
+
+    // bỏ qua những user đã là member của flashcard đó
+    @Query("""
+    SELECT u FROM User u
+    WHERE (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :keyword, '%')))
+    AND u.id NOT IN (
+        SELECT fm.user.id FROM FlashcardMember fm WHERE fm.flashcard.id = :flashcardId
+    )
+    ORDER BY u.lastName ASC, u.firstName ASC
+    """)
+   Page<User> searchByNameOrEmailForFlashcard(@Param("keyword") String keyword, @Param("flashcardId") Long flashcardId, Pageable pageable);
+
+    // bỏ qua những user đã là member của exam đó
+    @Query("""
+    SELECT u FROM User u
+    WHERE (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :keyword, '%')))
+    AND u.id NOT IN (
+        SELECT em.user.id FROM ExamMember em WHERE em.exam.id = :examId
+    )
+    ORDER BY u.lastName ASC, u.firstName ASC
+    """)
+   Page<User> searchByNameOrEmailForExam(@Param("keyword") String keyword, @Param("examId") Long examId, Pageable pageable);
 }

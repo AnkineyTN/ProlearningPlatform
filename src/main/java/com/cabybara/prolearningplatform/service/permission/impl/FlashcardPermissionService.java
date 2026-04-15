@@ -20,6 +20,7 @@ import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.dto.response.share.NoteMemberResponse;
+import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
 import com.cabybara.prolearningplatform.enums.FlashcardMemberStatus;
 import com.cabybara.prolearningplatform.enums.NoteRole;
 import com.cabybara.prolearningplatform.enums.NotificationType;
@@ -391,5 +392,32 @@ public class FlashcardPermissionService {
                     );
                 })
         );
+    }
+
+    public Page<UserSearchResponse> searchUsers(String keyword, Long flashcardId, Pageable pageable) {
+        return userRepository
+            .searchByNameOrEmailForFlashcard(keyword, flashcardId, pageable)
+            .map(UserSearchResponse::from);
+    }
+
+    public NoteRole getUserRoleInFlashcard(Long flashcardId, Long userId) {
+        // 1. Try to find user as a member
+        var optionalMember = flashcardMemberRepository
+            .findByFlashcardIdAndUserIdAndStatus(flashcardId, userId, FlashcardMemberStatus.ACTIVE);
+        
+        if (optionalMember.isPresent()) {
+            // User is a member: return their actual role
+            return optionalMember.get().getRole();
+        }
+        
+        // 2. User is not a member
+        if (isFlashcardPublic(flashcardId)) {
+            // PUBLIC flashcard: non-member = VIEWER role
+            return NoteRole.VIEWER;
+        }
+        
+        // PRIVATE flashcard: non-member = AccessDenied
+        throw new AccessDeniedException(
+            "User " + userId + " has no access to flashcard " + flashcardId);
     }
 }

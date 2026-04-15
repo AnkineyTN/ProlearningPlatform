@@ -9,6 +9,7 @@ import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
+import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import jakarta.validation.Valid;
@@ -44,5 +45,7 @@ public interface ExamService {
     void removeMember(Long examId, Long targetUserId);
 
     AcceptByTokenResponse acceptByToken(String token);
+
+    List<PendingInviteResponse> getPendingInvites();
 
 }

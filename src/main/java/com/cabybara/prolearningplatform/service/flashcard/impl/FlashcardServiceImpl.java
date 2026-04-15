@@ -4,7 +4,9 @@ import com.cabybara.prolearningplatform.dto.request.flashcard.*;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
+import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
+import com.cabybara.prolearningplatform.enums.NoteRole;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.event.model.ChildEntityUpdatedEvent;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
@@ -93,10 +95,15 @@ public class FlashcardServiceImpl implements FlashcardService {
     public DetailFlashcardResponseDto getDetailFlashcard(Long setId, Long flashcardId) {
         Long userId = authenticationContext.getCurrentUserId();
 
-        Flashcard flashcard = flashcardRepository.findByIdAndSetIdAndUserId(flashcardId, setId, userId)
+        Flashcard flashcard = flashcardRepository.findByIdAndSetId(flashcardId, setId)
                 .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id: " + flashcardId + " not found!"));
 
-        return flashcardMapper.toDetailFlashcardResponseDto(flashcard);
+        NoteRole userRole = flashcardPermissionService.getUserRoleInFlashcard(flashcardId, userId);
+
+        DetailFlashcardResponseDto dto = flashcardMapper.toDetailFlashcardResponseDto(flashcard);
+        dto.setUserRole(userRole);
+        
+        return dto;
     }
 
     @Override
@@ -282,5 +289,22 @@ public class FlashcardServiceImpl implements FlashcardService {
         AcceptByTokenResponse response = flashcardPermissionService.acceptByToken(token);
 
         return response;
+    }
+
+    @Override
+    public List<PendingInviteResponse> getPendingInvites() {
+        Long userId = authenticationContext.getCurrentUserId();
+        List<InviteResultResponse.PendingInviteFlashcardResponse> flashcardResponses = 
+            flashcardPermissionService.getPendingInvites(userId);
+        
+        return flashcardResponses.stream()
+                .map(fc -> new PendingInviteResponse(
+                    fc.getFlashcardId(),
+                    fc.getFlashcardTitle(),
+                    fc.getRole(),
+                    fc.getSetId(),
+                    fc.getInvitedAt()
+                ))
+                .collect(java.util.stream.Collectors.toList());
     }
 }

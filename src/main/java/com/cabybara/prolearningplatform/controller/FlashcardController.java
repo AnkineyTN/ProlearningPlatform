@@ -2,11 +2,14 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.flashcard.*;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
+import com.cabybara.prolearningplatform.dto.request.share.UpdateMemberRoleRequest;
 import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
+import com.cabybara.prolearningplatform.dto.response.share.NoteMemberResponse;
+import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.service.ai.AIFlashcardService;
@@ -25,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -266,6 +270,83 @@ public class FlashcardController {
         flashcardService.removeMember(flashcardId, targetUserId);
         return ResponseEntity.ok(
             ResponseUtil.success("Member removed successfully", null, null)
+        );
+    }
+
+    @GetMapping("/{flashcardId}/members")
+    @PreAuthorize("isAuthenticated() and @flashcardPermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #flashcardId)")
+    public ResponseEntity<ApiResponse<List<NoteMemberResponse>>> getMembers(
+        @PathVariable Long setId,
+        @PathVariable Long flashcardId,
+        @RequestParam(required = false) String keyword,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<NoteMemberResponse> result = (keyword != null && !keyword.isBlank())
+        ? flashcardPermissionService.searchMembers(flashcardId, keyword, pageable)
+        : flashcardPermissionService.getMembers(flashcardId, pageable);
+
+        PaginationResponseDto pagination = PaginationResponseDto.builder()
+            .currentPage(result.getNumber())
+            .totalPages(result.getTotalPages())
+            .totalItems(result.getTotalElements())
+            .pageSize(result.getSize())
+            .build();
+
+        return ResponseEntity.ok(
+            ResponseUtil.success(
+                "Members retrieved successfully",
+                result.getContent(),
+                pagination
+            )
+        );
+    }
+
+    @PatchMapping("/{flashcardId}/members/{targetUserId}/role")
+    @PreAuthorize("@flashcardPermissionService.isOwner(@authenticationContext.getCurrentUserId(), #flashcardId)")
+    public ResponseEntity<ApiResponse<Void>> updateMemberRole(
+            @PathVariable Long setId,
+            @PathVariable Long flashcardId,
+            @PathVariable Long targetUserId,
+            @RequestBody UpdateMemberRoleRequest request
+    ) {
+        flashcardPermissionService.updateMemberRole(
+            flashcardId, targetUserId, request.getRole(),
+            authenticationContext.getCurrentUserId()
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(
+            ResponseUtil.success("Member role updated successfully", null, request)
+        );
+    }
+
+    @GetMapping("/{flashcardId}/users/search")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<UserSearchResponse>>> searchUsers(
+        @PathVariable Long setId,
+        @PathVariable Long flashcardId,
+        @RequestParam String keyword,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserSearchResponse> result = flashcardPermissionService.searchUsers(keyword, flashcardId, pageable);
+
+        PaginationResponseDto pagination = PaginationResponseDto.builder()
+            .currentPage(result.getNumber())
+            .totalPages(result.getTotalPages())
+            .totalItems(result.getTotalElements())
+            .pageSize(result.getSize())
+            .build();
+
+        return ResponseEntity.ok(
+            ResponseUtil.success(
+                "Users retrieved successfully",
+                result.getContent(),
+                pagination
+            )
         );
     }
 }

@@ -20,6 +20,7 @@ import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.dto.response.share.NoteMemberResponse;
+import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
 import com.cabybara.prolearningplatform.enums.ExamMemberStatus;
 import com.cabybara.prolearningplatform.enums.NoteRole;
 import com.cabybara.prolearningplatform.enums.NotificationType;
@@ -391,5 +392,32 @@ public class ExamPermissionService {
                     );
                 })
         );
+    }
+
+    public Page<UserSearchResponse> searchUsers(String keyword, Long examId, Pageable pageable) {
+        return userRepository
+            .searchByNameOrEmailForExam(keyword, examId, pageable)
+            .map(UserSearchResponse::from);
+    }
+
+    public NoteRole getUserRoleInExam(Long examId, Long userId) {
+        // 1. Try to find user as a member
+        var optionalMember = examMemberRepository
+            .findByExamIdAndUserIdAndStatus(examId, userId, ExamMemberStatus.ACTIVE);
+        
+        if (optionalMember.isPresent()) {
+            // User is a member: return their actual role
+            return optionalMember.get().getRole();
+        }
+        
+        // 2. User is not a member
+        if (isExamPublic(examId)) {
+            // PUBLIC exam: non-member = VIEWER role
+            return NoteRole.VIEWER;
+        }
+        
+        // PRIVATE exam: non-member = AccessDenied
+        throw new AccessDeniedException(
+            "User " + userId + " has no access to exam " + examId);
     }
 }
