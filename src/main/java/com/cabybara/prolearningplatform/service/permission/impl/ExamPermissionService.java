@@ -395,9 +395,13 @@ public class ExamPermissionService {
     }
 
     public Page<UserSearchResponse> searchUsers(String keyword, Long examId, Pageable pageable) {
-        return userRepository
-            .searchByNameOrEmailForExam(keyword, examId, pageable)
-            .map(UserSearchResponse::from);
+        Page<User> users;
+        if (keyword == null || keyword.trim().isEmpty()) {
+            users = userRepository.findAllExcludingExamMembers(examId, pageable);
+        } else {
+            users = userRepository.searchByNameOrEmailForExam(keyword, examId, pageable);
+        }
+        return users.map(UserSearchResponse::from);
     }
 
     public NoteRole getUserRoleInExam(Long examId, Long userId) {

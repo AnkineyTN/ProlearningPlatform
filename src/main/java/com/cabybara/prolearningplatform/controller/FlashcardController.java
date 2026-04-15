@@ -329,7 +329,7 @@ public class FlashcardController {
     public ResponseEntity<ApiResponse<List<UserSearchResponse>>> searchUsers(
         @PathVariable Long setId,
         @PathVariable Long flashcardId,
-        @RequestParam String keyword,
+        @RequestParam(required = false) String keyword,
         @RequestParam(defaultValue = "0") int page,
         @RequestParam(defaultValue = "20") int size
     ) {

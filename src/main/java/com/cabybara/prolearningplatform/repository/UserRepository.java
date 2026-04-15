@@ -81,4 +81,34 @@ public interface UserRepository extends JpaRepository<User, Long> {
     ORDER BY u.lastName ASC, u.firstName ASC
     """)
    Page<User> searchByNameOrEmailForExam(@Param("keyword") String keyword, @Param("examId") Long examId, Pageable pageable);
+
+    // lấy tất cả users không phải là member của note
+    @Query("""
+    SELECT u FROM User u
+    WHERE u.id NOT IN (
+        SELECT nm.user.id FROM NoteMember nm WHERE nm.note.id = :noteId
+    )
+    ORDER BY u.lastName ASC, u.firstName ASC
+    """)
+    Page<User> findAllExcludingNoteMembers(@Param("noteId") Long noteId, Pageable pageable);
+
+    // lấy tất cả users không phải là member của flashcard
+    @Query("""
+    SELECT u FROM User u
+    WHERE u.id NOT IN (
+        SELECT fm.user.id FROM FlashcardMember fm WHERE fm.flashcard.id = :flashcardId
+    )
+    ORDER BY u.lastName ASC, u.firstName ASC
+    """)
+    Page<User> findAllExcludingFlashcardMembers(@Param("flashcardId") Long flashcardId, Pageable pageable);
+
+    // lấy tất cả users không phải là member của exam
+    @Query("""
+    SELECT u FROM User u
+    WHERE u.id NOT IN (
+        SELECT em.user.id FROM ExamMember em WHERE em.exam.id = :examId
+    )
+    ORDER BY u.lastName ASC, u.firstName ASC
+    """)
+    Page<User> findAllExcludingExamMembers(@Param("examId") Long examId, Pageable pageable);
 }

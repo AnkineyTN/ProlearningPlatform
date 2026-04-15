@@ -395,9 +395,13 @@ public class FlashcardPermissionService {
     }
 
     public Page<UserSearchResponse> searchUsers(String keyword, Long flashcardId, Pageable pageable) {
-        return userRepository
-            .searchByNameOrEmailForFlashcard(keyword, flashcardId, pageable)
-            .map(UserSearchResponse::from);
+        Page<User> users;
+        if (keyword == null || keyword.trim().isEmpty()) {
+            users = userRepository.findAllExcludingFlashcardMembers(flashcardId, pageable);
+        } else {
+            users = userRepository.searchByNameOrEmailForFlashcard(keyword, flashcardId, pageable);
+        }
+        return users.map(UserSearchResponse::from);
     }
 
     public NoteRole getUserRoleInFlashcard(Long flashcardId, Long userId) {

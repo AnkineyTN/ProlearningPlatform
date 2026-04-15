@@ -411,8 +411,12 @@ public class NotePermissionService implements ResourcePermissionService  {
     }
 
     public Page<UserSearchResponse> searchUsers(String keyword, Long noteId, Pageable pageable) {
-        return userRepository
-            .searchByNameOrEmail(keyword, noteId, pageable)
-            .map(UserSearchResponse::from);
+        Page<User> users;
+        if (keyword == null || keyword.trim().isEmpty()) {
+            users = userRepository.findAllExcludingNoteMembers(noteId, pageable);
+        } else {
+            users = userRepository.searchByNameOrEmail(keyword, noteId, pageable);
+        }
+        return users.map(UserSearchResponse::from);
     }
 }
