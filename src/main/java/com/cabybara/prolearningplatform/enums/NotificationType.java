@@ -7,6 +7,9 @@ public enum NotificationType {
 
     NOTE_INVITE("You have been invited to collaborate on a note"),
     NOTE_INVITE_ACCEPTED("Your invite to a note has been accepted"),
+    
+    FLASHCARD_INVITE("You have been invited to collaborate on a flashcard"),
+    EXAM_INVITE("You have been invited to collaborate on an exam"),
 
     // Social (future)
 //    SET_SHARED("Someone shared a set with you"),

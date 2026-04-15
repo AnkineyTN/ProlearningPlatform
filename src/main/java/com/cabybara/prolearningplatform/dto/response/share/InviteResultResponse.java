@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -23,5 +24,25 @@ public class InviteResultResponse {
             InviteMemberRequest.InviteTarget target, String reason) {
         return new InviteResultResponse(
             target.getUserId(), target.getEmail(), false, reason);
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class PendingInviteFlashcardResponse {
+        private Long flashcardId;
+        private String flashcardTitle;
+        private String role;
+        private Long setId;
+        private LocalDateTime invitedAt;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class PendingInviteExamResponse {
+        private Long examId;
+        private String examTitle;
+        private String role;
+        private Long setId;
+        private LocalDateTime invitedAt;
     }
 }

@@ -76,6 +76,30 @@ public class EmailServiceImpl implements EmailService {
         ));
     }
 
+    @Override
+    public void sendFlashcardInviteNotification(String toEmail, String inviterName, String flashcardTitle, String role,
+            String acceptUrl) {
+        publish(toEmail, EmailType.FLASHCARD_INVITE, Map.of(
+                "inviterName",     inviterName,
+                "flashcardTitle",  flashcardTitle,
+                "role",            role,
+                "acceptUrl",       acceptUrl,
+                "expiryHours",     inviteTokenExpiryHours
+        ));
+    }
+
+    @Override
+    public void sendExamInviteNotification(String toEmail, String inviterName, String examTitle, String role,
+            String acceptUrl) {
+        publish(toEmail, EmailType.EXAM_INVITE, Map.of(
+                "inviterName", inviterName,
+                "examTitle",   examTitle,
+                "role",        role,
+                "acceptUrl",   acceptUrl,
+                "expiryHours", inviteTokenExpiryHours
+        ));
+    }
+
     private void publish(String toEmail, EmailType type, Map<String, Object> variables) {
         EmailMessage message = EmailMessage.builder()
                 .to(toEmail)
