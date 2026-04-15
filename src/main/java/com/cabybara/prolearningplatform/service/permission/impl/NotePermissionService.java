@@ -21,6 +21,7 @@ import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.dto.response.share.NoteMemberResponse;
 import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
+import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
 import com.cabybara.prolearningplatform.enums.NoteMemberStatus;
 import com.cabybara.prolearningplatform.enums.NoteRole;
 import com.cabybara.prolearningplatform.enums.NotificationType;
@@ -407,5 +408,11 @@ public class NotePermissionService implements ResourcePermissionService  {
                     );
                 })
         );
+    }
+
+    public Page<UserSearchResponse> searchUsers(String keyword, Long noteId, Pageable pageable) {
+        return userRepository
+            .searchByNameOrEmail(keyword, noteId, pageable)
+            .map(UserSearchResponse::from);
     }
 }

@@ -8,6 +8,7 @@ import com.cabybara.prolearningplatform.dto.response.note.*;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.dto.response.share.NoteMemberResponse;
 import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
+import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.service.ai.AINoteService;
@@ -377,6 +378,7 @@ public class NoteController {
     }
     
     @PostMapping("/{noteId}/members/accept")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> acceptInvite(
         @PathVariable Long setId,
         @PathVariable Long noteId
@@ -388,6 +390,7 @@ public class NoteController {
     }
 
     @PostMapping("/{noteId}/members/decline")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> declineInvite(
         @PathVariable Long setId,
         @PathVariable Long noteId
@@ -436,6 +439,34 @@ public class NoteController {
         return ResponseEntity.ok(
             ResponseUtil.success(
                 "Members retrieved successfully",
+                result.getContent(),
+                pagination
+            )
+        );
+    }
+
+    @GetMapping("/{noteId}/users/search")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<UserSearchResponse>>> searchUsers(
+        @PathVariable Long setId,
+        @PathVariable Long noteId,
+        @RequestParam String keyword,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserSearchResponse> result = notePermissionService.searchUsers(keyword, noteId, pageable);
+
+        PaginationResponseDto pagination = PaginationResponseDto.builder()
+            .currentPage(result.getNumber())
+            .totalPages(result.getTotalPages())
+            .totalItems(result.getTotalElements())
+            .pageSize(result.getSize())
+            .build();
+
+        return ResponseEntity.ok(
+            ResponseUtil.success(
+                "Users retrieved successfully",
                 result.getContent(),
                 pagination
             )

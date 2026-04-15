@@ -90,7 +90,7 @@ public class FlashcardController {
             summary = "Get a Specific Flashcard's Details",
             description = "Retrieves the full details of a single flashcard, including all its associated card items."
     )
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @flashcardPermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #flashcardId)")
     @GetMapping("/{flashcardId}")
     public ResponseEntity<ApiResponse<DetailFlashcardResponseDto>> getDetailFlashcard(
             @Parameter(description = "The ID of the Set", required = true)
@@ -239,6 +239,7 @@ public class FlashcardController {
     }
     
     @PostMapping("/{flashcardId}/members/accept")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> acceptInvite(
         @PathVariable Long setId,
         @PathVariable Long flashcardId
@@ -250,6 +251,7 @@ public class FlashcardController {
     }
 
     @PostMapping("/{flashcardId}/members/decline")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> declineInvite(
         @PathVariable Long setId,
         @PathVariable Long flashcardId

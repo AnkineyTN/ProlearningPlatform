@@ -133,6 +133,8 @@ public class FlashcardServiceImpl implements FlashcardService {
 
         Flashcard savedFlashcard = flashcardRepository.save(flashcard);
 
+        flashcardPermissionService.addOwner(savedFlashcard.getId(), userId);
+
         eventPublisher.publishEvent(new ChildEntityUpdatedEvent(savedFlashcard));
         return flashcardMapper.toFlashcardResponseDto(savedFlashcard);
     }

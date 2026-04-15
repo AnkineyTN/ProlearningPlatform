@@ -76,7 +76,9 @@ public class ExamServiceImpl implements ExamService {
         exam.setCreatedBy(userId);
         exam.setSet(set);
 
-        return examMapper.toExamResponseDto(examRepository.save(exam));
+        Exam savedExam = examRepository.save(exam);
+        examPermissionService.addOwner(savedExam.getId(), userId);
+        return examMapper.toExamResponseDto(savedExam);
     }
 
     @Override
@@ -94,12 +96,14 @@ public class ExamServiceImpl implements ExamService {
         exam.setCreationMethod(CreationMethod.REVIEW);
 
         Exam savedExam = examRepository.save(exam);
+        Long examId = savedExam.getId();
+        examPermissionService.addOwner(examId, userId);
 
         if (dto.questions() != null && !dto.questions().isEmpty()) {
-            questionService.createQuestion(savedExam.getId(), dto.questions());
+            questionService.createQuestion(examId, dto.questions());
         }
 
-        return examMapper.toExamResponseDto(examRepository.findById(savedExam.getId())
+        return examMapper.toExamResponseDto(examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found after save")));
     }
 

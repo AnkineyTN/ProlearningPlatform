@@ -102,6 +102,7 @@ public class ExamController {
                 ));
     }
 
+    @PreAuthorize("isAuthenticated() and @examPermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #examId)")
     @GetMapping("/{examId}")
     public ResponseEntity<ApiResponse<ExamResponseDto>> getExam(
             @PathVariable Long setId,
@@ -440,6 +441,7 @@ public class ExamController {
     }
     
     @PostMapping("/{examId}/members/accept")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> acceptInvite(
         @PathVariable Long setId,
         @PathVariable Long examId
@@ -451,6 +453,7 @@ public class ExamController {
     }
 
     @PostMapping("/{examId}/members/decline")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Void>> declineInvite(
         @PathVariable Long setId,
         @PathVariable Long examId
