@@ -3,8 +3,10 @@ package com.cabybara.prolearningplatform.repository;
 import com.cabybara.prolearningplatform.model.note.Note;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.repository.query.Param;
 
@@ -86,4 +88,17 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
             """,
             nativeQuery = true)
     Page<Note> searchByUserIdAndSetIdAndPrivacy(Long userId, Long setId, String q, String privacy, Pageable pageable);
+
+    @Query("SELECT n.yjsState FROM Note n WHERE n.id = :noteId")
+    Optional<byte[]> findYjsStateById(@Param("noteId") Long noteId);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE Note n SET n.yjsState = :yjsState WHERE n.id = :noteId")
+    int updateYjsState(@Param("noteId") Long noteId, @Param("yjsState") byte[] yjsState);
+
+    @Query("SELECT n.title FROM Note n WHERE n.id = :noteId")
+    String findTitleById(@Param("noteId") Long noteId);
+
+    Optional<Note> findByIdAndSetId(Long noteId, Long setId);
 }

@@ -33,6 +33,9 @@ public class EmailServiceImpl implements EmailService {
     @Value("${app.token.reset-expiry-minutes:15}")
     private int resetExpiryMinutes;
 
+    @Value("${app.token.invite-token-expiry-hours:72}")
+    private int inviteTokenExpiryHours;
+
     @Override
     public void sendVerifyOtp(String toEmail, String username, String otp) {
         publish(toEmail, EmailType.VERIFY_OTP, Map.of(
@@ -58,6 +61,18 @@ public class EmailServiceImpl implements EmailService {
                 "changedAt",    LocalDateTime.now()
                                     .format(DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy")),
                 "supportEmail", "support@prolearning.com"
+        ));
+    }
+
+    @Override
+    public void sendNoteInviteNotification(String toEmail, String inviterName, String noteTitle, String role,
+            String acceptUrl) {
+        publish(toEmail, EmailType.NOTE_INVITE, Map.of(
+                "inviterName", inviterName,
+                "noteTitle",   noteTitle,
+                "role",        role,
+                "acceptUrl",   acceptUrl,
+                "expiryHours",  inviteTokenExpiryHours
         ));
     }
 

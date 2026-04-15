@@ -39,6 +39,9 @@ public class Note extends AbstractEntity {
     @Column(length = 50)
     private String status;
 
+    @Column(name = "yjs_state", columnDefinition = "BYTEA")
+    private byte[] yjsState;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_set", referencedColumnName = "id")
     private Set set;

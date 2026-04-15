@@ -66,6 +66,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/forgot-password/**").permitAll()
                 .requestMatchers("/auth/verify-reset-otp/**").permitAll()
                 .requestMatchers("/auth/reset-password/**").permitAll()
+                .requestMatchers("/internal/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
                 .anyRequest().authenticated()
         );

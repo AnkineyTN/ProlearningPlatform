@@ -1,15 +1,21 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.note.*;
+import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.*;
+import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
+import com.cabybara.prolearningplatform.dto.response.share.NoteMemberResponse;
+import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.service.ai.AINoteService;
 import com.cabybara.prolearningplatform.service.note.NoteFileRegionCommentService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
+import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import com.cabybara.prolearningplatform.utils.ValidateSort;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -30,6 +37,10 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+
+
+
 
 @RestController
 @RequestMapping("/sets/{setId}/notes")
@@ -47,6 +58,8 @@ public class NoteController {
     private final NoteService noteService;
     private final AINoteService aiNoteService;
     private final NoteFileRegionCommentService noteFileRegionCommentService;
+    private final AuthenticationContext authenticationContext;
+    private final NotePermissionService notePermissionService;
 
     // ##################################################
     // ###################  MAIN API  ###################
@@ -70,7 +83,7 @@ public class NoteController {
     }
 
     @Operation(method = "PATCH", summary = "Save note", description = "Save note while taking note")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @notePermissionService.canEdit(@authenticationContext.getCurrentUserId(), #noteId)")
     @PatchMapping(value = "/save/{noteId}")
     public ResponseData<Void> saveNote(
             @Parameter(description = "The ID of the Set", required = true)
@@ -188,7 +201,7 @@ public class NoteController {
     }
 
     @Operation(summary = "Get note detail", description = "Get note detail")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @notePermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #noteId)")
     @GetMapping("/{noteId}")
     public ResponseData<GetDetailNoteResponseDTO> getDetailNote(
             @Parameter(description = "The ID of the Set", required = true)
@@ -205,7 +218,7 @@ public class NoteController {
     }
 
     @Operation(method = "PATCH", summary = "Update note", description = "Update note")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @notePermissionService.canEdit(@authenticationContext.getCurrentUserId(), #noteId)")
     @PatchMapping(value = "/update/{noteId}")
     public ResponseData<Void> updateNote(
             @Parameter(description = "The ID of the Set", required = true)
@@ -283,7 +296,7 @@ public class NoteController {
     }
 
     @Operation(summary = "Delete note", description = "Delete note permanently")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @notePermissionService.isOwner(@authenticationContext.getCurrentUserId(), #noteId)")
     @DeleteMapping("/delete/{noteId}")
     public ResponseData<Void> deleteNote(
             @Parameter(description = "The ID of the Set", required = true)
@@ -341,6 +354,92 @@ public class NoteController {
             log.error(ERROR_MESSAGE, e);
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Summarize file with AI fail");
         }
+    }
+    
+    @PostMapping("/{noteId}/members/invite")
+    @PreAuthorize("@notePermissionService.isOwner(@authenticationContext.getCurrentUserId(), #noteId)")
+    public ResponseEntity<ApiResponse<List<InviteResultResponse>>> inviteMembers(
+        @PathVariable Long setId,
+        @PathVariable Long noteId,
+        @RequestBody InviteMemberRequest request
+    ) {
+        List<InviteResultResponse> results = noteService.inviteMembers(setId, noteId, request);
+
+        boolean hasFailure = results.stream().anyMatch(r -> !r.isSuccess());
+
+        return ResponseEntity.status(hasFailure ? HttpStatus.MULTI_STATUS : HttpStatus.OK).body(
+            ResponseUtil.success(
+                "Invitation process completed",
+                results,
+                null
+            )
+        );
+    }
+    
+    @PostMapping("/{noteId}/members/accept")
+    public ResponseEntity<ApiResponse<Void>> acceptInvite(
+        @PathVariable Long setId,
+        @PathVariable Long noteId
+    ) {
+        noteService.acceptInvite(noteId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Invite accepted successfully", null, null)
+        );
+    }
+
+    @PostMapping("/{noteId}/members/decline")
+    public ResponseEntity<ApiResponse<Void>> declineInvite(
+        @PathVariable Long setId,
+        @PathVariable Long noteId
+    ) {
+        noteService.declineInvite(noteId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Invite declined successfully", null, null)
+        );
+    }
+
+    @DeleteMapping("/{noteId}/members/{targetUserId}")
+    @PreAuthorize("@notePermissionService.isOwner(@authenticationContext.getCurrentUserId(), #noteId)")
+    public ResponseEntity<ApiResponse<Void>> removeMember(
+        @PathVariable Long setId,
+        @PathVariable Long noteId,
+        @PathVariable Long targetUserId
+    ) {
+        noteService.removeMember(noteId, targetUserId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Member removed successfully", null, null)
+        );
+    }
+    
+    @GetMapping("/{noteId}/members")
+    @PreAuthorize("isAuthenticated() and @notePermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #noteId)")
+    public ResponseEntity<ApiResponse<List<NoteMemberResponse>>> getMembers(
+        @PathVariable Long setId,
+        @PathVariable Long noteId,
+        @RequestParam(required = false) String keyword,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<NoteMemberResponse> result = (keyword != null && !keyword.isBlank())
+        ? notePermissionService.searchMembers(noteId, keyword, pageable)
+        : notePermissionService.getMembers(noteId, pageable);
+
+        PaginationResponseDto pagination = PaginationResponseDto.builder()
+            .currentPage(result.getNumber())
+            .totalPages(result.getTotalPages())
+            .totalItems(result.getTotalElements())
+            .pageSize(result.getSize())
+            .build();
+
+        return ResponseEntity.ok(
+            ResponseUtil.success(
+                "Members retrieved successfully",
+                result.getContent(),
+                pagination
+            )
+        );
     }
     
 }

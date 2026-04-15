@@ -2,16 +2,23 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.user.ChangePasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.request.user.UserUpdatingRequestDto;
-
+import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
+import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,6 +27,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
@@ -27,6 +35,8 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 public class UserController {
     private final UserService userService;
+    private final AuthenticationContext authenticationContext;
+    private final NotePermissionService notePermissionService;
 
     private static Long userIdFromJwt(Jwt jwt) {
         return Long.parseLong(jwt.getClaims().get("id").toString());
@@ -85,4 +95,31 @@ public class UserController {
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("OTP resent successfully", null, null));
     }
+
+    @PreAuthorize("isAuthenticated() and @notePermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #noteId)")
+    @GetMapping("/notes/{noteId}/search")
+    public ResponseEntity<ApiResponse<List<UserSearchResponse>>> searchUsers(
+        @PathVariable Long noteId,
+        @RequestParam String keyword,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<UserSearchResponse> searchResults = userService.searchNoteUsers(keyword, page, size, noteId);
+
+        PaginationResponseDto paginationResponseDto = PaginationResponseDto.builder()
+                .currentPage(searchResults.getNumber())
+                .totalPages(searchResults.getTotalPages())
+                .totalItems(searchResults.getTotalElements())
+                .pageSize(searchResults.getSize())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.OK).body(
+            ResponseUtil.success(
+                "Search completed",
+                searchResults.getContent(),
+                paginationResponseDto
+            )
+        );
+    }
+    
 }

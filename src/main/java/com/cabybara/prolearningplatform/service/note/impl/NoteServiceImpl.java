@@ -1,11 +1,16 @@
 package com.cabybara.prolearningplatform.service.note.impl;
 
 import com.cabybara.prolearningplatform.dto.request.note.*;
+import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.*;
+import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.note.CreateNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetAllNotesResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetDetailNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetDocsInNoteResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
+import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
+import com.cabybara.prolearningplatform.enums.NoteRole;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.*;
@@ -18,10 +23,12 @@ import com.cabybara.prolearningplatform.repository.*;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
 import com.cabybara.prolearningplatform.service.note.NoteFileRegionCommentService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
+import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +55,7 @@ public class NoteServiceImpl implements NoteService {
     private final AssetService assetService;
     private final AuthenticationContext authenticationContext;
     private final NoteFileRegionCommentService noteFileRegionCommentService;
+    private final NotePermissionService notePermissionService;
 
     // ##################################################
     // #################  MAIN METHOD  ##################
@@ -55,6 +63,7 @@ public class NoteServiceImpl implements NoteService {
 
     // [POST]: /sets/{setId}/notes
     @Override
+    @Transactional
     public CreateNoteResponseDTO createNote(Long setId, CreateNoteRequestDTO request) {
         Long userId = authenticationContext.getCurrentUserId();
         User user = getUserById(userId);
@@ -69,6 +78,8 @@ public class NoteServiceImpl implements NoteService {
                 .build();
         Note saved = noteRepository.save(note);
         log.info("✅ Created note '{}' in set id {} by user {}", note.getTitle(), set.getId(), userId);
+
+        notePermissionService.addOwner(saved.getId(), userId);
 
         return CreateNoteResponseDTO.builder()
                 .noteId(saved.getId())
@@ -179,7 +190,11 @@ public class NoteServiceImpl implements NoteService {
     @Override
     public GetDetailNoteResponseDTO getDetailNote(Long setId, Long noteId) {
         Long userId = authenticationContext.getCurrentUserId();
-        Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
+        // Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
+        Note note = getNoteByIdAndSetId(noteId, setId);
+
+        NoteRole noteRole = notePermissionService.getUserRoleInNote(noteId, userId);
+
 
         return GetDetailNoteResponseDTO.builder()
                 .id(note.getId())
@@ -188,6 +203,7 @@ public class NoteServiceImpl implements NoteService {
                 .description(note.getDescription())
                 .privacy(note.getPrivacy())
                 .content(note.getContent())
+                .userRole(noteRole)
                 .noteDocs(
                         note.getNoteDocs().stream()
                                 .map(doc -> {
@@ -270,6 +286,11 @@ public class NoteServiceImpl implements NoteService {
         return noteRepository.findById(noteId).orElseThrow(() -> new ResourceNotFoundException("Note not found"));
     }
 
+    private Note getNoteByIdAndSetId(Long noteId, Long setId) {
+        return noteRepository.findByIdAndSetId(noteId, setId)
+                .orElseThrow(() -> new ResourceNotFoundException("Note not found or no permission"));
+    }
+
     private Note getNoteByIdAndUserIdAndSetId(Long noteId, Long userId, Long setId) {
         return noteRepository.findByIdAndUserIdAndSetId(noteId, userId, setId)
                 .orElseThrow(() -> new ResourceNotFoundException("Note not found or no permission"));
@@ -296,4 +317,42 @@ public class NoteServiceImpl implements NoteService {
         log.info("Delete img in note with noteId {} and assetId {}", noteId, assetId);
     }
 
+    @Override
+    public List<InviteResultResponse> inviteMembers(Long setId, Long noteId, InviteMemberRequest request) {
+        Long userId = authenticationContext.getCurrentUserId();
+        List<InviteResultResponse> results = notePermissionService.inviteMembers(
+            setId, noteId, request.getTargets(), request.getRole(), userId);
+
+        return results;
+    }
+
+    @Override
+    public List<PendingInviteResponse> getPendingInvites() {
+        Long userId = authenticationContext.getCurrentUserId();
+        List<PendingInviteResponse> responses = notePermissionService.getPendingInvites(userId);
+
+        return responses;
+    }
+
+    @Override
+    public void acceptInvite(Long noteId) {
+        notePermissionService.acceptInvite(noteId, authenticationContext.getCurrentUserId());
+    }
+
+    @Override
+    public void declineInvite(Long noteId) {
+        notePermissionService.declineInvite(noteId, authenticationContext.getCurrentUserId());
+    }
+
+    @Override
+    public void removeMember(Long noteId, Long targetUserId) {
+        notePermissionService.removeMember(noteId, targetUserId, authenticationContext.getCurrentUserId());
+    }
+
+    @Override
+    public AcceptByTokenResponse acceptByToken(String token) {
+        AcceptByTokenResponse response = notePermissionService.acceptByToken(token);
+
+        return response;
+    }
 }
