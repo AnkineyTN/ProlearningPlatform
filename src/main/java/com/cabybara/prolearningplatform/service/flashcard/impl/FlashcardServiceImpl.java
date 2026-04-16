@@ -1,12 +1,18 @@
 package com.cabybara.prolearningplatform.service.flashcard.impl;
 
 import com.cabybara.prolearningplatform.dto.request.flashcard.*;
+import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
+import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
+import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
+import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
+import com.cabybara.prolearningplatform.enums.NoteRole;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.event.model.ChildEntityUpdatedEvent;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import com.cabybara.prolearningplatform.model.note.Note;
+import com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermissionService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
@@ -58,6 +64,7 @@ public class FlashcardServiceImpl implements FlashcardService {
 
     private final FileService fileService;
     private final AIFlashcardService aiFlashcardService;
+    private final FlashcardPermissionService flashcardPermissionService;
 
     @Override
     public Page<FlashcardResponseDto> getAllFlashcard(Long setId, String q, Privacy privacy, CreationMethod createMethod, Pageable pageable) {
@@ -88,10 +95,15 @@ public class FlashcardServiceImpl implements FlashcardService {
     public DetailFlashcardResponseDto getDetailFlashcard(Long setId, Long flashcardId) {
         Long userId = authenticationContext.getCurrentUserId();
 
-        Flashcard flashcard = flashcardRepository.findByIdAndSetIdAndUserId(flashcardId, setId, userId)
+        Flashcard flashcard = flashcardRepository.findByIdAndSetId(flashcardId, setId)
                 .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id: " + flashcardId + " not found!"));
 
-        return flashcardMapper.toDetailFlashcardResponseDto(flashcard);
+        NoteRole userRole = flashcardPermissionService.getUserRoleInFlashcard(flashcardId, userId);
+
+        DetailFlashcardResponseDto dto = flashcardMapper.toDetailFlashcardResponseDto(flashcard);
+        dto.setUserRole(userRole);
+        
+        return dto;
     }
 
     @Override
@@ -120,6 +132,8 @@ public class FlashcardServiceImpl implements FlashcardService {
         flashcard.setSet(setFlashcard);
 
         Flashcard savedFlashcard = flashcardRepository.save(flashcard);
+
+        flashcardPermissionService.addOwner(savedFlashcard.getId(), userId);
 
         eventPublisher.publishEvent(new ChildEntityUpdatedEvent(savedFlashcard));
         return flashcardMapper.toFlashcardResponseDto(savedFlashcard);
@@ -246,5 +260,53 @@ public class FlashcardServiceImpl implements FlashcardService {
     public Flashcard getFlashcardById(Long flashcardId) {
         return flashcardRepository.findById(flashcardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id " + flashcardId + " not found!"));
+    }
+
+    @Override
+    public List<InviteResultResponse> inviteMembers(Long setId, Long flashcardId, InviteMemberRequest request) {
+        Long userId = authenticationContext.getCurrentUserId();
+        List<InviteResultResponse> results = flashcardPermissionService.inviteMembers(
+            setId, flashcardId, request.getTargets(), request.getRole(), userId);
+
+        return results;
+    }
+
+    @Override
+    public void acceptInvite(Long flashcardId) {
+        flashcardPermissionService.acceptInvite(flashcardId, authenticationContext.getCurrentUserId());
+    }
+
+    @Override
+    public void declineInvite(Long flashcardId) {
+        flashcardPermissionService.declineInvite(flashcardId, authenticationContext.getCurrentUserId());
+    }
+
+    @Override
+    public void removeMember(Long flashcardId, Long targetUserId) {
+        flashcardPermissionService.removeMember(flashcardId, targetUserId, authenticationContext.getCurrentUserId());
+    }
+
+    @Override
+    public AcceptByTokenResponse acceptByToken(String token) {
+        AcceptByTokenResponse response = flashcardPermissionService.acceptByToken(token);
+
+        return response;
+    }
+
+    @Override
+    public List<PendingInviteResponse> getPendingInvites() {
+        Long userId = authenticationContext.getCurrentUserId();
+        List<InviteResultResponse.PendingInviteFlashcardResponse> flashcardResponses = 
+            flashcardPermissionService.getPendingInvites(userId);
+        
+        return flashcardResponses.stream()
+                .map(fc -> new PendingInviteResponse(
+                    fc.getFlashcardId(),
+                    fc.getFlashcardTitle(),
+                    fc.getRole(),
+                    fc.getSetId(),
+                    fc.getInvitedAt()
+                ))
+                .collect(java.util.stream.Collectors.toList());
     }
 }

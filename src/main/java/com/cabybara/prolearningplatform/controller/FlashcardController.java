@@ -1,15 +1,22 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.flashcard.*;
+import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
+import com.cabybara.prolearningplatform.dto.request.share.UpdateMemberRoleRequest;
 import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
+import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
+import com.cabybara.prolearningplatform.dto.response.share.NoteMemberResponse;
+import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.service.ai.AIFlashcardService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
+import com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermissionService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import com.cabybara.prolearningplatform.utils.ValidateSort;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -43,6 +51,8 @@ public class FlashcardController {
 
     private final FlashcardService flashcardService;
     private final AIFlashcardService aIFlashcardService;
+    private final FlashcardPermissionService flashcardPermissionService;
+    private final AuthenticationContext authenticationContext;
 
     @Operation(
             summary = "Get All Flashcards in a Set (Paginated)",
@@ -80,7 +90,7 @@ public class FlashcardController {
             summary = "Get a Specific Flashcard's Details",
             description = "Retrieves the full details of a single flashcard, including all its associated card items."
     )
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @flashcardPermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #flashcardId)")
     @GetMapping("/{flashcardId}")
     public ResponseEntity<ApiResponse<DetailFlashcardResponseDto>> getDetailFlashcard(
             @Parameter(description = "The ID of the Set", required = true)
@@ -206,5 +216,139 @@ public class FlashcardController {
             log.error(ERROR_MESSAGE, e);
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate flashcard by web with AI fail");
         }
+    }
+
+    @PostMapping("/{flashcardId}/members/invite")
+    @PreAuthorize("@flashcardPermissionService.isOwner(@authenticationContext.getCurrentUserId(), #flashcardId)")
+    public ResponseEntity<ApiResponse<List<InviteResultResponse>>> inviteMembers(
+        @PathVariable Long setId,
+        @PathVariable Long flashcardId,
+        @RequestBody InviteMemberRequest request
+    ) {
+        List<InviteResultResponse> results = flashcardService.inviteMembers(setId, flashcardId, request);
+
+        boolean hasFailure = results.stream().anyMatch(r -> !r.isSuccess());
+
+        return ResponseEntity.status(hasFailure ? HttpStatus.MULTI_STATUS : HttpStatus.OK).body(
+            ResponseUtil.success(
+                "Invitation process completed",
+                results,
+                null
+            )
+        );
+    }
+    
+    @PostMapping("/{flashcardId}/members/accept")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> acceptInvite(
+        @PathVariable Long setId,
+        @PathVariable Long flashcardId
+    ) {
+        flashcardService.acceptInvite(flashcardId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Invite accepted successfully", null, null)
+        );
+    }
+
+    @PostMapping("/{flashcardId}/members/decline")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> declineInvite(
+        @PathVariable Long setId,
+        @PathVariable Long flashcardId
+    ) {
+        flashcardService.declineInvite(flashcardId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Invite declined successfully", null, null)
+        );
+    }
+
+    @DeleteMapping("/{flashcardId}/members/{targetUserId}")
+    @PreAuthorize("@flashcardPermissionService.isOwner(@authenticationContext.getCurrentUserId(), #flashcardId)")
+    public ResponseEntity<ApiResponse<Void>> removeMember(
+        @PathVariable Long setId,
+        @PathVariable Long flashcardId,
+        @PathVariable Long targetUserId
+    ) {
+        flashcardService.removeMember(flashcardId, targetUserId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Member removed successfully", null, null)
+        );
+    }
+
+    @GetMapping("/{flashcardId}/members")
+    @PreAuthorize("isAuthenticated() and @flashcardPermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #flashcardId)")
+    public ResponseEntity<ApiResponse<List<NoteMemberResponse>>> getMembers(
+        @PathVariable Long setId,
+        @PathVariable Long flashcardId,
+        @RequestParam(required = false) String keyword,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<NoteMemberResponse> result = (keyword != null && !keyword.isBlank())
+        ? flashcardPermissionService.searchMembers(flashcardId, keyword, pageable)
+        : flashcardPermissionService.getMembers(flashcardId, pageable);
+
+        PaginationResponseDto pagination = PaginationResponseDto.builder()
+            .currentPage(result.getNumber())
+            .totalPages(result.getTotalPages())
+            .totalItems(result.getTotalElements())
+            .pageSize(result.getSize())
+            .build();
+
+        return ResponseEntity.ok(
+            ResponseUtil.success(
+                "Members retrieved successfully",
+                result.getContent(),
+                pagination
+            )
+        );
+    }
+
+    @PatchMapping("/{flashcardId}/members/{targetUserId}/role")
+    @PreAuthorize("@flashcardPermissionService.isOwner(@authenticationContext.getCurrentUserId(), #flashcardId)")
+    public ResponseEntity<ApiResponse<Void>> updateMemberRole(
+            @PathVariable Long setId,
+            @PathVariable Long flashcardId,
+            @PathVariable Long targetUserId,
+            @RequestBody UpdateMemberRoleRequest request
+    ) {
+        flashcardPermissionService.updateMemberRole(
+            flashcardId, targetUserId, request.getRole(),
+            authenticationContext.getCurrentUserId()
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(
+            ResponseUtil.success("Member role updated successfully", null, request)
+        );
+    }
+
+    @GetMapping("/{flashcardId}/users/search")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<UserSearchResponse>>> searchUsers(
+        @PathVariable Long setId,
+        @PathVariable Long flashcardId,
+        @RequestParam(required = false) String keyword,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserSearchResponse> result = flashcardPermissionService.searchUsers(keyword, flashcardId, pageable);
+
+        PaginationResponseDto pagination = PaginationResponseDto.builder()
+            .currentPage(result.getNumber())
+            .totalPages(result.getTotalPages())
+            .totalItems(result.getTotalElements())
+            .pageSize(result.getSize())
+            .build();
+
+        return ResponseEntity.ok(
+            ResponseUtil.success(
+                "Users retrieved successfully",
+                result.getContent(),
+                pagination
+            )
+        );
     }
 }

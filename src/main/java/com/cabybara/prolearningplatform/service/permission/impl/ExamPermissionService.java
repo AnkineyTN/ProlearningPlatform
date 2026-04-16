@@ -20,20 +20,18 @@ import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.dto.response.share.NoteMemberResponse;
-import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
 import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
-import com.cabybara.prolearningplatform.enums.NoteMemberStatus;
+import com.cabybara.prolearningplatform.enums.ExamMemberStatus;
 import com.cabybara.prolearningplatform.enums.NoteRole;
 import com.cabybara.prolearningplatform.enums.NotificationType;
 import com.cabybara.prolearningplatform.enums.Privacy;
-import com.cabybara.prolearningplatform.model.note.NoteMember;
-import com.cabybara.prolearningplatform.repository.NoteMemberRepository;
-import com.cabybara.prolearningplatform.repository.NoteRepository;
+import com.cabybara.prolearningplatform.model.exam.ExamMember;
+import com.cabybara.prolearningplatform.repository.ExamMemberRepository;
+import com.cabybara.prolearningplatform.repository.ExamRepository;
 import com.cabybara.prolearningplatform.repository.NotificationRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.email.EmailService;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
-import com.cabybara.prolearningplatform.service.permission.ResourcePermissionService;
 import com.cabybara.prolearningplatform.model.User;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -41,11 +39,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Service("notePermissionService")
+@Service("examPermissionService")
 @RequiredArgsConstructor
-public class NotePermissionService implements ResourcePermissionService  {
-    private final NoteMemberRepository noteMemberRepository;
-    private final NoteRepository noteRepository;
+public class ExamPermissionService {
+    private final ExamMemberRepository examMemberRepository;
+    private final ExamRepository examRepository;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
     private final NotificationDispatcher notificationDispatcher;
@@ -58,48 +56,45 @@ public class NotePermissionService implements ResourcePermissionService  {
     private int inviteTokenExpiryHours;
 
     /**
-     * Check if a note is PUBLIC
-     * PUBLIC notes allow all users to access with VIEWER role
+     * Check if an exam is PUBLIC
+     * PUBLIC exams allow all users to access with VIEWER role
      */
-    private boolean isNotePublic(Long noteId) {
-        return noteRepository.findPrivacyById(noteId)
+    private boolean isExamPublic(Long examId) {
+        return examRepository.findPrivacyById(examId)
             .map(p -> p == Privacy.PUBLIC)
             .orElse(false);
     }
 
-    @Override
     public boolean hasAccess(Long userId, Long resourceId) {
-        // PUBLIC notes: anyone can access (viewer role)
-        if (isNotePublic(resourceId)) {
+        // PUBLIC exams: anyone can access (viewer role)
+        if (isExamPublic(resourceId)) {
             return true;
         }
         
-        // PRIVATE notes: only members can access
-        return noteMemberRepository.existsByNoteIdAndUserIdAndStatus(
-            resourceId, userId, NoteMemberStatus.ACTIVE);
+        // PRIVATE exams: only members can access
+        return examMemberRepository.existsByExamIdAndUserIdAndStatus(
+            resourceId, userId, ExamMemberStatus.ACTIVE);
     }
 
-    @Override
     public boolean canEdit(Long userId, Long resourceId) {
-        return noteMemberRepository
-            .findByNoteIdAndUserIdAndStatus(resourceId, userId, NoteMemberStatus.ACTIVE)
+        // Both PUBLIC and PRIVATE: user must be a MEMBER with OWNER or EDITOR role
+        return examMemberRepository
+            .findByExamIdAndUserIdAndStatus(resourceId, userId, ExamMemberStatus.ACTIVE)
             .map(m -> m.getRole() == NoteRole.OWNER || m.getRole() == NoteRole.EDITOR)
             .orElse(false);
     }
 
-    @Override
     public boolean isOwner(Long userId, Long resourceId) {
-        return noteMemberRepository
-            .findByNoteIdAndUserIdAndStatus(resourceId, userId, NoteMemberStatus.ACTIVE)
+        return examMemberRepository
+            .findByExamIdAndUserIdAndStatus(resourceId, userId, ExamMemberStatus.ACTIVE)
             .map(m -> m.getRole() == NoteRole.OWNER)
             .orElse(false);
     }
 
-    @Override
     public String getRole(Long userId, Long resourceId) {
         // 1. Try to find user as a member
-        var optionalMember = noteMemberRepository
-            .findByNoteIdAndUserIdAndStatus(resourceId, userId, NoteMemberStatus.ACTIVE);
+        var optionalMember = examMemberRepository
+            .findByExamIdAndUserIdAndStatus(resourceId, userId, ExamMemberStatus.ACTIVE);
         
         if (optionalMember.isPresent()) {
             // User is a member: return their actual role
@@ -107,39 +102,41 @@ public class NotePermissionService implements ResourcePermissionService  {
         }
         
         // 2. User is not a member
-        if (isNotePublic(resourceId)) {
-            // PUBLIC note: non-member = VIEWER role
+        if (isExamPublic(resourceId)) {
+            // PUBLIC exam: non-member = VIEWER role
             return NoteRole.VIEWER.name();
         }
         
-        // PRIVATE note: non-member = AccessDenied
+        // PRIVATE exam: non-member = AccessDenied
         throw new AccessDeniedException(
-            "User " + userId + " has no access to note " + resourceId);
+            "User " + userId + " has no access to exam " + resourceId);
     }
 
     @Transactional
-    public void addOwner(Long noteId, Long userId) {
-        NoteMember owner = new NoteMember();
-        owner.setNote(noteRepository.getReferenceById(noteId));
+    public void addOwner(Long examId, Long userId) {
+        ExamMember owner = new ExamMember();
+        owner.setExam(examRepository.getReferenceById(examId));
         owner.setUser(userRepository.getReferenceById(userId));
         owner.setRole(NoteRole.OWNER);
-        owner.setStatus(NoteMemberStatus.ACTIVE);
-        noteMemberRepository.save(owner);
+        owner.setStatus(ExamMemberStatus.ACTIVE);
+        examMemberRepository.save(owner);
     }
 
     @Transactional
     public List<InviteResultResponse> inviteMembers(
             Long setId,
-            Long noteId,
+            Long examId,
             List<InviteMemberRequest.InviteTarget> targets,
             NoteRole role,
             Long requesterId
     ) {
-        if (!isOwner(requesterId, noteId)) {
+        if (!isOwner(requesterId, examId)) {
             throw new AccessDeniedException("Only owner can invite members");
         }
 
-        String noteTitle = noteRepository.findTitleById(noteId);
+        String examTitle = examRepository.findById(examId)
+            .map(e -> e.getTitle())
+            .orElse("Unknown");
         String inviterName = userRepository.findById(requesterId)
             .map(u -> u.getFirstName() + " " + u.getLastName())
             .orElse("Someone");
@@ -156,7 +153,7 @@ public class NotePermissionService implements ResourcePermissionService  {
                     continue;
                 }
 
-                doInvite(noteId, targetUserId, role);
+                doInvite(examId, targetUserId, role);
                 results.add(InviteResultResponse.success(target, targetUserId));
                 successUserIds.add(targetUserId);
 
@@ -165,43 +162,43 @@ public class NotePermissionService implements ResourcePermissionService  {
             } catch (IllegalStateException e) {
                 results.add(InviteResultResponse.failed(target, e.getMessage()));
             } catch (Exception e) {
-                log.error("[invite] Unexpected error for target {}: {}", target, e.getMessage());
+                log.error("[exam-invite] Unexpected error for target {}: {}", target, e.getMessage());
                 results.add(InviteResultResponse.failed(target, "Unexpected error"));
             }
         }
 
-        // Gửi notification cho tất cả user được invite thành công
+        // Send notifications for successful invites
         if (!successUserIds.isEmpty()) {
             LocalDateTime expiresAt = LocalDateTime.now().plusHours(inviteTokenExpiryHours);
-            sendInviteNotifications(successUserIds, inviterName, noteTitle, noteId, setId, expiresAt);
+            sendInviteNotifications(successUserIds, inviterName, examTitle, examId, setId, expiresAt);
         }
 
         return results;
     }
 
     @Transactional
-    public void acceptInvite(Long noteId, Long userId) {
-        NoteMember member = noteMemberRepository
-            .findByNoteIdAndUserId(noteId, userId)
+    public void acceptInvite(Long examId, Long userId) {
+        ExamMember member = examMemberRepository
+            .findByExamIdAndUserId(examId, userId)
             .orElseThrow(() -> new EntityNotFoundException("Invite not found"));
 
-        if (member.getStatus() != NoteMemberStatus.PENDING) {
-            throw new IllegalStateException("No pending invite for this note");
+        if (member.getStatus() != ExamMemberStatus.PENDING) {
+            throw new IllegalStateException("No pending invite for this exam");
         }
 
-        member.setStatus(NoteMemberStatus.ACTIVE);
+        member.setStatus(ExamMemberStatus.ACTIVE);
         
         // Delete invite notification
-        notificationRepository.deleteNoteInviteNotification(
+        notificationRepository.deleteExamInviteNotification(
             userId,
-            NotificationType.NOTE_INVITE.name(),
-            noteId.toString()
+            NotificationType.EXAM_INVITE.name(),
+            examId.toString()
         );
     }
 
     @Transactional
     public AcceptByTokenResponse acceptByToken(String token) {
-        NoteMember member = noteMemberRepository
+        ExamMember member = examMemberRepository
             .findByInviteToken(token)
             .orElseThrow(() -> new EntityNotFoundException("Invalid invite token"));
 
@@ -213,54 +210,54 @@ public class NotePermissionService implements ResourcePermissionService  {
             return new AcceptByTokenResponse(false, "Invite link has expired", null);
         }
 
-        if (member.getStatus() != NoteMemberStatus.PENDING) {
+        if (member.getStatus() != ExamMemberStatus.PENDING) {
             return new AcceptByTokenResponse(false, "Invite already processed", null);
         }
 
-        member.setStatus(NoteMemberStatus.ACTIVE);
-        member.setInviteToken(null); // xóa token sau khi dùng
-        noteMemberRepository.save(member);
+        member.setStatus(ExamMemberStatus.ACTIVE);
+        member.setInviteToken(null);
+        examMemberRepository.save(member);
 
-        return new AcceptByTokenResponse(true, null, member.getNote().getId());
+        return new AcceptByTokenResponse(true, null, member.getExam().getId());
     }
 
     @Transactional
-    public void declineInvite(Long noteId, Long userId) {
-        NoteMember member = noteMemberRepository
-            .findByNoteIdAndUserId(noteId, userId)
+    public void declineInvite(Long examId, Long userId) {
+        ExamMember member = examMemberRepository
+            .findByExamIdAndUserId(examId, userId)
             .orElseThrow(() -> new EntityNotFoundException("Invite not found"));
 
-        if (member.getStatus() != NoteMemberStatus.PENDING) {
-            throw new IllegalStateException("No pending invite for this note");
+        if (member.getStatus() != ExamMemberStatus.PENDING) {
+            throw new IllegalStateException("No pending invite for this exam");
         }
 
-        member.setStatus(NoteMemberStatus.DECLINED);
+        member.setStatus(ExamMemberStatus.DECLINED);
         
         // Delete invite notification
-        notificationRepository.deleteNoteInviteNotification(
+        notificationRepository.deleteExamInviteNotification(
             userId,
-            NotificationType.NOTE_INVITE.name(),
-            noteId.toString()
+            NotificationType.EXAM_INVITE.name(),
+            examId.toString()
         );
     }
 
-    public List<PendingInviteResponse> getPendingInvites(Long userId) {
-        return noteMemberRepository
-            .findByUserIdAndStatus(userId, NoteMemberStatus.PENDING)
+    public List<InviteResultResponse.PendingInviteExamResponse> getPendingInvites(Long userId) {
+        return examMemberRepository
+            .findByUserIdAndStatus(userId, ExamMemberStatus.PENDING)
             .stream()
-            .map(m -> new PendingInviteResponse(
-                m.getNote().getId(),
-                m.getNote().getTitle(),
+            .map(m -> new InviteResultResponse.PendingInviteExamResponse(
+                m.getExam().getId(),
+                m.getExam().getTitle(),
                 m.getRole().name(),
-                m.getNote().getSet().getId(),
+                m.getExam().getSet().getId(),
                 m.getCreatedAt()
             ))
             .toList();
     }
 
-    public Page<NoteMemberResponse> getMembers(Long noteId, Pageable pageable) {
-        return noteMemberRepository
-            .findPagedByNoteId(noteId, pageable)
+    public Page<NoteMemberResponse> getMembers(Long examId, Pageable pageable) {
+        return examMemberRepository
+            .findPagedByExamId(examId, pageable)
             .map(m -> new NoteMemberResponse(
                 m.getUser().getId(),
                 m.getUser().getFirstName(),
@@ -269,12 +266,12 @@ public class NotePermissionService implements ResourcePermissionService  {
                 m.getRole().name(),
                 m.getStatus().name()
             ));
-    }   
+    }
 
     public Page<NoteMemberResponse> searchMembers(
-        Long noteId, String keyword, Pageable pageable) {
-        return noteMemberRepository
-            .searchMembers(noteId, keyword, pageable)
+        Long examId, String keyword, Pageable pageable) {
+        return examMemberRepository
+            .searchMembers(examId, keyword, pageable)
             .map(m -> new NoteMemberResponse(
                 m.getUser().getId(),
                 m.getUser().getFirstName(),
@@ -286,58 +283,19 @@ public class NotePermissionService implements ResourcePermissionService  {
     }
 
     @Transactional
-    public void removeMember(Long noteId, Long targetUserId, Long requesterId) {
-        if (!isOwner(requesterId, noteId)) {
+    public void removeMember(Long examId, Long targetUserId, Long requesterId) {
+        if (!isOwner(requesterId, examId)) {
             throw new AccessDeniedException("Only owner can remove members");
         }
         if (targetUserId.equals(requesterId)) {
             throw new IllegalStateException("Owner cannot remove themselves");
         }
-        noteMemberRepository.deleteByNoteIdAndUserId(noteId, targetUserId);
-    }
-
-    
-
-     private void doInvite(Long noteId, Long targetUserId, NoteRole role) {
-        String token = UUID.randomUUID().toString().replace("-", "");
-        LocalDateTime expiresAt = LocalDateTime.now().plusHours(inviteTokenExpiryHours);
-
-        noteMemberRepository.findByNoteIdAndUserId(noteId, targetUserId)
-            .ifPresentOrElse(
-                existing -> {
-                    if (existing.getStatus() == NoteMemberStatus.ACTIVE) {
-                        throw new IllegalStateException("User is already a member");
-                    }
-                    // Re-invite nếu đã decline trước đó
-                    existing.setRole(role);
-                    existing.setStatus(NoteMemberStatus.PENDING);
-                    existing.setInviteToken(token);
-                    existing.setInviteTokenExpiresAt(expiresAt);
-                },
-                () -> {
-                    NoteMember member = new NoteMember();
-                    member.setNote(noteRepository.getReferenceById(noteId));
-                    member.setUser(userRepository.getReferenceById(targetUserId));
-                    member.setRole(role);
-                    member.setStatus(NoteMemberStatus.PENDING);
-                    member.setInviteToken(token);
-                    member.setInviteTokenExpiresAt(expiresAt);
-                    noteMemberRepository.save(member);
-                }
-            );
-    }
-
-    public NoteRole getUserRoleInNote(Long noteId, Long userId) {
-        return noteMemberRepository
-            .findByNoteIdAndUserIdAndStatus(noteId, userId, NoteMemberStatus.ACTIVE)
-            .map(NoteMember::getRole)
-            .orElseThrow(() -> new AccessDeniedException(
-                "User " + userId + " has no access to note " + noteId));
+        examMemberRepository.deleteByExamIdAndUserId(examId, targetUserId);
     }
 
     @Transactional
-    public void updateMemberRole(Long noteId, Long targetUserId, NoteRole newRole, Long requesterId) {
-        if (!isOwner(requesterId, noteId)) {
+    public void updateMemberRole(Long examId, Long targetUserId, NoteRole newRole, Long requesterId) {
+        if (!isOwner(requesterId, examId)) {
             throw new AccessDeniedException("Only owner can change member roles");
         }
         if (targetUserId.equals(requesterId)) {
@@ -347,11 +305,39 @@ public class NotePermissionService implements ResourcePermissionService  {
             throw new IllegalArgumentException("Cannot assign OWNER role");
         }
 
-        NoteMember member = noteMemberRepository
-            .findByNoteIdAndUserIdAndStatus(noteId, targetUserId, NoteMemberStatus.ACTIVE)
+        ExamMember member = examMemberRepository
+            .findByExamIdAndUserIdAndStatus(examId, targetUserId, ExamMemberStatus.ACTIVE)
             .orElseThrow(() -> new EntityNotFoundException("Member not found"));
 
         member.setRole(newRole);
+    }
+
+    private void doInvite(Long examId, Long targetUserId, NoteRole role) {
+        String token = UUID.randomUUID().toString().replace("-", "");
+        LocalDateTime expiresAt = LocalDateTime.now().plusHours(inviteTokenExpiryHours);
+
+        examMemberRepository.findByExamIdAndUserId(examId, targetUserId)
+            .ifPresentOrElse(
+                existing -> {
+                    if (existing.getStatus() == ExamMemberStatus.ACTIVE) {
+                        throw new IllegalStateException("User is already a member");
+                    }
+                    existing.setRole(role);
+                    existing.setStatus(ExamMemberStatus.PENDING);
+                    existing.setInviteToken(token);
+                    existing.setInviteTokenExpiresAt(expiresAt);
+                },
+                () -> {
+                    ExamMember member = new ExamMember();
+                    member.setExam(examRepository.getReferenceById(examId));
+                    member.setUser(userRepository.getReferenceById(targetUserId));
+                    member.setRole(role);
+                    member.setStatus(ExamMemberStatus.PENDING);
+                    member.setInviteToken(token);
+                    member.setInviteTokenExpiresAt(expiresAt);
+                    examMemberRepository.save(member);
+                }
+            );
     }
 
     private Long resolveUserId(InviteMemberRequest.InviteTarget target) {
@@ -367,27 +353,25 @@ public class NotePermissionService implements ResourcePermissionService  {
     protected void sendInviteNotifications(
             List<Long> userIds,
             String inviterName,
-            String noteTitle,
-            Long noteId,
+            String examTitle,
+            Long examId,
             Long setId,
             LocalDateTime expiresAt
     ) {
         Map<String, Object> data = new HashMap<>();
-        
-        data.put("noteId", noteId);
+        data.put("examId", examId);
         data.put("setId", setId);
         data.put("expiresAt", expiresAt.toString());
 
         List<CreateNotificationDto> notifications = userIds.stream()
             .map(userId -> CreateNotificationDto.builder()
                 .userId(userId)
-                .type(NotificationType.NOTE_INVITE)
+                .type(NotificationType.EXAM_INVITE)
                 .title(inviterName + " invited you to collaborate")
-                .message("Note: " + noteTitle)
+                .message("Exam: " + examTitle)
                 .sendPush(true)
-                .referenceId(noteId)
-                .referenceParentId(setId)
-                .referenceType("NOTE")
+                .referenceId(examId)
+                .referenceType("EXAM")
                 .data(data)
                 .build())
             .toList();
@@ -395,15 +379,15 @@ public class NotePermissionService implements ResourcePermissionService  {
         notificationDispatcher.dispatchToMany(notifications);
 
         userIds.forEach(userId ->
-            noteMemberRepository.findByNoteIdAndUserId(noteId, userId)
+            examMemberRepository.findByExamIdAndUserId(examId, userId)
                 .ifPresent(member -> {
                     String acceptUrl = frontendUrl
-                        + "/invites/accept?token=" + member.getInviteToken();
+                        + "/exam-invites/accept?token=" + member.getInviteToken();
 
-                    emailService.sendNoteInviteNotification(
+                    emailService.sendExamInviteNotification(
                         member.getUser().getEmail(),
                         inviterName,
-                        noteTitle,
+                        examTitle,
                         member.getRole().name(),
                         acceptUrl
                     );
@@ -411,13 +395,34 @@ public class NotePermissionService implements ResourcePermissionService  {
         );
     }
 
-    public Page<UserSearchResponse> searchUsers(String keyword, Long noteId, Pageable pageable) {
+    public Page<UserSearchResponse> searchUsers(String keyword, Long examId, Pageable pageable) {
         Page<User> users;
         if (keyword == null || keyword.trim().isEmpty()) {
-            users = userRepository.findAllExcludingNoteMembers(noteId, pageable);
+            users = userRepository.findAllExcludingExamMembers(examId, pageable);
         } else {
-            users = userRepository.searchByNameOrEmail(keyword, noteId, pageable);
+            users = userRepository.searchByNameOrEmailForExam(keyword, examId, pageable);
         }
         return users.map(UserSearchResponse::from);
+    }
+
+    public NoteRole getUserRoleInExam(Long examId, Long userId) {
+        // 1. Try to find user as a member
+        var optionalMember = examMemberRepository
+            .findByExamIdAndUserIdAndStatus(examId, userId, ExamMemberStatus.ACTIVE);
+        
+        if (optionalMember.isPresent()) {
+            // User is a member: return their actual role
+            return optionalMember.get().getRole();
+        }
+        
+        // 2. User is not a member
+        if (isExamPublic(examId)) {
+            // PUBLIC exam: non-member = VIEWER role
+            return NoteRole.VIEWER;
+        }
+        
+        // PRIVATE exam: non-member = AccessDenied
+        throw new AccessDeniedException(
+            "User " + userId + " has no access to exam " + examId);
     }
 }

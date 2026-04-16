@@ -2,7 +2,10 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.exam.*;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByWebRequestDto;
+import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
+import com.cabybara.prolearningplatform.dto.request.share.UpdateMemberRoleRequest;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionErrorStatDto;
+import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.ResponseData;
@@ -16,12 +19,16 @@ import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIRespon
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
+import com.cabybara.prolearningplatform.dto.response.share.NoteMemberResponse;
+import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.service.ai.AIExamService;
 import com.cabybara.prolearningplatform.service.exam.ExamAttemptService;
 import com.cabybara.prolearningplatform.service.exam.QuestionService;
 import com.cabybara.prolearningplatform.service.exam.ExamService;
+import com.cabybara.prolearningplatform.service.permission.impl.ExamPermissionService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import com.cabybara.prolearningplatform.utils.ValidateSort;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -46,6 +53,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import static jakarta.servlet.RequestDispatcher.ERROR_MESSAGE;
 
@@ -61,6 +71,8 @@ public class ExamController {
     private final QuestionService questionService;
     private final AIExamService aiExamService;
     private final ExamAttemptService examAttemptService;
+    private final ExamPermissionService examPermissionService;
+    private final AuthenticationContext authenticationContext;
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping()
@@ -90,6 +102,7 @@ public class ExamController {
                 ));
     }
 
+    @PreAuthorize("isAuthenticated() and @examPermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #examId)")
     @GetMapping("/{examId}")
     public ResponseEntity<ApiResponse<ExamResponseDto>> getExam(
             @PathVariable Long setId,
@@ -406,5 +419,138 @@ public class ExamController {
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Explain wrong answer fail");
         }
     }
+
+    @PostMapping("/{examId}/members/invite")
+    @PreAuthorize("@examPermissionService.isOwner(@authenticationContext.getCurrentUserId(), #examId)")
+    public ResponseEntity<ApiResponse<List<InviteResultResponse>>> inviteMembers(
+        @PathVariable Long setId,
+        @PathVariable Long examId,
+        @RequestBody InviteMemberRequest request
+    ) {
+        List<InviteResultResponse> results = examService.inviteMembers(setId, examId, request);
+
+        boolean hasFailure = results.stream().anyMatch(r -> !r.isSuccess());
+
+        return ResponseEntity.status(hasFailure ? HttpStatus.MULTI_STATUS : HttpStatus.OK).body(
+            ResponseUtil.success(
+                "Invitation process completed",
+                results,
+                null
+            )
+        );
+    }
     
+    @PostMapping("/{examId}/members/accept")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> acceptInvite(
+        @PathVariable Long setId,
+        @PathVariable Long examId
+    ) {
+        examService.acceptInvite(examId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Invite accepted successfully", null, null)
+        );
+    }
+
+    @PostMapping("/{examId}/members/decline")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<Void>> declineInvite(
+        @PathVariable Long setId,
+        @PathVariable Long examId
+    ) {
+        examService.declineInvite(examId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Invite declined successfully", null, null)
+        );
+    }
+
+    @DeleteMapping("/{examId}/members/{targetUserId}")
+    @PreAuthorize("@examPermissionService.isOwner(@authenticationContext.getCurrentUserId(), #examId)")
+    public ResponseEntity<ApiResponse<Void>> removeMember(
+        @PathVariable Long setId,
+        @PathVariable Long examId,
+        @PathVariable Long targetUserId
+    ) {
+        examService.removeMember(examId, targetUserId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Member removed successfully", null, null)
+        );
+    }
+
+    @GetMapping("/{examId}/members")
+    @PreAuthorize("isAuthenticated() and @examPermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #examId)")
+    public ResponseEntity<ApiResponse<List<NoteMemberResponse>>> getMembers(
+        @PathVariable Long setId,
+        @PathVariable Long examId,
+        @RequestParam(required = false) String keyword,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<NoteMemberResponse> result = (keyword != null && !keyword.isBlank())
+        ? examPermissionService.searchMembers(examId, keyword, pageable)
+        : examPermissionService.getMembers(examId, pageable);
+
+        PaginationResponseDto pagination = PaginationResponseDto.builder()
+            .currentPage(result.getNumber())
+            .totalPages(result.getTotalPages())
+            .totalItems(result.getTotalElements())
+            .pageSize(result.getSize())
+            .build();
+
+        return ResponseEntity.ok(
+            ResponseUtil.success(
+                "Members retrieved successfully",
+                result.getContent(),
+                pagination
+            )
+        );
+    }
+
+    @PatchMapping("/{examId}/members/{targetUserId}/role")
+    @PreAuthorize("@examPermissionService.isOwner(@authenticationContext.getCurrentUserId(), #examId)")
+    public ResponseEntity<ApiResponse<Void>> updateMemberRole(
+            @PathVariable Long setId,
+            @PathVariable Long examId,
+            @PathVariable Long targetUserId,
+            @RequestBody UpdateMemberRoleRequest request
+    ) {
+        examPermissionService.updateMemberRole(
+            examId, targetUserId, request.getRole(),
+            authenticationContext.getCurrentUserId()
+        );
+
+        return ResponseEntity.status(HttpStatus.OK).body(
+            ResponseUtil.success("Member role updated successfully", null, request)
+        );
+    }
+
+    @GetMapping("/{examId}/users/search")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse<List<UserSearchResponse>>> searchUsers(
+        @PathVariable Long setId,
+        @PathVariable Long examId,
+        @RequestParam(required = false) String keyword,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "20") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<UserSearchResponse> result = examPermissionService.searchUsers(keyword, examId, pageable);
+
+        PaginationResponseDto pagination = PaginationResponseDto.builder()
+            .currentPage(result.getNumber())
+            .totalPages(result.getTotalPages())
+            .totalItems(result.getTotalElements())
+            .pageSize(result.getSize())
+            .build();
+
+        return ResponseEntity.ok(
+            ResponseUtil.success(
+                "Users retrieved successfully",
+                result.getContent(),
+                pagination
+            )
+        );
+    }
 }

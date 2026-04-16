@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.dto.response.flashcard;
 
 import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.FlashcardStatus;
+import com.cabybara.prolearningplatform.enums.NoteRole;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import lombok.Data;
 import lombok.experimental.SuperBuilder;
@@ -27,4 +28,6 @@ public class FlashcardResponseDto {
 
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+
+    private NoteRole userRole;
 }

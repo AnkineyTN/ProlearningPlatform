@@ -122,4 +122,10 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
                                                            @Param("userId") Long userId,
                                                            @Param("creationMethod") CreationMethod creationMethod,
                                                            Pageable pageable);
+
+    @Query("SELECT f.privacy FROM Flashcard f WHERE f.id = :flashcardId")
+    Optional<Privacy> findPrivacyById(@Param("flashcardId") Long flashcardId);
+
+    @EntityGraph(attributePaths = {"cards", "cards.image"})
+    Optional<Flashcard> findByIdAndSetId(Long flashcardId, Long setId);
 }

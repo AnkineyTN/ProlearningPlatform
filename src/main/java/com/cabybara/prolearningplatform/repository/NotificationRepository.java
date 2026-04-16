@@ -36,5 +36,17 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     int deleteOldReadNotifications(@Param("before") OffsetDateTime before);
 
     List<Notification> findByUserIdAndTypeOrderByCreatedAtDesc(Long userId, com.cabybara.prolearningplatform.enums.NotificationType type, Pageable pageable);
+
+    @Modifying
+    @Query(value = "DELETE FROM notification n WHERE n.user_id = :userId AND n.type = :type AND n.data->>'flashcardId' = :flashcardId", nativeQuery = true)
+    int deleteFlashcardInviteNotification(@Param("userId") Long userId, @Param("type") String type, @Param("flashcardId") String flashcardId);
+
+    @Modifying
+    @Query(value = "DELETE FROM notification n WHERE n.user_id = :userId AND n.type = :type AND n.data->>'examId' = :examId", nativeQuery = true)
+    int deleteExamInviteNotification(@Param("userId") Long userId, @Param("type") String type, @Param("examId") String examId);
+
+    @Modifying
+    @Query(value = "DELETE FROM notification n WHERE n.user_id = :userId AND n.type = :type AND n.data->>'noteId' = :noteId", nativeQuery = true)
+    int deleteNoteInviteNotification(@Param("userId") Long userId, @Param("type") String type, @Param("noteId") String noteId);
 }
 
