@@ -361,7 +361,7 @@ public class ExamPermissionService {
         Map<String, Object> data = new HashMap<>();
         data.put("examId", examId);
         data.put("setId", setId);
-        data.put("expiresAt", expiresAt);
+        data.put("expiresAt", expiresAt.toString());
 
         List<CreateNotificationDto> notifications = userIds.stream()
             .map(userId -> CreateNotificationDto.builder()
