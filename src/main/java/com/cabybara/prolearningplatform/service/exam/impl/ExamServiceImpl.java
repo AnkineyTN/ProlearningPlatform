@@ -141,19 +141,19 @@ public class ExamServiceImpl implements ExamService {
 
         Page<Exam> pagedExam;
 
-        if (createMethod == CreationMethod.REVIEW) {
-            pagedExam = examRepository.findAllBySetIdAndCreatedByAndCreationMethod(setId, userId, CreationMethod.REVIEW, pageable);
-        } else if (q == null || q.isBlank()) {
+        String methodFilter = createMethod != null ? createMethod.name() : null;
+
+        if (q == null || q.isBlank()) {
             if (privacy == null) {
-                pagedExam = examRepository.findByCreatedByAndSetId(userId, setId, pageable);
+                pagedExam = examRepository.findByCreatedByAndSetId(userId, setId, methodFilter, pageable);
             } else {
-                pagedExam = examRepository.findByCreatedByAndSetIdAndPrivacy(userId, setId, privacy.name(), pageable);
+                pagedExam = examRepository.findByCreatedByAndSetIdAndPrivacy(userId, setId, privacy.name(), methodFilter, pageable);
             }
         } else {
             if (privacy == null) {
-                pagedExam = examRepository.searchByCreatedByAndSetId(userId, setId, q, pageable);
+                pagedExam = examRepository.searchByCreatedByAndSetId(userId, setId, q, methodFilter, pageable);
             } else {
-                pagedExam = examRepository.searchByCreatedByAndSetIdAndPrivacy(userId, setId, q, privacy.name(), pageable);
+                pagedExam = examRepository.searchByCreatedByAndSetIdAndPrivacy(userId, setId, q, privacy.name(), methodFilter, pageable);
             }
         }
 

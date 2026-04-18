@@ -72,19 +72,19 @@ public class FlashcardServiceImpl implements FlashcardService {
 
         Page<Flashcard> pagedFlashcard;
 
-        if (createMethod == CreationMethod.REVIEW) {
-            pagedFlashcard = flashcardRepository.findAllBySetIdAndUserIdAndCreateMethod(setId, userId, CreationMethod.REVIEW, pageable);
-        } else if (q == null || q.isBlank()) {
+        String methodFilter = createMethod != null ? createMethod.name() : null;
+
+        if (q == null || q.isBlank()) {
             if (privacy == null) {
-                pagedFlashcard = flashcardRepository.findByUserIdAndSetId(userId, setId, pageable);
+                pagedFlashcard = flashcardRepository.findByUserIdAndSetId(userId, setId, methodFilter, pageable);
             } else {
-                pagedFlashcard = flashcardRepository.findByUserIdAndSetIdAndPrivacy(userId, setId, privacy.name(), pageable);
+                pagedFlashcard = flashcardRepository.findByUserIdAndSetIdAndPrivacy(userId, setId, privacy.name(), methodFilter, pageable);
             }
         } else {
             if (privacy == null) {
-                pagedFlashcard = flashcardRepository.searchByUserIdAndSetId(userId, setId, q, pageable);
+                pagedFlashcard = flashcardRepository.searchByUserIdAndSetId(userId, setId, q, methodFilter, pageable);
             } else {
-                pagedFlashcard = flashcardRepository.searchByUserIdAndSetIdAndPrivacy(userId, setId, q, privacy.name(), pageable);
+                pagedFlashcard = flashcardRepository.searchByUserIdAndSetIdAndPrivacy(userId, setId, q, privacy.name(), methodFilter, pageable);
             }
         }
 

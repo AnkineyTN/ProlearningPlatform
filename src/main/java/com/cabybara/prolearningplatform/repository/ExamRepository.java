@@ -1,10 +1,8 @@
 package com.cabybara.prolearningplatform.repository;
 
-import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.exam.Exam;
-import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,26 +23,31 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
             value = """
                 SELECT *
                 FROM exams
-                WHERE created_by = :userId AND set_id = :setId AND create_method != 'REVIEW'
+                WHERE created_by = :userId AND set_id = :setId
+                  AND ((:createMethod IS NULL AND create_method != 'REVIEW')
+                      OR (:createMethod IS NOT NULL AND create_method = :createMethod))
             """,
             nativeQuery = true)
-    Page<Exam> findByCreatedByAndSetId(Long userId, Long setId, Pageable pageable);
+    Page<Exam> findByCreatedByAndSetId(Long userId, Long setId, String createMethod, Pageable pageable);
 
     @Query(
             value = """
                 SELECT *
                 FROM exams
-                WHERE created_by = :userId AND set_id = :setId AND privacy = :privacy AND create_method != 'REVIEW'
+                WHERE created_by = :userId AND set_id = :setId AND privacy = :privacy
+                  AND ((:createMethod IS NULL AND create_method != 'REVIEW')
+                      OR (:createMethod IS NOT NULL AND create_method = :createMethod))
             """,
             nativeQuery = true)
-    Page<Exam> findByCreatedByAndSetIdAndPrivacy(Long userId, Long setId, String privacy, Pageable pageable);
+    Page<Exam> findByCreatedByAndSetIdAndPrivacy(Long userId, Long setId, String privacy, String createMethod, Pageable pageable);
 
     @Query(
             value = """
                 SELECT *
                 FROM exams
                 WHERE created_by = :userId AND set_id = :setId
-                  AND create_method != 'REVIEW'
+                  AND ((:createMethod IS NULL AND create_method != 'REVIEW')
+                      OR (:createMethod IS NOT NULL AND create_method = :createMethod))
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
@@ -52,13 +55,13 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
                 SELECT count(*)
                 FROM exams
                 WHERE created_by = :userId AND set_id = :setId
-                  AND create_method != 'REVIEW'
-                  AND (
-                        search_vector @@ plainto_tsquery('simple', :q)
-                        OR (title || ' ' || description) % unaccent(:q))
+                  AND ((:createMethod IS NULL AND create_method != 'REVIEW')
+                      OR (:createMethod IS NOT NULL AND create_method = :createMethod))
+                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                      OR (title || ' ' || description) % unaccent(:q))
                 """,
             nativeQuery = true)
-    Page<Exam> searchByCreatedByAndSetId(Long userId, Long setId, String q, Pageable pageable);
+    Page<Exam> searchByCreatedByAndSetId(Long userId, Long setId, String q, String createMethod, Pageable pageable);
 
     @Query(
             value = """
@@ -67,7 +70,8 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
                 WHERE created_by = :userId
                   AND set_id = :setId
                   AND privacy = :privacy
-                  AND create_method != 'REVIEW'
+                  AND ((:createMethod IS NULL AND create_method != 'REVIEW')
+                      OR (:createMethod IS NOT NULL AND create_method = :createMethod))
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
@@ -77,12 +81,13 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
                 WHERE created_by = :userId
                   AND set_id = :setId
                   AND privacy = :privacy
-                  AND create_method != 'REVIEW'
+                  AND ((:createMethod IS NULL AND create_method != 'REVIEW')
+                      OR (:createMethod IS NOT NULL AND create_method = :createMethod))
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             nativeQuery = true)
-    Page<Exam> searchByCreatedByAndSetIdAndPrivacy(Long userId, Long setId, String q, String privacy, Pageable pageable);
+    Page<Exam> searchByCreatedByAndSetIdAndPrivacy(Long userId, Long setId, String q, String privacy, String createMethod, Pageable pageable);
 
     @Query(
             value = "SELECT * FROM exams q WHERE q.set_id = :setId AND q.id = :examId",
@@ -91,14 +96,6 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
     Optional<Exam> findBySetIdAndId(Long setId, Long examId);
 
     boolean existsBySetIdAndId(Long setId, Long examId);
-
-    Page<Exam> findAllByCreatedByAndCreationMethod(Long createdBy, CreationMethod creationMethod, Pageable pageable);
-
-    @Query("SELECT e FROM Exam e WHERE e.set.id = :setId AND e.createdBy = :userId AND e.creationMethod = :creationMethod")
-    Page<Exam> findAllBySetIdAndCreatedByAndCreationMethod(@Param("setId") Long setId,
-                                                           @Param("userId") Long userId,
-                                                           @Param("creationMethod") CreationMethod creationMethod,
-                                                           Pageable pageable);
 
     @Query("SELECT e.privacy FROM Exam e WHERE e.id = :examId")
     Optional<Privacy> findPrivacyById(@Param("examId") Long examId);
