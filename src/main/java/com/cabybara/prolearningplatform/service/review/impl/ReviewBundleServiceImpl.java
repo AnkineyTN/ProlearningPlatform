@@ -116,7 +116,7 @@ public class ReviewBundleServiceImpl implements ReviewBundleService {
         ReviewBundle bundle = findBundleForCurrentUser(bundleId);
         List<CardContent> cards = loadCardContents(bundle);
 
-        CreateExamFromReviewRequestDto dto = aiExamService.generateExamFromReview(cards);
+        CreateExamFromReviewRequestDto dto = aiExamService.generateExamFromCards(cards);
         return examService.createExamFromReview(dto, bundle.getSetId());
     }
 

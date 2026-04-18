@@ -26,6 +26,8 @@ public interface ExamService {
 
     ExamResponseDto createReviewExamFromQuestions(Long examId, List<Long> questionIds);
 
+    ExamResponseDto createExamFromFlashcard(Long setId, Long flashcardId);
+
     Page<ExamResponseDto> getExam(Long setId, String q, Privacy privacy, CreationMethod createMethod, Pageable pageable);
 
     ExamResponseDto getExam(Long setId, Long ExamId);

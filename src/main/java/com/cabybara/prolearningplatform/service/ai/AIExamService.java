@@ -27,7 +27,7 @@ public interface AIExamService {
 
     ExplainWrongAnswerResponseDto explainWrongAnswer(ExplainWrongAnswerRequestDto request);
 
-    CreateExamFromReviewRequestDto generateExamFromReview(List<CardContent> cards);
+    CreateExamFromReviewRequestDto generateExamFromCards(List<CardContent> cards);
 
     CreateExamFromReviewRequestDto generateExamFromQuestions(List<QuestionContent> questions);
 }

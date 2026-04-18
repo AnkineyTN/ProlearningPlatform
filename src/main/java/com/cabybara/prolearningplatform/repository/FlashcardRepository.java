@@ -1,8 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
-import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
-import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -30,26 +28,31 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
             value = """
                 SELECT *
                 FROM flashcard
-                WHERE id_user = :userId AND id_set = :setId AND create_method != 'REVIEW'
+                WHERE id_user = :userId AND id_set = :setId
+                  AND ((:createMethod IS NULL AND create_method != 'REVIEW')
+                      OR (:createMethod IS NOT NULL AND create_method = :createMethod))
             """,
             nativeQuery = true)
-    Page<Flashcard> findByUserIdAndSetId(Long userId, Long setId, Pageable pageable);
+    Page<Flashcard> findByUserIdAndSetId(Long userId, Long setId, String createMethod, Pageable pageable);
 
     @Query(
             value = """
                 SELECT *
                 FROM flashcard
-                WHERE id_user = :userId AND id_set = :setId AND privacy = :privacy AND create_method != 'REVIEW'
+                WHERE id_user = :userId AND id_set = :setId AND privacy = :privacy
+                  AND ((:createMethod IS NULL AND create_method != 'REVIEW')
+                      OR (:createMethod IS NOT NULL AND create_method = :createMethod))
             """,
-        nativeQuery = true)
-    Page<Flashcard> findByUserIdAndSetIdAndPrivacy(Long userId, Long setId, String privacy, Pageable pageable);
+            nativeQuery = true)
+    Page<Flashcard> findByUserIdAndSetIdAndPrivacy(Long userId, Long setId, String privacy, String createMethod, Pageable pageable);
 
     @Query(
             value = """
                 SELECT *
                 FROM flashcard
                 WHERE id_user = :userId AND id_set = :setId
-                  AND create_method != 'REVIEW'
+                  AND ((:createMethod IS NULL AND create_method != 'REVIEW')
+                      OR (:createMethod IS NOT NULL AND create_method = :createMethod))
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
@@ -57,13 +60,13 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
                 SELECT count(*)
                 FROM flashcard
                 WHERE id_user = :userId AND id_set = :setId
-                  AND create_method != 'REVIEW'
-                  AND (
-                        search_vector @@ plainto_tsquery('simple', unaccent(:q))
-                        OR (title || ' ' || description) % unaccent(:q))
+                  AND ((:createMethod IS NULL AND create_method != 'REVIEW')
+                      OR (:createMethod IS NOT NULL AND create_method = :createMethod))
+                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                      OR (title || ' ' || description) % unaccent(:q))
                 """,
             nativeQuery = true)
-    Page<Flashcard> searchByUserIdAndSetId(Long userId, Long setId, String q, Pageable pageable);
+    Page<Flashcard> searchByUserIdAndSetId(Long userId, Long setId, String q, String createMethod, Pageable pageable);
 
     @Query(
             value = """
@@ -72,7 +75,8 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
                 WHERE id_user = :userId
                   AND id_set = :setId
                   AND privacy = :privacy
-                  AND create_method != 'REVIEW'
+                  AND ((:createMethod IS NULL AND create_method != 'REVIEW')
+                      OR (:createMethod IS NOT NULL AND create_method = :createMethod))
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
@@ -82,12 +86,13 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
                 WHERE id_user = :userId
                   AND id_set = :setId
                   AND privacy = :privacy
-                  AND create_method != 'REVIEW'
+                  AND ((:createMethod IS NULL AND create_method != 'REVIEW')
+                      OR (:createMethod IS NOT NULL AND create_method = :createMethod))
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             nativeQuery = true)
-    Page<Flashcard> searchByUserIdAndSetIdAndPrivacy(Long userId, Long setId, String q, String privacy, Pageable pageable);
+    Page<Flashcard> searchByUserIdAndSetIdAndPrivacy(Long userId, Long setId, String q, String privacy, String createMethod, Pageable pageable);
 
     @EntityGraph(attributePaths = {"cards", "cards.image"})
     Optional<Flashcard> findByIdAndSetIdAndUserId(Long flashcardId, Long setId, Long userId);
@@ -111,17 +116,6 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
     boolean existsBySetIdAndIdAndUserId(@Param("setId") Long setId,
                                         @Param("flashcardId") Long flashcardId,
                                         @Param("userId") Long userId);
-
-    @Query("SELECT f FROM Flashcard f WHERE f.user.id = :userId AND f.create_method = :creationMethod")
-    Page<Flashcard> findAllByUserIdAndCreateMethod(@Param("userId") Long userId,
-                                                   @Param("creationMethod") CreationMethod creationMethod,
-                                                   Pageable pageable);
-
-    @Query("SELECT f FROM Flashcard f WHERE f.set.id = :setId AND f.user.id = :userId AND f.create_method = :creationMethod")
-    Page<Flashcard> findAllBySetIdAndUserIdAndCreateMethod(@Param("setId") Long setId,
-                                                           @Param("userId") Long userId,
-                                                           @Param("creationMethod") CreationMethod creationMethod,
-                                                           Pageable pageable);
 
     @Query("SELECT f.privacy FROM Flashcard f WHERE f.id = :flashcardId")
     Optional<Privacy> findPrivacyById(@Param("flashcardId") Long flashcardId);

@@ -1,24 +1,14 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.exam.*;
-import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByWebRequestDto;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.request.share.UpdateMemberRoleRequest;
-import com.cabybara.prolearningplatform.dto.response.exam.QuestionErrorStatDto;
+import com.cabybara.prolearningplatform.dto.response.exam.*;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.ResponseData;
 import com.cabybara.prolearningplatform.dto.response.ResponseError;
-import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptDto;
-import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptResultDto;
-import com.cabybara.prolearningplatform.dto.response.exam.ExamQuestionViewDto;
-import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
-import com.cabybara.prolearningplatform.dto.response.exam.ExplainWrongAnswerResponseDto;
-import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
-import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
-import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
-import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.share.NoteMemberResponse;
 import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
 import com.cabybara.prolearningplatform.enums.Privacy;
@@ -31,8 +21,6 @@ import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import com.cabybara.prolearningplatform.utils.ValidateSort;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -50,12 +38,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import static jakarta.servlet.RequestDispatcher.ERROR_MESSAGE;
 
@@ -338,6 +322,18 @@ public class ExamController {
             summary = "Generate review exam from selected incorrect questions",
             description = "Uses AI to generate a new exam with variant questions based on the selected incorrect question IDs. The new exam belongs to the same set as the source exam."
     )
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/from-flashcard/{flashcardId}")
+    public ResponseEntity<ApiResponse<ExamResponseDto>> generateExamFromFlashcard(
+            @PathVariable Long setId,
+            @PathVariable Long flashcardId
+    ) {
+        ExamResponseDto exam = examService.createExamFromFlashcard(setId, flashcardId);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ResponseUtil.success("Exam generated from flashcard", exam, null));
+    }
+
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/{examId}/generate-review-exam")
     public ResponseEntity<ApiResponse<ExamResponseDto>> generateReviewExam(
