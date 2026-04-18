@@ -88,7 +88,7 @@ public class AIExamServiceImpl implements AIExamService {
             options.add(new QuestionOptionDto(null, parts[i].trim(), isCorrect));
         }
 
-        return new CreateQuestionRequestDto(content, "MULTI_CHOICE", 1, options, null);
+        return new CreateQuestionRequestDto(content, "MULTIPLE_CHOICE", 1, options, null);
     }
 
     // TF|Question content|True or False
@@ -219,7 +219,7 @@ public class AIExamServiceImpl implements AIExamService {
     }
 
     @Override
-    public CreateExamFromReviewRequestDto generateExamFromReview(List<CardContent> cards) {
+    public CreateExamFromReviewRequestDto generateExamFromCards(List<CardContent> cards) {
         try {
             Map<String, Object> body = new HashMap<>();
             body.put("cards", cards);
