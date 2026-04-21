@@ -127,6 +127,10 @@ public class CardItemServiceImpl implements CardItemService {
             throw new BadRequestException("The card does not match the provided ownership criteria.");
         }
 
+        if (cardItem.getImage() != null) {
+            assetService.markDeletedAsset(cardItem.getImage());
+        }
+
         cardItemRepository.delete(cardItem);
     }
 
@@ -165,18 +169,31 @@ public class CardItemServiceImpl implements CardItemService {
     @Override
     @Transactional
     public void deleteCards(Long setId, Long flashcardId, List<Long> cardIds) throws BadRequestException {
+        if (cardIds.isEmpty()) {
+            return;
+        }
+
         Long userId = authenticationContext.getCurrentUserId();
+        List<CardItem> cards = cardItemRepository.findAllWithImageByIdIn(cardIds);
 
-        int deletedCount = cardItemRepository.deleteAllByIdInAndOwnershipChecks(
-                cardIds,
-                flashcardId,
-                setId,
-                userId
-        );
-
-        if (deletedCount == 0 && !cardIds.isEmpty()) {
+        if (cards.isEmpty()) {
             throw new BadRequestException("Flashcard not found or access denied.");
         }
+
+        for (CardItem card : cards) {
+            if (!card.getFlashcard().getId().equals(flashcardId) ||
+                    !card.getFlashcard().getSet().getId().equals(setId) ||
+                    !card.getFlashcard().getSet().getUser().getId().equals(userId)) {
+                throw new BadRequestException("The card does not match the provided ownership criteria.");
+            }
+        }
+
+        cards.stream()
+                .map(CardItem::getImage)
+                .filter(Objects::nonNull)
+                .forEach(assetService::markDeletedAsset);
+
+        cardItemRepository.deleteAll(cards);
     }
 
     private Map<Long, CardItemUpdatingRequestDto> prepareUpdateDtoMap(
@@ -238,6 +255,29 @@ public class CardItemServiceImpl implements CardItemService {
         }
     }
 
+    @Override
+    @Transactional
+    public CardItemResponseDto deleteCardImage(Long setId, Long flashcardId, Long cardId) throws BadRequestException {
+        Long userId = authenticationContext.getCurrentUserId();
+        CardItem cardItem = cardItemRepository.findById(cardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Card not found."));
+
+        if (!cardItem.getFlashcard().getId().equals(flashcardId) ||
+                !cardItem.getFlashcard().getSet().getId().equals(setId) ||
+                !cardItem.getFlashcard().getSet().getUser().getId().equals(userId)) {
+            throw new BadRequestException("The card does not match the provided ownership criteria.");
+        }
+
+        if (cardItem.getImage() == null) {
+            throw new BadRequestException("This card does not have an image.");
+        }
+
+        assetService.markDeletedAsset(cardItem.getImage());
+        cardItem.setImage(null);
+
+        return cardItemMapper.toCardItemResponseDto(cardItemRepository.save(cardItem));
+    }
+
     private void updateCardImage(CardItem cardItem, CardItemUpdatingRequestDto dto, Long userId) {
         Long newImageAssetId = dto.getImageAssetId();
 
@@ -245,7 +285,7 @@ public class CardItemServiceImpl implements CardItemService {
             return;
         }
 
-        if (cardItem.getImage().getUrl() != null) {
+        if (cardItem.getImage() != null) {
             assetService.markDeletedAsset(cardItem.getImage());
         }
 

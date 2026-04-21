@@ -6,7 +6,6 @@ import com.cabybara.prolearningplatform.model.Asset;
 import com.cabybara.prolearningplatform.service.cloudinary.CloudinaryService;
 import com.cabybara.prolearningplatform.service.scheduler.AssetCleanupService;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -28,7 +27,6 @@ public class AssetCleanupServiceImpl implements AssetCleanupService {
 
     @Scheduled(cron = "0 0 3 * * ?", zone = SCHEDULER_TIME_ZONE)
     @Async("heavyTaskExecutor")
-    @Transactional
     public void cleanupAssets() {
         OffsetDateTime cutoffTime = OffsetDateTime.now().minusHours(24);
 
@@ -47,9 +45,9 @@ public class AssetCleanupServiceImpl implements AssetCleanupService {
                 .toList();
 
         try {
-            assetService.deleteAllAssets(cleanupAssets);
-
             cloudinaryService.deleteAssets(assetToDeleteDtos);
+
+            assetService.deleteAllAssets(cleanupAssets);
         } catch (Exception e) {
             log.error("Error during cleanup image assets", e);
         }

@@ -123,6 +123,28 @@ public class CardItemController {
     }
 
     @Operation(
+            summary = "Delete image from a specific card",
+            description = "Removes the image from a card item without deleting the card itself"
+    )
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/{cardId}/image")
+    public ResponseEntity<ApiResponse<CardItemResponseDto>> deleteCardImage(
+            @Parameter(description = "The ID of the Set", required = true)
+            @PathVariable Long setId,
+
+            @Parameter(description = "The ID of the Flashcard", required = true)
+            @PathVariable Long flashcardId,
+
+            @Parameter(description = "The ID of the Card", required = true)
+            @PathVariable Long cardId
+    ) throws BadRequestException {
+        CardItemResponseDto result = cardItemService.deleteCardImage(setId, flashcardId, cardId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Delete card image successfully", result, null));
+    }
+
+    @Operation(
             summary = "Deletes multiple Card Items from a specific Flashcard",
             description = "Deletes a list of Card Items based on the provided IDs, all belonging to a specific Flashcard within a Set. **This operation requires a request body.**"
     )

@@ -4,7 +4,7 @@ public interface DueCardReminderService {
 
     void sendDueCardReminders();
 
-    void sendEveningStudyReminders();
+//    void sendEveningStudyReminders();
 
     void sendDueCardReminderToUser(Long userId, long dueCount);
 }
