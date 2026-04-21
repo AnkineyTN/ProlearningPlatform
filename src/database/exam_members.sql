@@ -15,7 +15,7 @@ CREATE INDEX IF NOT EXISTS idx_exam_members_user_status ON exam_members(user_id,
 
 -- Populate owners: Thêm chủ sở hữu hiện tại vào bảng exam_members
 INSERT INTO exam_members (exam_id, user_id, role, status, created_at)
-SELECT id, id_user, 'OWNER', 'ACTIVE', NOW()
+SELECT id, created_by, 'OWNER', 'ACTIVE', NOW()
 FROM exams
 WHERE id_user IS NOT NULL
 ON CONFLICT (exam_id, user_id) DO NOTHING;

@@ -20,6 +20,8 @@ public interface CardItemService {
 
     void deleteCard(Long setId, Long flashcardId, Long cardId) throws BadRequestException;
 
+    CardItemResponseDto deleteCardImage(Long setId, Long flashcardId, Long cardId) throws BadRequestException;
+
     List<CardItem> getCardsForReview(Long setId, Long flashcardSetId, int limit);
 
     List<CardItem> getAllCardsForReview(Long setId, Long flashcardId, int limit);
