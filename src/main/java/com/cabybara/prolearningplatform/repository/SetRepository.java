@@ -18,7 +18,7 @@ import org.springframework.stereotype.Repository;
 public interface SetRepository extends JpaRepository<Set, Long> {
     Optional<Set> findByTitle(String title);
 
-    boolean existsByTitle(String title);
+    boolean existsByTitleAndUserId(String title, Long userId);
 
     Page<Set> findAllByUserId(Long userId, Pageable pageable);
 
