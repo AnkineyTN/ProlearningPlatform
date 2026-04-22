@@ -42,6 +42,7 @@ public class AIExamServiceImpl implements AIExamService {
     private static final String GENERATE_EXAM_BY_FILE_PATH = "/tests/from-file";
     private static final String GENERATE_EXAM_BY_NOTE_PATH = "/tests/from-note";
     private static final String GENERATE_EXAM_BY_WEB_PATH = "/tests/from-web";
+    private static final String GENERATE_EXAM_BY_EXISTING_EXAM_PATH = "/tests/from-existing-test";
     private static final String GRADE_ESSAY_PATH = "/tests/grade-essay";
     private static final String EXPLAIN_WRONG_ANSWER_PATH = "/tests/explain-answer";
     private static final String GENERATE_EXAM_FROM_FORGOTTEN_FLASHCARD = "/tests/from-forgotten-cards";
@@ -219,6 +220,30 @@ public class AIExamServiceImpl implements AIExamService {
     }
 
     @Override
+    public GenerateExamByAIResponseDto generateExamByExistingExam(GenerateExamByExistingExamRequestDto request) {
+        try {
+            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+            for (MultipartFile file : request.getFiles()) {
+                body.add("files", convertToResource(file));
+            }
+
+            String raw = restHttpClientUtil.postMultipart(
+                    aiServiceBaseApi + GENERATE_EXAM_BY_EXISTING_EXAM_PATH,
+                    body,
+                    String.class
+            );
+
+            return GenerateExamByAIResponseDto.builder()
+                    .content(parseData(raw))
+                    .build();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to call AI service for generating Exam by Existing exam", e);
+        }
+    }
+
+    @Override
     public CreateExamFromReviewRequestDto generateExamFromCards(List<CardContent> cards) {
         try {
             Map<String, Object> body = new HashMap<>();
@@ -236,7 +261,7 @@ public class AIExamServiceImpl implements AIExamService {
             return CreateExamFromReviewRequestDto.builder()
                     .title(root.get("title").asText())
                     .description(root.get("description").asText())
-                    .duration(root.get("duration").asLong())
+                    .duration(root.get("duration").asLong() * 60)
                     .questions(parseReviewData(root.get("data").asText()))
                     .build();
 
@@ -263,7 +288,7 @@ public class AIExamServiceImpl implements AIExamService {
             return CreateExamFromReviewRequestDto.builder()
                     .title(root.get("title").asText())
                     .description(root.get("description").asText())
-                    .duration(root.get("duration").asLong())
+                    .duration(root.get("duration").asLong() * 60)
                     .questions(parseReviewData(root.get("data").asText()))
                     .build();
 

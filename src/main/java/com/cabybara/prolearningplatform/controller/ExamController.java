@@ -403,6 +403,23 @@ public class ExamController {
         }
     }
 
+    @Operation(method = "POST", summary = "Generate exam by existing exam with AI", description = "Generate exam by existing exam with AI")
+    @PostMapping(value = "/ai-existing-exam", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseData<GenerateExamByAIResponseDto> generateExamByExistingExam(@RequestPart("files") List<MultipartFile> files) {
+        log.info("Generate exam by existing exam with AI");
+        try {
+            GenerateExamByExistingExamRequestDto request = GenerateExamByExistingExamRequestDto.builder()
+                    .files(files)
+                    .build();
+
+            GenerateExamByAIResponseDto response = aiExamService.generateExamByExistingExam(request);
+            return new ResponseData<>(HttpStatus.OK.value(), "Generate exam by files with AI successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate exam by files with AI fail");
+        }
+    }
+
     @Operation(method = "POST", summary = "Explain wrong answer with AI", description = "Get AI explanation for an incorrect answer")
     @PostMapping(value = "/ai-explain-wrong-answer")
     public ResponseData<ExplainWrongAnswerResponseDto> explainWrongAnswer(@Valid @RequestBody ExplainWrongAnswerRequestDto request) {
