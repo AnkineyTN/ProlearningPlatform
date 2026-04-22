@@ -181,7 +181,11 @@ public class FlashcardController {
     // =============================================
     @Operation(method = "POST", summary = "Generate flashcard by files with AI", description = "Generate flashcard by file with AI")
     @PostMapping(value = "/ai-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByFile(@Valid @ModelAttribute GenerateFlashcardByFileRequestDto request) {
+    public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByFile(
+            @Parameter(description = "The ID of the Set", required = true)
+            @PathVariable Long setId,
+            @Valid @ModelAttribute GenerateFlashcardByFileRequestDto request
+    ) {
         log.info("Generate flashcard by files with AI");
         try {
             GenerateFlashcardByAIResponseDto response = aIFlashcardService.generateFlashcardByFiles(request);
@@ -194,7 +198,11 @@ public class FlashcardController {
 
     @Operation(method = "POST", summary = "Generate flashcard by notes with AI", description = "Generate flashcard by note with AI")
     @PostMapping(value = "/ai-note")
-    public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByNote(@Valid @RequestBody GenerateFlashcardByNoteRequestDto request) {
+    public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByNote(
+            @Parameter(description = "The ID of the Set", required = true)
+            @PathVariable Long setId,
+            @Valid @RequestBody GenerateFlashcardByNoteRequestDto request
+    ) {
         log.info("Generate flashcard by notes with AI");
         try {
             GenerateFlashcardByAIResponseDto response = flashcardService.generateFlashcardByNotes(request);
@@ -207,7 +215,11 @@ public class FlashcardController {
 
     @Operation(method = "POST", summary = "Generate flashcard by web URL with AI", description = "Generate flashcard by web URL with AI")
     @PostMapping(value = "/ai-web")
-    public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByWeb(@Valid @RequestBody GenerateFlashcardByWebRequestDto request) {
+    public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByWeb(
+            @Parameter(description = "The ID of the Set", required = true)
+            @PathVariable Long setId,
+            @Valid @RequestBody GenerateFlashcardByWebRequestDto request
+    ) {
         log.info("Generate flashcard by notes with AI");
         try {
             GenerateFlashcardByAIResponseDto response = aIFlashcardService.generateFlashcardByWeb(request);

@@ -354,6 +354,7 @@ public class ExamController {
     @Operation(method = "POST", summary = "Generate exam by files with AI", description = "Generate exam by file with AI")
     @PostMapping(value = "/ai-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseData<GenerateExamByAIResponseDto> generateExamByFile(
+            @PathVariable Long setId,
             @RequestPart("files") List<MultipartFile> files,
             @RequestPart("questions") String questions,
             @RequestPart("difficulty") String difficulty,
@@ -379,7 +380,10 @@ public class ExamController {
 
     @Operation(method = "POST", summary = "Generate exam by note with AI", description = "Generate exam by note with AI")
     @PostMapping(value = "/ai-note")
-    public ResponseData<GenerateExamByAIResponseDto> generateExamByNote(@RequestBody GenerateExamByNoteRequestDto request) {
+    public ResponseData<GenerateExamByAIResponseDto> generateExamByNote(
+            @PathVariable Long setId,
+            @RequestBody GenerateExamByNoteRequestDto request
+    ) {
         log.info("Generate exam by note with AI");
         try {
             GenerateExamByAIResponseDto response = examService.generateExamByNotes(request);
@@ -392,7 +396,10 @@ public class ExamController {
 
     @Operation(method = "POST", summary = "Generate flashcard by web URL with AI", description = "Generate exam by web URL with AI")
     @PostMapping(value = "/ai-web")
-    public ResponseData<GenerateExamByAIResponseDto> generateExamByWeb(@Valid @RequestBody GenerateExamByWebRequestDto request) {
+    public ResponseData<GenerateExamByAIResponseDto> generateExamByWeb(
+            @PathVariable Long setId,
+            @Valid @RequestBody GenerateExamByWebRequestDto request
+    ) {
         log.info("Generate exam by notes with AI");
         try {
             GenerateExamByAIResponseDto response = aiExamService.generateExamByWeb(request);
@@ -405,7 +412,10 @@ public class ExamController {
 
     @Operation(method = "POST", summary = "Generate exam by existing exam with AI", description = "Generate exam by existing exam with AI")
     @PostMapping(value = "/ai-existing-exam", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseData<GenerateExamByAIResponseDto> generateExamByExistingExam(@RequestPart("files") List<MultipartFile> files) {
+    public ResponseData<GenerateExamByAIResponseDto> generateExamByExistingExam(
+            @PathVariable Long setId,
+            @RequestPart("files") List<MultipartFile> files
+    ) {
         log.info("Generate exam by existing exam with AI");
         try {
             GenerateExamByExistingExamRequestDto request = GenerateExamByExistingExamRequestDto.builder()
@@ -422,7 +432,10 @@ public class ExamController {
 
     @Operation(method = "POST", summary = "Explain wrong answer with AI", description = "Get AI explanation for an incorrect answer")
     @PostMapping(value = "/ai-explain-wrong-answer")
-    public ResponseData<ExplainWrongAnswerResponseDto> explainWrongAnswer(@Valid @RequestBody ExplainWrongAnswerRequestDto request) {
+    public ResponseData<ExplainWrongAnswerResponseDto> explainWrongAnswer(
+            @PathVariable Long setId,
+            @Valid @RequestBody ExplainWrongAnswerRequestDto request
+    ) {
         log.info("Explain wrong answer with AI");
         try {
             ExplainWrongAnswerResponseDto response = aiExamService.explainWrongAnswer(request);
