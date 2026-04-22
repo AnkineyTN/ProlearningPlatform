@@ -220,7 +220,7 @@ public class NoteController {
 
     @Operation(method = "PATCH", summary = "Update note", description = "Update note")
     @PreAuthorize("isAuthenticated() and @notePermissionService.canEdit(@authenticationContext.getCurrentUserId(), #noteId)")
-    @PatchMapping(value = "/update/{noteId}")
+    @PatchMapping(value = "/{noteId}")
     public ResponseData<Void> updateNote(
             @Parameter(description = "The ID of the Set", required = true)
             @PathVariable Long setId,
@@ -298,7 +298,7 @@ public class NoteController {
 
     @Operation(summary = "Delete note", description = "Delete note permanently")
     @PreAuthorize("isAuthenticated() and @notePermissionService.isOwner(@authenticationContext.getCurrentUserId(), #noteId)")
-    @DeleteMapping("/delete/{noteId}")
+    @DeleteMapping("/{noteId}")
     public ResponseData<Void> deleteNote(
             @Parameter(description = "The ID of the Set", required = true)
             @PathVariable Long setId,
