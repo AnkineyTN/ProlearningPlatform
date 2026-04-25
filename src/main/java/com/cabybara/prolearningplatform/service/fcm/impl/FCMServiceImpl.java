@@ -137,8 +137,9 @@ public class FCMServiceImpl implements FCMService {
             BatchResponse response = sendNotification(fcmMessage);
 
             if (response != null && response.getSuccessCount() > 0) {
-                notification.setPushSent(true);
-                notificationRepository.save(notification);
+                // Use query update instead of save() to avoid Hibernate session issues in async context
+                notificationRepository.updatePushSentByIds(
+                    List.of(notification.getId()), true);
             }
 
         } catch (Exception e) {
@@ -151,6 +152,8 @@ public class FCMServiceImpl implements FCMService {
     public void sendPushForNotificationsAsync(List<Notification> notifications) {
         Map<Long, List<Notification>> notificationsByUser = notifications.stream()
                 .collect(Collectors.groupingBy(n -> n.getUser().getId()));
+
+        List<Long> successNotificationIds = new ArrayList<>();
 
         for (Map.Entry<Long, List<Notification>> entry : notificationsByUser.entrySet()) {
             Long userId = entry.getKey();
@@ -167,7 +170,7 @@ public class FCMServiceImpl implements FCMService {
                     BatchResponse response = sendNotification(fcmMessage);
 
                     if (response != null && response.getSuccessCount() > 0) {
-                        notification.setPushSent(true);
+                        successNotificationIds.add(notification.getId());
                     }
                 }
             } catch (Exception e) {
@@ -175,7 +178,10 @@ public class FCMServiceImpl implements FCMService {
             }
         }
 
-        notificationRepository.saveAll(notifications);
+        // Use query update instead of saveAll() to avoid Hibernate session issues in async context
+        if (!successNotificationIds.isEmpty()) {
+            notificationRepository.updatePushSentByIds(successNotificationIds, true);
+        }
     }
 
     private FCMMessage buildFCMMessageFromNotification(Notification notification, List<String> tokens) {
