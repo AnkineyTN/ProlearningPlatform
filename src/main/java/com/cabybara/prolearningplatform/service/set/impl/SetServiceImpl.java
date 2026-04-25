@@ -75,7 +75,7 @@ public class SetServiceImpl implements SetService {
     @Override
     @Transactional
     public SetResponseDto createSet(Long userId, SetCreationRequestDto setCreationRequestDto) {
-        if (setRepository.existsByTitle(setCreationRequestDto.getTitle())) {
+        if (setRepository.existsByTitleAndUserId(setCreationRequestDto.getTitle(), userId)) {
             throw new ResourceAlreadyExistsException("Set with title '" + setCreationRequestDto.getTitle() + "' already exists.");
         }
 

@@ -48,35 +48,35 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
         }
 
         List<CreateNotificationDto> notifications = usersWithDueCards.stream()
-                .map(stat -> buildDueCardNotification(stat, "morning"))
+                .map(stat -> buildDueCardNotification(stat))
                 .toList();
 
         notificationDispatcher.dispatchToMany(notifications);
     }
 
-    @Override
-    public void sendEveningStudyReminders() {
-        Set<Long> enabledUserIds = Set.copyOf(
-                userNotificationPreferenceRepository.findUserIdsByDueCardReminderEnabled());
-
-        if (enabledUserIds.isEmpty()) {
-            log.info("No users with due card reminder enabled for evening reminder");
-            return;
-        }
-
-        List<CreateNotificationDto> notifications = cardItemRepository.findUsersWithDueCards(OffsetDateTime.now())
-                .stream()
-                .filter(stat -> enabledUserIds.contains(stat.getUserId()) && stat.getDueCount() >= 5)
-                .map(stat -> buildDueCardNotification(stat, "evening"))
-                .toList();
-
-        if (notifications.isEmpty()) {
-            log.info("No users qualify for evening reminder");
-            return;
-        }
-
-        notificationDispatcher.dispatchToMany(notifications);
-    }
+//    @Override
+//    public void sendEveningStudyReminders() {
+//        Set<Long> enabledUserIds = Set.copyOf(
+//                userNotificationPreferenceRepository.findUserIdsByDueCardReminderEnabled());
+//
+//        if (enabledUserIds.isEmpty()) {
+//            log.info("No users with due card reminder enabled for evening reminder");
+//            return;
+//        }
+//
+//        List<CreateNotificationDto> notifications = cardItemRepository.findUsersWithDueCards(OffsetDateTime.now())
+//                .stream()
+//                .filter(stat -> enabledUserIds.contains(stat.getUserId()) && stat.getDueCount() >= 5)
+//                .map(stat -> buildDueCardNotification(stat))
+//                .toList();
+//
+//        if (notifications.isEmpty()) {
+//            log.info("No users qualify for evening reminder");
+//            return;
+//        }
+//
+//        notificationDispatcher.dispatchToMany(notifications);
+//    }
 
     @Override
     public void sendDueCardReminderToUser(Long userId, long dueCount) {
@@ -96,15 +96,14 @@ public class DueCardReminderServiceImpl implements DueCardReminderService {
         notificationDispatcher.dispatch(notification);
     }
 
-    private CreateNotificationDto buildDueCardNotification(UserDueStatDto stat, String timeOfDay) {
+    private CreateNotificationDto buildDueCardNotification(UserDueStatDto stat) {
         UserLanguage language = stat.getUserLanguage() != null ? stat.getUserLanguage() : UserLanguage.EN;
 
         Map<String, Object> data = new HashMap<>();
         data.put("dueCount", stat.getDueCount());
-        data.put("reminderType", timeOfDay);
 
-        String titleKey = "notification.due_card." + timeOfDay + ".title";
-        String messageKey = "notification.due_card." + timeOfDay + ".message";
+        String titleKey = "notification.due_card.direct.title";
+        String messageKey = "notification.due_card.direct.message";
 
         return CreateNotificationDto.builder()
                 .userId(stat.getUserId())

@@ -1,24 +1,14 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.exam.*;
-import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByWebRequestDto;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.request.share.UpdateMemberRoleRequest;
-import com.cabybara.prolearningplatform.dto.response.exam.QuestionErrorStatDto;
+import com.cabybara.prolearningplatform.dto.response.exam.*;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.ResponseData;
 import com.cabybara.prolearningplatform.dto.response.ResponseError;
-import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptDto;
-import com.cabybara.prolearningplatform.dto.response.exam.ExamAttemptResultDto;
-import com.cabybara.prolearningplatform.dto.response.exam.ExamQuestionViewDto;
-import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
-import com.cabybara.prolearningplatform.dto.response.exam.ExplainWrongAnswerResponseDto;
-import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
-import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
-import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
-import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.share.NoteMemberResponse;
 import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
 import com.cabybara.prolearningplatform.enums.Privacy;
@@ -31,8 +21,6 @@ import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import com.cabybara.prolearningplatform.utils.ValidateSort;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -50,12 +38,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import static jakarta.servlet.RequestDispatcher.ERROR_MESSAGE;
 
@@ -339,6 +323,18 @@ public class ExamController {
             description = "Uses AI to generate a new exam with variant questions based on the selected incorrect question IDs. The new exam belongs to the same set as the source exam."
     )
     @PreAuthorize("isAuthenticated()")
+    @PostMapping("/from-flashcard/{flashcardId}")
+    public ResponseEntity<ApiResponse<ExamResponseDto>> generateExamFromFlashcard(
+            @PathVariable Long setId,
+            @PathVariable Long flashcardId
+    ) {
+        ExamResponseDto exam = examService.createExamFromFlashcard(setId, flashcardId);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ResponseUtil.success("Exam generated from flashcard", exam, null));
+    }
+
+    @PreAuthorize("isAuthenticated()")
     @PostMapping("/{examId}/generate-review-exam")
     public ResponseEntity<ApiResponse<ExamResponseDto>> generateReviewExam(
             @PathVariable Long setId,
@@ -358,6 +354,7 @@ public class ExamController {
     @Operation(method = "POST", summary = "Generate exam by files with AI", description = "Generate exam by file with AI")
     @PostMapping(value = "/ai-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseData<GenerateExamByAIResponseDto> generateExamByFile(
+            @PathVariable Long setId,
             @RequestPart("files") List<MultipartFile> files,
             @RequestPart("questions") String questions,
             @RequestPart("difficulty") String difficulty,
@@ -383,7 +380,10 @@ public class ExamController {
 
     @Operation(method = "POST", summary = "Generate exam by note with AI", description = "Generate exam by note with AI")
     @PostMapping(value = "/ai-note")
-    public ResponseData<GenerateExamByAIResponseDto> generateExamByNote(@RequestBody GenerateExamByNoteRequestDto request) {
+    public ResponseData<GenerateExamByAIResponseDto> generateExamByNote(
+            @PathVariable Long setId,
+            @RequestBody GenerateExamByNoteRequestDto request
+    ) {
         log.info("Generate exam by note with AI");
         try {
             GenerateExamByAIResponseDto response = examService.generateExamByNotes(request);
@@ -396,7 +396,10 @@ public class ExamController {
 
     @Operation(method = "POST", summary = "Generate flashcard by web URL with AI", description = "Generate exam by web URL with AI")
     @PostMapping(value = "/ai-web")
-    public ResponseData<GenerateExamByAIResponseDto> generateExamByWeb(@Valid @RequestBody GenerateExamByWebRequestDto request) {
+    public ResponseData<GenerateExamByAIResponseDto> generateExamByWeb(
+            @PathVariable Long setId,
+            @Valid @RequestBody GenerateExamByWebRequestDto request
+    ) {
         log.info("Generate exam by notes with AI");
         try {
             GenerateExamByAIResponseDto response = aiExamService.generateExamByWeb(request);
@@ -407,9 +410,32 @@ public class ExamController {
         }
     }
 
+    @Operation(method = "POST", summary = "Generate exam by existing exam with AI", description = "Generate exam by existing exam with AI")
+    @PostMapping(value = "/ai-existing-exam", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseData<GenerateExamByAIResponseDto> generateExamByExistingExam(
+            @PathVariable Long setId,
+            @RequestPart("files") List<MultipartFile> files
+    ) {
+        log.info("Generate exam by existing exam with AI");
+        try {
+            GenerateExamByExistingExamRequestDto request = GenerateExamByExistingExamRequestDto.builder()
+                    .files(files)
+                    .build();
+
+            GenerateExamByAIResponseDto response = aiExamService.generateExamByExistingExam(request);
+            return new ResponseData<>(HttpStatus.OK.value(), "Generate exam by files with AI successfully", response);
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e);
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Generate exam by files with AI fail");
+        }
+    }
+
     @Operation(method = "POST", summary = "Explain wrong answer with AI", description = "Get AI explanation for an incorrect answer")
     @PostMapping(value = "/ai-explain-wrong-answer")
-    public ResponseData<ExplainWrongAnswerResponseDto> explainWrongAnswer(@Valid @RequestBody ExplainWrongAnswerRequestDto request) {
+    public ResponseData<ExplainWrongAnswerResponseDto> explainWrongAnswer(
+            @PathVariable Long setId,
+            @Valid @RequestBody ExplainWrongAnswerRequestDto request
+    ) {
         log.info("Explain wrong answer with AI");
         try {
             ExplainWrongAnswerResponseDto response = aiExamService.explainWrongAnswer(request);

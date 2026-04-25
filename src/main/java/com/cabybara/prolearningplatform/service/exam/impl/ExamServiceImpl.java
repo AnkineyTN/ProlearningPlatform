@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.service.exam.impl;
 
+import com.cabybara.prolearningplatform.dto.internal.CardContent;
 import com.cabybara.prolearningplatform.dto.internal.QuestionContent;
 import com.cabybara.prolearningplatform.dto.request.exam.CreateExamFromReviewRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.CreateExamRequestDto;
@@ -23,7 +24,9 @@ import com.cabybara.prolearningplatform.model.exam.Exam;
 import com.cabybara.prolearningplatform.model.exam.ExamQuestion;
 import com.cabybara.prolearningplatform.model.exam.Question;
 import com.cabybara.prolearningplatform.model.note.Note;
+import com.cabybara.prolearningplatform.repository.CardItemRepository;
 import com.cabybara.prolearningplatform.repository.ExamQuestionRepository;
+import com.cabybara.prolearningplatform.repository.FlashcardRepository;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
 import com.cabybara.prolearningplatform.repository.ExamRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
@@ -55,6 +58,8 @@ public class ExamServiceImpl implements ExamService {
     private final AuthenticationContext authenticationContext;
     private final ExamRepository examRepository;
     private final ExamQuestionRepository examQuestionRepository;
+    private final FlashcardRepository flashcardRepository;
+    private final CardItemRepository cardItemRepository;
     private final SetRepository setRepository;
     private final NoteRepository noteRepository;
     private final ExamMapper examMapper;
@@ -84,23 +89,45 @@ public class ExamServiceImpl implements ExamService {
     @Override
     @Transactional
     public ExamResponseDto createExamFromReview(CreateExamFromReviewRequestDto dto, Long setId) {
+        return persistExam(dto, setId, CreationMethod.REVIEW);
+    }
+
+    @Override
+    @Transactional
+    public ExamResponseDto createExamFromFlashcard(Long setId, Long flashcardId) {
+        flashcardRepository.findByIdAndSetId(flashcardId, setId)
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard not found with id: " + flashcardId));
+
+        List<CardContent> cards = cardItemRepository.findAllByFlashcardId(flashcardId)
+                .stream()
+                .map(card -> new CardContent(card.getFrontCard(), card.getBackCard()))
+                .toList();
+
+        if (cards.isEmpty()) {
+            throw new BadRequestException("Flashcard has no cards to generate exam from");
+        }
+
+        return persistExam(aiExamService.generateExamFromCards(cards), setId, CreationMethod.AI);
+    }
+
+    private ExamResponseDto persistExam(CreateExamFromReviewRequestDto content, Long setId, CreationMethod method) {
         Long userId = authenticationContext.getCurrentUserId();
 
         Exam exam = new Exam();
-        exam.setTitle(dto.title());
-        exam.setDescription(dto.description());
-        exam.setDuration(dto.duration());
+        exam.setTitle(content.title());
+        exam.setDescription(content.description());
+        exam.setDuration(content.duration());
         exam.setCreatedBy(userId);
         exam.setSet(setId != null ? setRepository.getReferenceById(setId) : null);
         exam.setPrivacy(Privacy.PRIVATE);
-        exam.setCreationMethod(CreationMethod.REVIEW);
+        exam.setCreationMethod(method);
 
         Exam savedExam = examRepository.save(exam);
         Long examId = savedExam.getId();
         examPermissionService.addOwner(examId, userId);
 
-        if (dto.questions() != null && !dto.questions().isEmpty()) {
-            questionService.createQuestion(examId, dto.questions());
+        if (content.questions() != null && !content.questions().isEmpty()) {
+            questionService.createQuestion(examId, content.questions());
         }
 
         return examMapper.toExamResponseDto(examRepository.findById(examId)
@@ -114,19 +141,19 @@ public class ExamServiceImpl implements ExamService {
 
         Page<Exam> pagedExam;
 
-        if (createMethod == CreationMethod.REVIEW) {
-            pagedExam = examRepository.findAllBySetIdAndCreatedByAndCreationMethod(setId, userId, CreationMethod.REVIEW, pageable);
-        } else if (q == null || q.isBlank()) {
+        String methodFilter = createMethod != null ? createMethod.name() : null;
+
+        if (q == null || q.isBlank()) {
             if (privacy == null) {
-                pagedExam = examRepository.findByCreatedByAndSetId(userId, setId, pageable);
+                pagedExam = examRepository.findByCreatedByAndSetId(userId, setId, methodFilter, pageable);
             } else {
-                pagedExam = examRepository.findByCreatedByAndSetIdAndPrivacy(userId, setId, privacy.name(), pageable);
+                pagedExam = examRepository.findByCreatedByAndSetIdAndPrivacy(userId, setId, privacy.name(), methodFilter, pageable);
             }
         } else {
             if (privacy == null) {
-                pagedExam = examRepository.searchByCreatedByAndSetId(userId, setId, q, pageable);
+                pagedExam = examRepository.searchByCreatedByAndSetId(userId, setId, q, methodFilter, pageable);
             } else {
-                pagedExam = examRepository.searchByCreatedByAndSetIdAndPrivacy(userId, setId, q, privacy.name(), pageable);
+                pagedExam = examRepository.searchByCreatedByAndSetIdAndPrivacy(userId, setId, q, privacy.name(), methodFilter, pageable);
             }
         }
 

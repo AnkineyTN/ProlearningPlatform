@@ -4,7 +4,6 @@ import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.AbstractEntity;
 import com.cabybara.prolearningplatform.model.Set;
-import com.cabybara.prolearningplatform.model.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
