@@ -44,6 +44,16 @@ public class User extends AbstractEntity implements UserDetails {
     @ColumnDefault("false")
     private boolean isEmailVerified;
 
+    @Column(name = "streak_freeze_tokens", nullable = false)
+    @ColumnDefault("0")
+    @Builder.Default
+    private int streakFreezeTokens = 0;
+
+    @Column(name = "timezone", nullable = false, length = 50)
+    @ColumnDefault("'Asia/Ho_Chi_Minh'")
+    @Builder.Default
+    private String timezone = "Asia/Ho_Chi_Minh";
+
     @Column(columnDefinition = "user_language")
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
