@@ -1,7 +1,9 @@
 package com.cabybara.prolearningplatform.controller;
 
+import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,15 +13,19 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cabybara.prolearningplatform.dto.request.pomodoro.CreateSoundRequestDto;
 import com.cabybara.prolearningplatform.dto.request.pomodoro.CreateSpaceRequestDto;
+import com.cabybara.prolearningplatform.dto.request.pomodoro.LogSessionRequestDto;
 import com.cabybara.prolearningplatform.dto.request.pomodoro.PomodoroSettingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.pomodoro.SetActiveSoundRequestDto;
 import com.cabybara.prolearningplatform.dto.response.pomodoro.PomodoroSettingResponseDto;
 import com.cabybara.prolearningplatform.dto.response.pomodoro.SoundResponseDto;
 import com.cabybara.prolearningplatform.dto.response.pomodoro.SpaceResponseDto;
+import com.cabybara.prolearningplatform.dto.response.pomodoro.WeeklyStatsResponseDto;
+import com.cabybara.prolearningplatform.service.pomodoro.PomodoroSessionService;
 import com.cabybara.prolearningplatform.service.pomodoro.PomodoroSettingService;
 import com.cabybara.prolearningplatform.service.pomodoro.PomodoroSoundService;
 import com.cabybara.prolearningplatform.service.pomodoro.PomodoroSpaceService;
@@ -40,6 +46,7 @@ public class PomodoroController {
     private final PomodoroSettingService settingService;
     private final PomodoroSpaceService spaceService;
     private final PomodoroSoundService soundService;
+    private final PomodoroSessionService sessionService;
 
     @GetMapping("/setting")
     public ResponseEntity<ApiResponse<PomodoroSettingResponseDto>> getSetting() {
@@ -147,6 +154,23 @@ public class PomodoroController {
         soundService.toggleFavoriteSound(soundId);
         return ResponseEntity.ok(
             ResponseUtil.success("Favorite status updated successfully", null, null)
+        );
+    }
+
+    @PostMapping("/sessions")
+    public ResponseEntity<ApiResponse<Void>> logSession(@RequestBody @Valid LogSessionRequestDto dto) {
+        sessionService.logSession(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+            ResponseUtil.success("Session logged successfully", null, null)
+        );
+    }
+
+    @GetMapping("/stats/weekly")
+    public ResponseEntity<ApiResponse<WeeklyStatsResponseDto>> getWeeklyStats(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(defaultValue = "UTC") String timezone) {
+        return ResponseEntity.ok(
+            ResponseUtil.success("Weekly stats retrieved successfully", sessionService.getWeeklyStats(startDate, timezone), null)
         );
     }
 }
