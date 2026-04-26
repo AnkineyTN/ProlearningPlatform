@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.dto.response.todo;
 
 import com.cabybara.prolearningplatform.enums.GoalStatus;
+import com.cabybara.prolearningplatform.enums.GoalType;
 import lombok.Builder;
 import lombok.Data;
 
@@ -17,6 +18,8 @@ public class GoalWithTodosResponse {
     private LocalDate targetDate;
     private String color;
     private GoalStatus status;
+    private GoalType type;
+    private Long parentGoalId;
     private long totalTodos;
     private long completedTodos;
     private int progress;

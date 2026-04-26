@@ -6,6 +6,7 @@ import com.cabybara.prolearningplatform.dto.response.todo.GoalResponse;
 import com.cabybara.prolearningplatform.dto.response.todo.GoalWithTodosResponse;
 import com.cabybara.prolearningplatform.dto.response.todo.TodoResponse;
 import com.cabybara.prolearningplatform.enums.GoalStatus;
+import com.cabybara.prolearningplatform.enums.GoalType;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.Goal;
 import com.cabybara.prolearningplatform.model.User;
@@ -20,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -32,12 +34,10 @@ public class GoalServiceImpl implements GoalService {
     private final AuthenticationContext authenticationContext;
 
     @Override
-    public Page<GoalResponse> getAllGoals(GoalStatus status, Pageable pageable) {
+    public Page<GoalResponse> getAllGoals(GoalStatus status, GoalType type, Pageable pageable) {
         Long userId = authenticationContext.getCurrentUserId();
-        Page<Goal> goals = (status != null)
-                ? goalRepository.findByUserIdAndStatus(userId, status, pageable)
-                : goalRepository.findByUserId(userId, pageable);
-        return goals.map(this::toGoalResponse);
+        Page<Goal> goals = goalRepository.findByFilters(userId, status, type, pageable);
+        return goals.map(g -> toGoalResponse(g, userId));
     }
 
     @Override
@@ -61,6 +61,12 @@ public class GoalServiceImpl implements GoalService {
                         .goalId(goalId)
                         .goalTitle(goal.getTitle())
                         .goalColor(goal.getColor())
+                        .type(todo.getType())
+                        .status(todo.getStatus())
+                        .setRefs(todo.getSetRefs())
+                        .noteRefs(todo.getNoteRefs())
+                        .flashcardRefs(todo.getFlashcardRefs())
+                        .examRefs(todo.getExamRefs())
                         .createdAt(todo.getCreatedAt())
                         .updatedAt(todo.getUpdatedAt())
                         .build())
@@ -73,6 +79,8 @@ public class GoalServiceImpl implements GoalService {
                 .targetDate(goal.getTargetDate())
                 .color(goal.getColor())
                 .status(goal.getStatus())
+                .type(goal.getType())
+                .parentGoalId(goal.getParentGoal() != null ? goal.getParentGoal().getId() : null)
                 .totalTodos(total)
                 .completedTodos(completed)
                 .progress(total == 0 ? 0 : (int) (completed * 100 / total))
@@ -88,16 +96,26 @@ public class GoalServiceImpl implements GoalService {
         Long userId = authenticationContext.getCurrentUserId();
         User user = userService.getUserById(userId);
 
+        GoalType goalType = request.getType() != null ? request.getType() : GoalType.LONG;
+
+        Goal parentGoal = null;
+        if (request.getParentGoalId() != null) {
+            parentGoal = goalRepository.findByIdAndUserId(request.getParentGoalId(), userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Parent goal not found"));
+        }
+
         Goal goal = Goal.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
                 .targetDate(request.getTargetDate())
                 .color(request.getColor())
                 .status(GoalStatus.IN_PROGRESS)
+                .type(goalType)
+                .parentGoal(parentGoal)
                 .user(user)
                 .build();
 
-        return toGoalResponse(goalRepository.save(goal));
+        return toGoalResponse(goalRepository.save(goal), userId);
     }
 
     @Override
@@ -112,8 +130,17 @@ public class GoalServiceImpl implements GoalService {
         if (request.getTargetDate() != null) goal.setTargetDate(request.getTargetDate());
         if (request.getColor() != null) goal.setColor(request.getColor());
         if (request.getStatus() != null) goal.setStatus(request.getStatus());
+        if (request.getType() != null) goal.setType(request.getType());
 
-        return toGoalResponse(goalRepository.save(goal));
+        if (request.isClearParentGoal()) {
+            goal.setParentGoal(null);
+        } else if (request.getParentGoalId() != null) {
+            Goal parent = goalRepository.findByIdAndUserId(request.getParentGoalId(), userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Parent goal not found"));
+            goal.setParentGoal(parent);
+        }
+
+        return toGoalResponse(goalRepository.save(goal), userId);
     }
 
     @Override
@@ -123,10 +150,41 @@ public class GoalServiceImpl implements GoalService {
         Goal goal = goalRepository.findByIdAndUserId(goalId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Goal not found"));
         goal.getTodos().forEach(todo -> todo.setGoal(null));
+        goal.getShortGoals().forEach(sg -> sg.setParentGoal(null));
         goalRepository.delete(goal);
     }
 
-    private GoalResponse toGoalResponse(Goal goal) {
+    private GoalResponse toGoalResponse(Goal goal, Long userId) {
+        long total = todoRepository.countByGoalId(goal.getId());
+        long completed = todoRepository.countByGoalIdAndCompleted(goal.getId(), true);
+
+        List<GoalResponse> shortGoals = Collections.emptyList();
+        if (goal.getType() == GoalType.LONG) {
+            shortGoals = goalRepository.findByParentGoalIdAndUserId(goal.getId(), userId)
+                    .stream()
+                    .map(sg -> toShortGoalResponse(sg))
+                    .toList();
+        }
+
+        return GoalResponse.builder()
+                .id(goal.getId())
+                .title(goal.getTitle())
+                .description(goal.getDescription())
+                .targetDate(goal.getTargetDate())
+                .color(goal.getColor())
+                .status(goal.getStatus())
+                .type(goal.getType())
+                .parentGoalId(goal.getParentGoal() != null ? goal.getParentGoal().getId() : null)
+                .totalTodos(total)
+                .completedTodos(completed)
+                .progress(total == 0 ? 0 : (int) (completed * 100 / total))
+                .shortGoals(shortGoals)
+                .createdAt(goal.getCreatedAt())
+                .updatedAt(goal.getUpdatedAt())
+                .build();
+    }
+
+    private GoalResponse toShortGoalResponse(Goal goal) {
         long total = todoRepository.countByGoalId(goal.getId());
         long completed = todoRepository.countByGoalIdAndCompleted(goal.getId(), true);
         return GoalResponse.builder()
@@ -136,9 +194,12 @@ public class GoalServiceImpl implements GoalService {
                 .targetDate(goal.getTargetDate())
                 .color(goal.getColor())
                 .status(goal.getStatus())
+                .type(goal.getType())
+                .parentGoalId(goal.getParentGoal() != null ? goal.getParentGoal().getId() : null)
                 .totalTodos(total)
                 .completedTodos(completed)
                 .progress(total == 0 ? 0 : (int) (completed * 100 / total))
+                .shortGoals(Collections.emptyList())
                 .createdAt(goal.getCreatedAt())
                 .updatedAt(goal.getUpdatedAt())
                 .build();

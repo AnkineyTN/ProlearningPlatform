@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.dto.request.todo;
 
+import com.cabybara.prolearningplatform.enums.GoalType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -19,4 +20,8 @@ public class CreateGoalRequest {
 
     @Size(max = 10, message = "Color must not exceed 10 characters")
     private String color;
+
+    private GoalType type;
+
+    private Long parentGoalId;
 }

@@ -1,6 +1,8 @@
 package com.cabybara.prolearningplatform.repository;
 
 import com.cabybara.prolearningplatform.enums.TodoPriority;
+import com.cabybara.prolearningplatform.enums.TodoStatus;
+import com.cabybara.prolearningplatform.enums.TodoType;
 import com.cabybara.prolearningplatform.model.Todo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +23,8 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
               AND (:completed IS NULL OR t.completed = :completed)
               AND (:priority IS NULL OR t.priority = :priority)
               AND (:noGoal IS NULL OR (:noGoal = true AND t.goal IS NULL) OR (:noGoal = false AND t.goal IS NOT NULL))
+              AND (:type IS NULL OR t.type = :type)
+              AND (:status IS NULL OR t.status = :status)
             """)
     Page<Todo> findByFilters(
             @Param("userId") Long userId,
@@ -28,6 +32,8 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
             @Param("completed") Boolean completed,
             @Param("priority") TodoPriority priority,
             @Param("noGoal") Boolean noGoal,
+            @Param("type") TodoType type,
+            @Param("status") TodoStatus status,
             Pageable pageable
     );
 

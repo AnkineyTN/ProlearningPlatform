@@ -6,6 +6,7 @@ import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.todo.GoalResponse;
 import com.cabybara.prolearningplatform.dto.response.todo.GoalWithTodosResponse;
 import com.cabybara.prolearningplatform.enums.GoalStatus;
+import com.cabybara.prolearningplatform.enums.GoalType;
 import com.cabybara.prolearningplatform.service.todo.GoalService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -35,9 +36,10 @@ public class GoalController {
     @GetMapping
     public ResponseEntity<ApiResponse<Object>> getAllGoals(
             @RequestParam(required = false) GoalStatus status,
+            @RequestParam(required = false) GoalType type,
             @ParameterObject @PageableDefault(page = 0, size = 20, sort = "createdAt") Pageable pageable
     ) {
-        Page<GoalResponse> page = goalService.getAllGoals(status, pageable);
+        Page<GoalResponse> page = goalService.getAllGoals(status, type, pageable);
         PaginationResponseDto pagination = PaginationResponseDto.builder()
                 .currentPage(page.getNumber())
                 .totalPages(page.getTotalPages())

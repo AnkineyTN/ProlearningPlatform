@@ -5,12 +5,13 @@ import com.cabybara.prolearningplatform.dto.request.todo.UpdateGoalRequest;
 import com.cabybara.prolearningplatform.dto.response.todo.GoalResponse;
 import com.cabybara.prolearningplatform.dto.response.todo.GoalWithTodosResponse;
 import com.cabybara.prolearningplatform.enums.GoalStatus;
+import com.cabybara.prolearningplatform.enums.GoalType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface GoalService {
 
-    Page<GoalResponse> getAllGoals(GoalStatus status, Pageable pageable);
+    Page<GoalResponse> getAllGoals(GoalStatus status, GoalType type, Pageable pageable);
 
     GoalWithTodosResponse getGoalById(Long goalId);
 

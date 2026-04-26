@@ -5,6 +5,8 @@ import com.cabybara.prolearningplatform.dto.request.todo.UpdateTodoRequest;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.todo.TodoResponse;
 import com.cabybara.prolearningplatform.enums.TodoPriority;
+import com.cabybara.prolearningplatform.enums.TodoStatus;
+import com.cabybara.prolearningplatform.enums.TodoType;
 import com.cabybara.prolearningplatform.service.todo.TodoService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -37,9 +39,11 @@ public class TodoController {
             @RequestParam(required = false) Boolean completed,
             @RequestParam(required = false) TodoPriority priority,
             @RequestParam(required = false) Boolean noGoal,
+            @RequestParam(required = false) TodoType type,
+            @RequestParam(required = false) TodoStatus status,
             @ParameterObject @PageableDefault(page = 0, size = 20, sort = "createdAt") Pageable pageable
     ) {
-        Page<TodoResponse> page = todoService.getAllTodos(goalId, completed, priority, noGoal, pageable);
+        Page<TodoResponse> page = todoService.getAllTodos(goalId, completed, priority, noGoal, type, status, pageable);
         PaginationResponseDto pagination = PaginationResponseDto.builder()
                 .currentPage(page.getNumber())
                 .totalPages(page.getTotalPages())

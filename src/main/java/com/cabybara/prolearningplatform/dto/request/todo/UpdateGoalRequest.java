@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.dto.request.todo;
 
 import com.cabybara.prolearningplatform.enums.GoalStatus;
+import com.cabybara.prolearningplatform.enums.GoalType;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -20,4 +21,10 @@ public class UpdateGoalRequest {
     private String color;
 
     private GoalStatus status;
+
+    private GoalType type;
+
+    private Long parentGoalId;
+
+    private boolean clearParentGoal;
 }
