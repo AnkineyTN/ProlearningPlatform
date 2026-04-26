@@ -13,11 +13,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cabybara.prolearningplatform.dto.request.pomodoro.CreateSoundRequestDto;
 import com.cabybara.prolearningplatform.dto.request.pomodoro.CreateSpaceRequestDto;
 import com.cabybara.prolearningplatform.dto.request.pomodoro.PomodoroSettingRequestDto;
+import com.cabybara.prolearningplatform.dto.request.pomodoro.SetActiveSoundRequestDto;
 import com.cabybara.prolearningplatform.dto.response.pomodoro.PomodoroSettingResponseDto;
+import com.cabybara.prolearningplatform.dto.response.pomodoro.SoundResponseDto;
 import com.cabybara.prolearningplatform.dto.response.pomodoro.SpaceResponseDto;
 import com.cabybara.prolearningplatform.service.pomodoro.PomodoroSettingService;
+import com.cabybara.prolearningplatform.service.pomodoro.PomodoroSoundService;
 import com.cabybara.prolearningplatform.service.pomodoro.PomodoroSpaceService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -35,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PomodoroController {
     private final PomodoroSettingService settingService;
     private final PomodoroSpaceService spaceService;
+    private final PomodoroSoundService soundService;
 
     @GetMapping("/setting")
     public ResponseEntity<ApiResponse<PomodoroSettingResponseDto>> getSetting() {
@@ -90,4 +95,58 @@ public class PomodoroController {
         );
     }
 
+    @GetMapping("/sounds")
+    public ResponseEntity<ApiResponse<List<SoundResponseDto>>> getAllSounds() {
+        return ResponseEntity.ok(
+            ResponseUtil.success("Sounds retrieved successfully", soundService.getAllSounds(), null)
+        );
+    }
+
+    @PostMapping("/sounds")
+    public ResponseEntity<ApiResponse<SoundResponseDto>> createSound(
+            @RequestBody @Valid CreateSoundRequestDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+            ResponseUtil.success("Sound created successfully", soundService.createUserSound(dto), null)
+        );
+    }
+
+    @DeleteMapping("/sounds/{soundId}")
+    public ResponseEntity<ApiResponse<Void>> deleteSound(@PathVariable Long soundId) {
+        soundService.deleteUserSound(soundId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Sound deleted successfully", null, null)
+        );
+    }
+
+    @PostMapping("/sounds/active")
+    public ResponseEntity<ApiResponse<Void>> addActiveSound(@RequestBody @Valid SetActiveSoundRequestDto dto) {
+        soundService.addActiveSound(dto);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Active sound added successfully", null, null)
+        );
+    }
+
+    @DeleteMapping("/sounds/active/{soundId}")
+    public ResponseEntity<ApiResponse<Void>> removeActiveSound(@PathVariable Long soundId) {
+        soundService.removeActiveSound(soundId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Active sound removed successfully", null, null)
+        );
+    }
+
+    @DeleteMapping("/sounds/active")
+    public ResponseEntity<ApiResponse<Void>> clearAllActiveSounds() {
+        soundService.clearAllActiveSounds();
+        return ResponseEntity.ok(
+            ResponseUtil.success("All active sounds cleared successfully", null, null)
+        );
+    }
+
+    @PostMapping("/sounds/{soundId}/favorite")
+    public ResponseEntity<ApiResponse<Void>> toggleFavoriteSound(@PathVariable Long soundId) {
+        soundService.toggleFavoriteSound(soundId);
+        return ResponseEntity.ok(
+            ResponseUtil.success("Favorite status updated successfully", null, null)
+        );
+    }
 }
