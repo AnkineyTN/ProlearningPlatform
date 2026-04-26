@@ -39,12 +39,10 @@ public class AssetCleanupScheduler {
 
         // Lọc ra những asset có publicId thực sự tồn tại trên Cloudinary
         List<AssetToDeleteDto> toDeleteFromCloudinary = toCleanup.stream()
-                .filter(a -> a.getPublicId() != null && !a.getPublicId().isBlank())
-                .map(a -> AssetToDeleteDto.builder()
-                        .publicId(a.getPublicId())
-                        .assetType(a.getType())
-                        .build())
-                .collect(Collectors.toList());
+            .filter(a -> a.getPublicId() != null && !a.getPublicId().isBlank())
+            .filter(a -> a.getUser() != null)   // ← chỉ xóa Cloudinary với user asset
+            .map(a -> new AssetToDeleteDto(a.getPublicId(), a.getType()))
+            .collect(Collectors.toList());
 
         if (!toDeleteFromCloudinary.isEmpty()) {
             try {

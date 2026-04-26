@@ -93,3 +93,9 @@ CREATE INDEX idx_pomodoro_session_user_started ON pomodoro_session (id_user, sta
 CREATE INDEX idx_pomodoro_session_user_type    ON pomodoro_session (id_user, type);
 CREATE INDEX idx_pomodoro_space_source         ON pomodoro_space (source, is_active);
 CREATE INDEX idx_pomodoro_sound_source         ON pomodoro_sound (source, is_active);
+
+ALTER TABLE public.asset
+    ALTER COLUMN id_user DROP NOT NULL;
+
+ALTER TABLE public.asset
+    ALTER COLUMN file_name DROP NOT NULL;
