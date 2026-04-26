@@ -4,10 +4,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cabybara.prolearningplatform.dto.request.pomodoro.CreateSpaceRequestDto;
+import com.cabybara.prolearningplatform.dto.request.pomodoro.PomodoroSpaceSearchRequestDto;
 import com.cabybara.prolearningplatform.dto.response.pomodoro.SpaceResponseDto;
 import com.cabybara.prolearningplatform.enums.AssetSource;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
@@ -65,7 +70,7 @@ public class PomodoroSpaceServiceImpl implements PomodoroSpaceService {
         PomodoroSpace space = PomodoroSpace.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
-                .source(AssetSource.USER)
+                .source(AssetSource.USER.name())
                 .asset(asset)
                 .user(user)
                 .build();
@@ -96,7 +101,7 @@ public class PomodoroSpaceServiceImpl implements PomodoroSpaceService {
 
         PomodoroSpace space = spaceRepository.findById(spaceId)
                 .filter(s -> s.getIsActive() && (
-                        s.getSource() == AssetSource.SYSTEM ||
+                        "SYSTEM".equals(s.getSource()) ||
                         s.getUser().getId().equals(userId)))
                 .orElseThrow(() -> new ResourceNotFoundException("Space not found: " + spaceId));
 
@@ -120,6 +125,37 @@ public class PomodoroSpaceServiceImpl implements PomodoroSpaceService {
         }
     }
 
+    @Override
+    public Page<SpaceResponseDto> searchSpaces(PomodoroSpaceSearchRequestDto request) {
+        Long userId = authenticationContext.getCurrentUserId();
+
+        Sort sort = request.getSortDir().equalsIgnoreCase("asc")
+                ? Sort.by(request.getSortBy()).ascending()
+                : Sort.by(request.getSortBy()).descending();
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sort);
+
+        String keyword = (request.getKeyword() == null || request.getKeyword().isBlank())
+                ? "" : request.getKeyword().trim();
+
+        Page<PomodoroSpace> page = switch (request.getTab()) {
+            case MY_UPLOADS -> spaceRepository.searchUserSpaces(userId, keyword, pageable);
+            case FAVORITES  -> spaceRepository.searchFavoriteSpaces(userId, keyword, pageable);
+            default         -> (request.getSource() == null)
+                    ? spaceRepository.searchAvailableForUser(userId, keyword, pageable)
+                    : spaceRepository.searchAvailableForUserBySource(userId, keyword, request.getSource().name(), pageable);
+        };
+
+        Set<Long> favoriteIds = favoriteSpaceRepository.findFavoriteSpaceIdsByUserId(userId);
+        Long activeSpaceId = activeSpaceRepository.findByUserId(userId)
+                .map(a -> a.getSpace().getId()).orElse(null);
+
+        Page<SpaceResponseDto> dtoPage = page.map(s ->
+                toDto(s, favoriteIds.contains(s.getId()), s.getId().equals(activeSpaceId)));
+
+
+        return dtoPage;
+    }
+
     private SpaceResponseDto toDto(PomodoroSpace s, boolean isFavorite, boolean isActive) {
         return SpaceResponseDto.builder()
                 .id(s.getId())
@@ -127,7 +163,7 @@ public class PomodoroSpaceServiceImpl implements PomodoroSpaceService {
                 .description(s.getDescription())
                 .assetUrl(s.getAsset().getUrl())
                 .assetType(s.getAsset().getType())
-                .source(s.getSource())
+                .source(AssetSource.valueOf(s.getSource()))
                 .isFavorite(isFavorite)
                 .isActive(isActive)
                 .build();

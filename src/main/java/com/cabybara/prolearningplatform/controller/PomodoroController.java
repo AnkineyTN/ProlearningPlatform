@@ -3,6 +3,7 @@ package com.cabybara.prolearningplatform.controller;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +21,15 @@ import com.cabybara.prolearningplatform.dto.request.pomodoro.CreateSoundRequestD
 import com.cabybara.prolearningplatform.dto.request.pomodoro.CreateSpaceRequestDto;
 import com.cabybara.prolearningplatform.dto.request.pomodoro.LogSessionRequestDto;
 import com.cabybara.prolearningplatform.dto.request.pomodoro.PomodoroSettingRequestDto;
+import com.cabybara.prolearningplatform.dto.request.pomodoro.PomodoroSoundSearchRequestDto;
+import com.cabybara.prolearningplatform.dto.request.pomodoro.PomodoroSpaceSearchRequestDto;
 import com.cabybara.prolearningplatform.dto.request.pomodoro.SetActiveSoundRequestDto;
+import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.pomodoro.PomodoroSettingResponseDto;
 import com.cabybara.prolearningplatform.dto.response.pomodoro.SoundResponseDto;
 import com.cabybara.prolearningplatform.dto.response.pomodoro.SpaceResponseDto;
 import com.cabybara.prolearningplatform.dto.response.pomodoro.WeeklyStatsResponseDto;
+import com.cabybara.prolearningplatform.enums.AssetSource;
 import com.cabybara.prolearningplatform.service.pomodoro.PomodoroSessionService;
 import com.cabybara.prolearningplatform.service.pomodoro.PomodoroSettingService;
 import com.cabybara.prolearningplatform.service.pomodoro.PomodoroSoundService;
@@ -34,6 +39,8 @@ import com.cabybara.prolearningplatform.utils.ResponseUtil;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,6 +74,43 @@ public class PomodoroController {
     public ResponseEntity<ApiResponse<List<SpaceResponseDto>>> getAllSpaces() {
         return ResponseEntity.ok(
             ResponseUtil.success("Spaces retrieved successfully", spaceService.getAllSpaces(), null)
+        );
+    }
+
+    @GetMapping("/spaces/search")
+    public ResponseEntity<ApiResponse<List<SpaceResponseDto>>> searchSpaces(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) AssetSource source,
+            @RequestParam(defaultValue = "ALL") PomodoroSpaceSearchRequestDto.SpaceTab tab,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+
+        PomodoroSpaceSearchRequestDto request = new PomodoroSpaceSearchRequestDto();
+            request.setKeyword(keyword);
+            request.setSource(source);
+            request.setTab(tab);
+            request.setPage(page);
+            request.setSize(size);
+            request.setSortBy(sortBy);
+            request.setSortDir(sortDir);
+
+        Page<SpaceResponseDto> resultPage = spaceService.searchSpaces(request);
+
+        PaginationResponseDto pagination = PaginationResponseDto.builder()
+            .currentPage(resultPage.getNumber())
+            .totalPages(resultPage.getTotalPages())
+            .totalItems(resultPage.getTotalElements())
+            .pageSize(resultPage.getSize())
+            .build();
+
+        return ResponseEntity.ok(
+            ResponseUtil.success(
+                "Spaces retrieved successfully",
+                resultPage.getContent(),
+                pagination
+            )
         );
     }
 
@@ -106,6 +150,39 @@ public class PomodoroController {
     public ResponseEntity<ApiResponse<List<SoundResponseDto>>> getAllSounds() {
         return ResponseEntity.ok(
             ResponseUtil.success("Sounds retrieved successfully", soundService.getAllSounds(), null)
+        );
+    }
+
+    @GetMapping("/sounds/search")
+    public ResponseEntity<ApiResponse<List<SoundResponseDto>>> searchSounds(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) AssetSource source,
+            @RequestParam(defaultValue = "ALL") PomodoroSoundSearchRequestDto.SoundTab tab,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir) {
+
+        PomodoroSoundSearchRequestDto request = new PomodoroSoundSearchRequestDto();
+            request.setKeyword(keyword);
+            request.setSource(source);
+            request.setTab(tab);
+            request.setPage(page);
+            request.setSize(size);
+            request.setSortBy(sortBy);
+            request.setSortDir(sortDir);
+
+        Page<SoundResponseDto> resultPage = soundService.searchSounds(request);
+
+        PaginationResponseDto pagination = PaginationResponseDto.builder()
+            .currentPage(resultPage.getNumber())
+            .totalPages(resultPage.getTotalPages())
+            .totalItems(resultPage.getTotalElements())
+            .pageSize(resultPage.getSize())
+            .build();
+
+        return ResponseEntity.ok(
+            ResponseUtil.success("Sounds retrieved successfully", resultPage.getContent(), pagination)
         );
     }
 

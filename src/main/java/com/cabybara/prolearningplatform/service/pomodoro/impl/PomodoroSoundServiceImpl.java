@@ -6,10 +6,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cabybara.prolearningplatform.dto.request.pomodoro.CreateSoundRequestDto;
+import com.cabybara.prolearningplatform.dto.request.pomodoro.PomodoroSoundSearchRequestDto;
 import com.cabybara.prolearningplatform.dto.request.pomodoro.SetActiveSoundRequestDto;
 import com.cabybara.prolearningplatform.dto.response.pomodoro.SoundResponseDto;
 import com.cabybara.prolearningplatform.enums.AssetSource;
@@ -67,7 +72,7 @@ public class PomodoroSoundServiceImpl implements PomodoroSoundService {
         PomodoroSound sound = PomodoroSound.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
-                .source(AssetSource.USER)
+                .source(AssetSource.USER.name())
                 .asset(asset)
                 .user(user)
                 .build();
@@ -144,13 +149,45 @@ public class PomodoroSoundServiceImpl implements PomodoroSoundService {
         }
     }
 
+    @Override
+    public Page<SoundResponseDto> searchSounds(PomodoroSoundSearchRequestDto request) {
+        Long userId = authenticationContext.getCurrentUserId();
+
+        Sort sort = request.getSortDir().equalsIgnoreCase("asc")
+                ? Sort.by(request.getSortBy()).ascending()
+                : Sort.by(request.getSortBy()).descending();
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sort);
+
+        String keyword = (request.getKeyword() == null || request.getKeyword().isBlank())
+                ? "" : request.getKeyword().trim();
+
+        Page<PomodoroSound> page = switch (request.getTab()) {
+            case MY_UPLOADS -> soundRepository.searchUserSounds(userId, keyword, pageable);
+            case FAVORITES  -> soundRepository.searchFavoriteSounds(userId, keyword, pageable);
+            default         -> (request.getSource() == null)
+                    ? soundRepository.searchAvailableForUser(userId, keyword, pageable)
+                    : soundRepository.searchAvailableForUserBySource(userId, keyword, request.getSource().name(), pageable);
+        };
+
+        Set<Long> favoriteIds = favoriteSoundRepository.findFavoriteSoundIdsByUserId(userId);
+        Map<Long, Float> activeMap = activeSoundRepository.findByUserId(userId).stream()
+                .collect(Collectors.toMap(a -> a.getSound().getId(), PomodoroUserActiveSound::getVolume));
+
+        Page<SoundResponseDto> dtoPage = page.map(s ->
+                toDto(s, favoriteIds.contains(s.getId()), activeMap.get(s.getId())));
+
+
+
+        return dtoPage;
+    }
+
     private SoundResponseDto toDto(PomodoroSound s, boolean isFavorite, Float volume) {
         return SoundResponseDto.builder()
                 .id(s.getId())
                 .name(s.getName())
                 .description(s.getDescription())
                 .assetUrl(s.getAsset().getUrl())
-                .source(s.getSource())
+                .source(AssetSource.valueOf(s.getSource()))
                 .isFavorite(isFavorite)
                 .isActive(volume != null)
                 .volume(volume)

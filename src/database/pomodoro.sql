@@ -1,6 +1,5 @@
 
 CREATE TYPE pomodoro_session_type AS ENUM ('POMODORO', 'SHORT_BREAK', 'LONG_BREAK');
-CREATE TYPE asset_source           AS ENUM ('SYSTEM', 'USER');
 
 CREATE TABLE pomodoro_setting (
     id                  BIGSERIAL PRIMARY KEY,
@@ -19,9 +18,10 @@ CREATE TABLE pomodoro_space (
     id          BIGSERIAL PRIMARY KEY,
     name        VARCHAR(255)  NOT NULL,
     description VARCHAR(1024),
-    source      asset_source  NOT NULL DEFAULT 'SYSTEM',
+    source      VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM'
+                              CHECK (source IN ('SYSTEM', 'USER')),
     id_asset    BIGINT        NOT NULL REFERENCES asset(id),
-    id_user     BIGINT        REFERENCES users(id) ON DELETE CASCADE,  -- NULL nếu là SYSTEM
+    id_user     BIGINT        REFERENCES users(id) ON DELETE CASCADE,
     is_active   BOOLEAN       NOT NULL DEFAULT TRUE,
     created_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW()
@@ -31,9 +31,10 @@ CREATE TABLE pomodoro_sound (
     id          BIGSERIAL PRIMARY KEY,
     name        VARCHAR(255)  NOT NULL,
     description VARCHAR(1024),
-    source      asset_source  NOT NULL DEFAULT 'SYSTEM',
+    source      VARCHAR(20)   NOT NULL DEFAULT 'SYSTEM'
+                              CHECK (source IN ('SYSTEM', 'USER')),
     id_asset    BIGINT        NOT NULL REFERENCES asset(id),
-    id_user     BIGINT        REFERENCES users(id) ON DELETE CASCADE,  -- NULL nếu là SYSTEM
+    id_user     BIGINT        REFERENCES users(id) ON DELETE CASCADE,
     is_active   BOOLEAN       NOT NULL DEFAULT TRUE,
     created_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW()
@@ -44,20 +45,25 @@ CREATE TABLE pomodoro_user_active_sound (
     id_user     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     id_sound    BIGINT NOT NULL REFERENCES pomodoro_sound(id) ON DELETE CASCADE,
     volume      FLOAT  NOT NULL DEFAULT 0.5 CHECK (volume >= 0.0 AND volume <= 1.0),
+    created_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
     UNIQUE (id_user, id_sound)
 );
 
 CREATE TABLE pomodoro_user_active_space (
     id          BIGSERIAL PRIMARY KEY,
     id_user     BIGINT NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-    id_space    BIGINT NOT NULL REFERENCES pomodoro_space(id) ON DELETE CASCADE
+    id_space    BIGINT NOT NULL REFERENCES pomodoro_space(id) ON DELETE CASCADE,
+    created_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE pomodoro_user_favorite_space (
     id          BIGSERIAL PRIMARY KEY,
     id_user     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     id_space    BIGINT NOT NULL REFERENCES pomodoro_space(id) ON DELETE CASCADE,
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
     UNIQUE (id_user, id_space)
 );
 
@@ -66,6 +72,7 @@ CREATE TABLE pomodoro_user_favorite_sound (
     id_user     BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     id_sound    BIGINT NOT NULL REFERENCES pomodoro_sound(id) ON DELETE CASCADE,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
     UNIQUE (id_user, id_sound)
 );
 
@@ -78,7 +85,8 @@ CREATE TABLE pomodoro_session (
     completed    BOOLEAN               NOT NULL DEFAULT TRUE,
     started_at   TIMESTAMPTZ           NOT NULL,
     ended_at     TIMESTAMPTZ           NOT NULL,
-    created_at   TIMESTAMPTZ           NOT NULL DEFAULT NOW()
+    created_at   TIMESTAMPTZ           NOT NULL DEFAULT NOW(),
+    updated_at   TIMESTAMPTZ           NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_pomodoro_session_user_started ON pomodoro_session (id_user, started_at DESC);

@@ -2,7 +2,10 @@ package com.cabybara.prolearningplatform.service.pomodoro;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+
 import com.cabybara.prolearningplatform.dto.request.pomodoro.CreateSpaceRequestDto;
+import com.cabybara.prolearningplatform.dto.request.pomodoro.PomodoroSpaceSearchRequestDto;
 import com.cabybara.prolearningplatform.dto.response.pomodoro.SpaceResponseDto;
 
 public interface PomodoroSpaceService {
@@ -11,4 +14,5 @@ public interface PomodoroSpaceService {
     void deleteUserSpace(Long spaceId);
     void setActiveSpace(Long spaceId);
     void toggleFavoriteSpace(Long spaceId);
+    Page<SpaceResponseDto> searchSpaces(PomodoroSpaceSearchRequestDto request);
 }

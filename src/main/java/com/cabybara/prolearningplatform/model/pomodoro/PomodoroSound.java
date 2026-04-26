@@ -35,10 +35,9 @@ public class PomodoroSound extends AbstractEntity {
     @Column(name = "description", length = 1024)
     private String description;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "source", nullable = false)
     @Builder.Default
-    private AssetSource source = AssetSource.SYSTEM;
+    private String source = "SYSTEM";
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_asset", referencedColumnName = "id")
@@ -47,7 +46,7 @@ public class PomodoroSound extends AbstractEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_user", referencedColumnName = "id")
     @JsonIgnore
-    private User user;  // null nếu là SYSTEM sound
+    private User user;
 
     @Column(name = "is_active", nullable = false)
     @Builder.Default
