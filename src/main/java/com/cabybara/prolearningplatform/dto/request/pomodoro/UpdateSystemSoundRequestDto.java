@@ -14,6 +14,5 @@ public class UpdateSystemSoundRequestDto {
 
     private String description;
 
-    private String publicId;
-    private String url;
+    private Long assetId;
 }

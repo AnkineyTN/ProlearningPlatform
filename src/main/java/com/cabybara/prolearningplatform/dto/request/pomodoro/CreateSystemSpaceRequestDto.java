@@ -1,7 +1,5 @@
 package com.cabybara.prolearningplatform.dto.request.pomodoro;
 
-import org.hibernate.validator.constraints.URL;
-
 import com.cabybara.prolearningplatform.enums.AssetType;
 
 import jakarta.validation.constraints.NotBlank;
@@ -14,17 +12,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateSystemSpaceRequestDto {
-    @NotBlank
+@NotBlank
     private String name;
 
     private String description;
 
-    @NotBlank
-    private String publicId;
-
-    @NotBlank @URL
-    private String url;
+    @NotNull
+    private Long assetId;
 
     @NotNull
-    private AssetType assetType;
+    private AssetType assetType; 
 }

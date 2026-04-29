@@ -27,4 +27,6 @@ public interface AssetService {
     void deleteAllAssets(List<Asset> assets);
 
     void markDeletedAsset(Asset asset);
+
+    AssetSignatureResponseDto generateSystemAssetSignature(AssetType assetType);
 }
