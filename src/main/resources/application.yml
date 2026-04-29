@@ -29,6 +29,8 @@ cloud:
         apiSecret: ${CLOUD_CLOUDINARY_API_SECRET}
         image_preset: ${CLOUD_CLOUDINARY_IMAGE_PRESET}
         document_preset: ${CLOUD_CLOUDINARY_DOCUMENT_PRESET}
+        video_preset: ${CLOUD_CLOUDINARY_VIDEO_PRESET}
+        audio_preset: ${CLOUD_CLOUDINARY_AUDIO_PRESET}
 
 spring:
     profiles:

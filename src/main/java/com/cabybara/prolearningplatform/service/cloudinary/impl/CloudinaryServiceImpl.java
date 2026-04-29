@@ -35,6 +35,12 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     @Value("${cloud.cloudinary.document_preset}")
     private String documentPreset;
 
+    @Value("${cloud.cloudinary.video_preset}")
+    private String videoPreset; 
+
+    @Value("${cloud.cloudinary.audio_preset}")
+    private String audioPreset;
+
     private final String NOTE_DOCS_FOLDER = "ProLearning/note-documents";
     private final String NOTE_IMAGES_FOLDER = "ProLearning/note-images";
 
@@ -50,8 +56,19 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     public Map generateUploadSignature(AssetType type) {
         long timestamp = Instant.now().getEpochSecond();
 
-        String selectedPreset = type == AssetType.IMAGE ? imagePreset : documentPreset;
-        String selectedResourceType = type == AssetType.IMAGE ? "image" : "raw";
+        String selectedPreset = switch (type) {
+            case IMAGE    -> imagePreset;
+            case DOCUMENT -> documentPreset;
+            case VIDEO    -> videoPreset;
+            case AUDIO    -> audioPreset;
+        };
+
+        String selectedResourceType = switch (type) {
+            case IMAGE    -> "image";
+            case DOCUMENT -> "raw";
+            case VIDEO    -> "video";
+            case AUDIO    -> "video";
+        };
 
         Map<String, Object> paramsToSign = Map.of(
                 "timestamp", timestamp,

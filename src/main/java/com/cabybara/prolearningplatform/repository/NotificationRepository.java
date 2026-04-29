@@ -48,5 +48,9 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Modifying
     @Query(value = "DELETE FROM notification n WHERE n.user_id = :userId AND n.type = :type AND n.data->>'noteId' = :noteId", nativeQuery = true)
     int deleteNoteInviteNotification(@Param("userId") Long userId, @Param("type") String type, @Param("noteId") String noteId);
+
+    @Modifying
+    @Query("UPDATE Notification n SET n.pushSent = :pushSent WHERE n.id IN :ids")
+    int updatePushSentByIds(@Param("ids") List<Long> ids, @Param("pushSent") Boolean pushSent);
 }
 
