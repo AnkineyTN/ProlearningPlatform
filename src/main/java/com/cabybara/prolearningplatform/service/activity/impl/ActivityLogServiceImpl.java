@@ -31,7 +31,6 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 
     private static final ZoneId ICT = ZoneId.of("Asia/Ho_Chi_Minh");
     private static final long MIN_ACTIVE_SECONDS = 30;
-    private static final long STREAK_THRESHOLD_SECONDS = 300;
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;
 
     private final ActivityLogRepository activityLogRepository;
@@ -49,7 +48,8 @@ public class ActivityLogServiceImpl implements ActivityLogService {
         }
 
         Long userId = authenticationContext.getCurrentUserId();
-        User user = userRepository.getReferenceById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("User not found"));
 
         LocalDate date = OffsetDateTime.parse(dto.getClientTimestamp())
                 .atZoneSameInstant(ICT)
@@ -68,6 +68,15 @@ public class ActivityLogServiceImpl implements ActivityLogService {
             }
             activityLogRepository.save(log);
         } else {
+            // First log of this day: consume freeze token if resuming after a 2-day gap
+            List<LocalDate> prevActiveDays = activityLogRepository.findActiveDays(userId);
+            if (!prevActiveDays.isEmpty()) {
+                long gap = date.toEpochDay() - prevActiveDays.get(0).toEpochDay();
+                if (gap == 2 && user.getStreakFreezeTokens() > 0) {
+                    user.setStreakFreezeTokens(user.getStreakFreezeTokens() - 1);
+                    userRepository.save(user);
+                }
+            }
             ActivityLog log = ActivityLog.builder()
                     .user(user)
                     .date(date)
@@ -132,15 +141,11 @@ public class ActivityLogServiceImpl implements ActivityLogService {
         LocalDate lastActive = activeDays.get(0);
         long daysDiff = today.toEpochDay() - lastActive.toEpochDay();
 
-        // Streak is broken if gap > 1 day (unless freeze token applies)
         if (daysDiff > 1) {
-            // Check freeze token: applies only when gap == 2
             if (daysDiff == 2 && user.getStreakFreezeTokens() > 0) {
-                user.setStreakFreezeTokens(user.getStreakFreezeTokens() - 1);
-                userRepository.save(user);
-                // Continue calculating streak from lastActive
+                // Freeze token covers the gap; token will be consumed on the next logActivity
+                // call
             } else {
-                // Streak broken
                 int longest = computeLongestStreak(activeDays);
                 return StreakResponseDto.builder()
                         .currentStreak(0)
@@ -169,7 +174,8 @@ public class ActivityLogServiceImpl implements ActivityLogService {
         int clampedDays = Math.min(Math.max(days, 1), 365);
         LocalDate startDate = LocalDate.now(ICT).minusDays(clampedDays);
 
-        Object[] overall = activityLogRepository.findOverallSummary(userId, startDate);
+        List<Object[]> overallList = activityLogRepository.findOverallSummary(userId, startDate);
+        Object[] overall = overallList.isEmpty() ? new Object[4] : overallList.get(0);
         long totalSeconds = overall[0] != null ? toLong(overall[0]) : 0L;
         long totalSessions = overall[1] != null ? toLong(overall[1]) : 0L;
         long totalItems = overall[2] != null ? toLong(overall[2]) : 0L;
@@ -197,7 +203,8 @@ public class ActivityLogServiceImpl implements ActivityLogService {
     // --- Streak helpers ---
 
     private int computeCurrentStreak(List<LocalDate> activeDays) {
-        if (activeDays.isEmpty()) return 0;
+        if (activeDays.isEmpty())
+            return 0;
         int streak = 1;
         for (int i = 1; i < activeDays.size(); i++) {
             long gap = activeDays.get(i - 1).toEpochDay() - activeDays.get(i).toEpochDay();
@@ -211,7 +218,8 @@ public class ActivityLogServiceImpl implements ActivityLogService {
     }
 
     private int computeLongestStreak(List<LocalDate> activeDays) {
-        if (activeDays.isEmpty()) return 0;
+        if (activeDays.isEmpty())
+            return 0;
         int longest = 1;
         int current = 1;
         for (int i = 1; i < activeDays.size(); i++) {
@@ -229,28 +237,38 @@ public class ActivityLogServiceImpl implements ActivityLogService {
     // --- Type conversion helpers for native query Object[] ---
 
     private LocalDate toLocalDate(Object o) {
-        if (o instanceof LocalDate d) return d;
-        if (o instanceof java.sql.Date d) return d.toLocalDate();
+        if (o instanceof LocalDate d)
+            return d;
+        if (o instanceof java.sql.Date d)
+            return d.toLocalDate();
         return LocalDate.parse(o.toString());
     }
 
     private long toLong(Object o) {
-        if (o == null) return 0L;
-        if (o instanceof BigInteger bi) return bi.longValue();
-        if (o instanceof BigDecimal bd) return bd.longValue();
-        if (o instanceof Number n) return n.longValue();
+        if (o == null)
+            return 0L;
+        if (o instanceof BigInteger bi)
+            return bi.longValue();
+        if (o instanceof BigDecimal bd)
+            return bd.longValue();
+        if (o instanceof Number n)
+            return n.longValue();
         return Long.parseLong(o.toString());
     }
 
     private int toInt(Object o) {
-        if (o instanceof BigInteger bi) return bi.intValue();
-        if (o instanceof Number n) return n.intValue();
+        if (o instanceof BigInteger bi)
+            return bi.intValue();
+        if (o instanceof Number n)
+            return n.intValue();
         return Integer.parseInt(o.toString());
     }
 
     private double toDouble(Object o) {
-        if (o instanceof BigDecimal bd) return bd.doubleValue();
-        if (o instanceof Number n) return n.doubleValue();
+        if (o instanceof BigDecimal bd)
+            return bd.doubleValue();
+        if (o instanceof Number n)
+            return n.doubleValue();
         return Double.parseDouble(o.toString());
     }
 }
