@@ -82,7 +82,7 @@ public class AssetUploadController {
     }
 
     @GetMapping("/signature/system")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AssetSignatureResponseDto> generateSystemSignature(
         @RequestParam AssetType type) {
         return ResponseEntity.ok(assetService.generateSystemAssetSignature(type));
