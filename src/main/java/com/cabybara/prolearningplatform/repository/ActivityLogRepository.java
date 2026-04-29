@@ -63,7 +63,7 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> 
             WHERE a.user_id = :userId
               AND a.date >= :startDate
             """, nativeQuery = true)
-    Object[] findOverallSummary(
+    List<Object[]> findOverallSummary(
             @Param("userId") Long userId,
             @Param("startDate") LocalDate startDate);
 }
