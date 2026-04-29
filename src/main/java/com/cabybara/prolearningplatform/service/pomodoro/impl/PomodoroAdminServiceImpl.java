@@ -19,7 +19,6 @@ import com.cabybara.prolearningplatform.model.pomodoro.PomodoroSpace;
 import com.cabybara.prolearningplatform.repository.AssetRepository;
 import com.cabybara.prolearningplatform.repository.PomodoroSoundRepository;
 import com.cabybara.prolearningplatform.repository.PomodoroSpaceRepository;
-import com.cabybara.prolearningplatform.service.cloudinary.CloudinaryService;
 import com.cabybara.prolearningplatform.service.pomodoro.PomodoroAdminService;
 
 import lombok.RequiredArgsConstructor;
@@ -29,34 +28,33 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class PomodoroAdminServiceImpl implements PomodoroAdminService {
- private final PomodoroSpaceRepository spaceRepository;
+
+    private final PomodoroSpaceRepository spaceRepository;
     private final PomodoroSoundRepository soundRepository;
     private final AssetRepository assetRepository;
-    private final CloudinaryService cloudinaryService;
 
     @Override
     @Transactional
     public SpaceResponseDto createSystemSpace(CreateSystemSpaceRequestDto dto) {
-        Asset asset = Asset.builder()
-                .publicId(dto.getPublicId())
-                .url(dto.getUrl())
-                .type(dto.getAssetType())   
-                .status(AssetStatus.ACTIVE)
-                .fileName(extractFileName(dto.getUrl()))
-                .user(null)           
-                .build();
-        asset = assetRepository.save(asset);
+        Asset asset = assetRepository.findById(dto.getAssetId())
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + dto.getAssetId()));
+
+        if (asset.getUser() != null) {
+            throw new SecurityException("Asset này thuộc về user, không dùng làm system content được.");
+        }
+
+        asset.setStatus(AssetStatus.ACTIVE);
+        assetRepository.save(asset);
 
         PomodoroSpace space = PomodoroSpace.builder()
                 .name(dto.getName())
                 .description(dto.getDescription())
                 .source("SYSTEM")
                 .asset(asset)
-                .user(null)         
+                .user(null)
                 .build();
 
-        space = spaceRepository.save(space);
-        return toSpaceDto(space);
+        return toSpaceDto(spaceRepository.save(space));
     }
 
     @Override
@@ -69,20 +67,20 @@ public class PomodoroAdminServiceImpl implements PomodoroAdminService {
         space.setName(dto.getName());
         space.setDescription(dto.getDescription());
 
-        if (dto.getPublicId() != null && dto.getUrl() != null) {
+        if (dto.getAssetId() != null) {
+            Asset newAsset = assetRepository.findById(dto.getAssetId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + dto.getAssetId()));
+
+            if (newAsset.getUser() != null) {
+                throw new SecurityException("Asset này thuộc về user, không dùng làm system content được.");
+            }
+
             Asset oldAsset = space.getAsset();
             oldAsset.setStatus(AssetStatus.DELETED);
             assetRepository.save(oldAsset);
 
-            Asset newAsset = Asset.builder()
-                    .publicId(dto.getPublicId())
-                    .url(dto.getUrl())
-                    .type(dto.getAssetType() != null ? dto.getAssetType() : oldAsset.getType())
-                    .status(AssetStatus.ACTIVE)
-                    .fileName(extractFileName(dto.getUrl()))
-                    .user(null)
-                    .build();
-            newAsset = assetRepository.save(newAsset);
+            newAsset.setStatus(AssetStatus.ACTIVE);
+            assetRepository.save(newAsset);
             space.setAsset(newAsset);
         }
 
@@ -98,7 +96,6 @@ public class PomodoroAdminServiceImpl implements PomodoroAdminService {
 
         space.getAsset().setStatus(AssetStatus.DELETED);
         assetRepository.save(space.getAsset());
-
         space.setIsActive(false);
         spaceRepository.save(space);
     }
@@ -106,15 +103,15 @@ public class PomodoroAdminServiceImpl implements PomodoroAdminService {
     @Override
     @Transactional
     public SoundResponseDto createSystemSound(CreateSystemSoundRequestDto dto) {
-        Asset asset = Asset.builder()
-                .publicId(dto.getPublicId())
-                .url(dto.getUrl())
-                .type(AssetType.AUDIO)
-                .status(AssetStatus.ACTIVE)
-                .fileName(extractFileName(dto.getUrl()))
-                .user(null)
-                .build();
-        asset = assetRepository.save(asset);
+        Asset asset = assetRepository.findById(dto.getAssetId())
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + dto.getAssetId()));
+
+        if (asset.getUser() != null) {
+            throw new SecurityException("Asset này thuộc về user, không dùng làm system content được.");
+        }
+
+        asset.setStatus(AssetStatus.ACTIVE);
+        assetRepository.save(asset);
 
         PomodoroSound sound = PomodoroSound.builder()
                 .name(dto.getName())
@@ -137,20 +134,21 @@ public class PomodoroAdminServiceImpl implements PomodoroAdminService {
         sound.setName(dto.getName());
         sound.setDescription(dto.getDescription());
 
-        if (dto.getPublicId() != null && dto.getUrl() != null) {
+        if (dto.getAssetId() != null) {
+            Asset newAsset = assetRepository.findById(dto.getAssetId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Asset not found: " + dto.getAssetId()));
+
+            if (newAsset.getUser() != null) {
+                throw new SecurityException("Asset này thuộc về user, không dùng làm system content được.");
+            }
+
             Asset oldAsset = sound.getAsset();
             oldAsset.setStatus(AssetStatus.DELETED);
             assetRepository.save(oldAsset);
 
-            Asset newAsset = Asset.builder()
-                    .publicId(dto.getPublicId())
-                    .url(dto.getUrl())
-                    .type(AssetType.AUDIO)
-                    .status(AssetStatus.ACTIVE)
-                    .fileName(extractFileName(dto.getUrl()))
-                    .user(null)
-                    .build();
-            sound.setAsset(assetRepository.save(newAsset));
+            newAsset.setStatus(AssetStatus.ACTIVE);
+            assetRepository.save(newAsset);
+            sound.setAsset(newAsset);
         }
 
         return toSoundDto(soundRepository.save(sound));
@@ -167,14 +165,6 @@ public class PomodoroAdminServiceImpl implements PomodoroAdminService {
         assetRepository.save(sound.getAsset());
         sound.setIsActive(false);
         soundRepository.save(sound);
-    }
-
-    private String extractFileName(String url) {
-        // Lấy tên file từ URL Cloudinary, VD:
-        // https://res.cloudinary.com/demo/video/upload/v123/ProLearning/rain.mp4 → rain.mp4
-        if (url == null) return "";
-        String[] parts = url.split("/");
-        return parts[parts.length - 1];
     }
 
     private SpaceResponseDto toSpaceDto(PomodoroSpace s) {

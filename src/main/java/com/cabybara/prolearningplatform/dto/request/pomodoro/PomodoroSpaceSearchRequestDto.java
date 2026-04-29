@@ -4,9 +4,13 @@ import com.cabybara.prolearningplatform.enums.AssetSource;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class PomodoroSpaceSearchRequestDto {
      private String keyword;          
 

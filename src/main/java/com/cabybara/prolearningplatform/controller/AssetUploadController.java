@@ -80,4 +80,11 @@ public class AssetUploadController {
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully", "Update uploaded image from signed url completed", null));
     }
+
+    @GetMapping("/signature/system")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AssetSignatureResponseDto> generateSystemSignature(
+        @RequestParam AssetType type) {
+        return ResponseEntity.ok(assetService.generateSystemAssetSignature(type));
+   }
 }

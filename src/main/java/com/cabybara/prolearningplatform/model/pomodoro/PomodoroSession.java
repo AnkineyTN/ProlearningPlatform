@@ -2,6 +2,9 @@ package com.cabybara.prolearningplatform.model.pomodoro;
 
 import java.time.OffsetDateTime;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import com.cabybara.prolearningplatform.enums.PomodoroSessionType;
 import com.cabybara.prolearningplatform.model.AbstractEntity;
 import com.cabybara.prolearningplatform.model.User;
@@ -34,6 +37,7 @@ public class PomodoroSession extends AbstractEntity {
     private User user;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(name = "type", nullable = false)
     private PomodoroSessionType type;
 

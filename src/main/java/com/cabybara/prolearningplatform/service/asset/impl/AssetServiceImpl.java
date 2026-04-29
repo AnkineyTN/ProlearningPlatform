@@ -185,4 +185,33 @@ public class AssetServiceImpl implements AssetService {
         asset.setStatus(AssetStatus.DELETED);
         assetRepository.save(asset);
     }
+
+    @Override
+    @Transactional
+    public AssetSignatureResponseDto generateSystemAssetSignature(AssetType assetType) {
+        String cloudinaryApiKey = cloudinaryService.getConfiguration().apiKey;
+        String cloudinaryName   = cloudinaryService.getConfiguration().cloudName;
+
+        Asset newAsset = Asset.builder()
+                .publicId("")
+                .url("")
+                .status(AssetStatus.PENDING)
+                .type(assetType)
+                .user(null)           
+                .build();
+        newAsset = assetRepository.save(newAsset);
+
+        long timestamp = Instant.now().getEpochSecond();
+        Map signInfo = cloudinaryService.generateUploadSignature(assetType);
+
+        return AssetSignatureResponseDto.builder()
+                .signature(signInfo.get("signature").toString())
+                .timestamp(timestamp)
+                .apiKey(cloudinaryApiKey)
+                .cloudName(cloudinaryName)
+                .assetId(newAsset.getId())
+                .uploadPreset(signInfo.get("uploadPreset").toString())
+                .uploadResourceType(signInfo.get("uploadResourceType").toString())
+                .build();
+    }
 }
