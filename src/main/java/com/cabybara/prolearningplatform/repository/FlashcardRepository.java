@@ -14,6 +14,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -122,4 +123,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
 
     @EntityGraph(attributePaths = {"cards", "cards.image"})
     Optional<Flashcard> findByIdAndSetId(Long flashcardId, Long setId);
+
+    @Query("SELECT f.id FROM Flashcard f WHERE f.set.id = :setId")
+    List<Long> findIdsBySetId(@Param("setId") Long setId);
 }

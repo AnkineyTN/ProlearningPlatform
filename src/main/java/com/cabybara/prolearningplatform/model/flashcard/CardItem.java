@@ -52,4 +52,7 @@ public class CardItem extends AbstractEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "asset_id")
     private Asset image;
+
+    @Column(name = "topic")
+    private String topic;
 }

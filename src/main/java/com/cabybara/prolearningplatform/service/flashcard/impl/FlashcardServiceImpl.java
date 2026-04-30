@@ -65,6 +65,7 @@ public class FlashcardServiceImpl implements FlashcardService {
     private final FileService fileService;
     private final AIFlashcardService aiFlashcardService;
     private final FlashcardPermissionService flashcardPermissionService;
+    private final com.cabybara.prolearningplatform.service.knowledge.TopicAssignmentAsyncService topicAssignmentAsyncService;
 
     @Override
     public Page<FlashcardResponseDto> getAllFlashcard(Long setId, String q, Privacy privacy, CreationMethod createMethod, Pageable pageable) {
@@ -135,6 +136,10 @@ public class FlashcardServiceImpl implements FlashcardService {
 
         flashcardPermissionService.addOwner(savedFlashcard.getId(), userId);
 
+        if (flashcard.getCreate_method() == CreationMethod.AI) {
+            topicAssignmentAsyncService.assignTopicsToFlashcardAsync(savedFlashcard.getId());
+        }
+
         eventPublisher.publishEvent(new ChildEntityUpdatedEvent(savedFlashcard));
         return flashcardMapper.toFlashcardResponseDto(savedFlashcard);
     }
@@ -158,6 +163,7 @@ public class FlashcardServiceImpl implements FlashcardService {
                         .flashcard(flashcard)
                         .frontCard(source.getFrontCard())
                         .backCard(source.getBackCard())
+                        .topic(source.getTopic())
                         .build())
                 .collect(Collectors.toList());
 

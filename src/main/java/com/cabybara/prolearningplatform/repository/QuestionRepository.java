@@ -16,4 +16,9 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findAllByExamId(Long examId);
 
     List<Question> findAllByCreatedBy(Long createdBy);
+
+    @Query("SELECT q FROM Question q " +
+            "JOIN ExamQuestion eq ON eq.question = q " +
+            "WHERE eq.exam.id = :examId AND q.topic IS NULL")
+    List<Question> findByExamIdAndTopicIsNull(@org.springframework.data.repository.query.Param("examId") Long examId);
 }
