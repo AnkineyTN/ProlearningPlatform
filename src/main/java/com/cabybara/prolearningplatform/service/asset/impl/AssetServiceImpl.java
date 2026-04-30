@@ -187,6 +187,12 @@ public class AssetServiceImpl implements AssetService {
     }
 
     @Override
+    public void markActiveAsset(Asset asset) {
+        asset.setStatus(AssetStatus.ACTIVE);
+        assetRepository.save(asset);
+    }
+
+    @Override
     @Transactional
     public AssetSignatureResponseDto generateSystemAssetSignature(AssetType assetType) {
         String cloudinaryApiKey = cloudinaryService.getConfiguration().apiKey;
