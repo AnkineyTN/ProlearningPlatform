@@ -6,6 +6,7 @@ import com.cabybara.prolearningplatform.dto.response.knowledge.KnowledgeAnalysis
 import com.cabybara.prolearningplatform.dto.response.knowledge.TopicAccuracyDto;
 import com.cabybara.prolearningplatform.enums.ExamAttemptStatus;
 import com.cabybara.prolearningplatform.enums.FlashcardStudySessionStatus;
+import com.cabybara.prolearningplatform.enums.KnowledgeSourceType;
 import com.cabybara.prolearningplatform.exception.BadRequestException;
 import com.cabybara.prolearningplatform.exception.ResourceAlreadyExistsException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
@@ -29,10 +30,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
 
-    private static final String SOURCE_FLASHCARD = "FLASHCARD";
-    private static final String SOURCE_EXAM      = "EXAM";
-    private static final String SOURCE_SET       = "SET";
-
     private final AuthenticationContext authenticationContext;
     private final FlashcardStudySessionRepository sessionRepository;
     private final ExamAttemptRepository examAttemptRepository;
@@ -43,7 +40,6 @@ public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
     private final KnowledgeAccuracyService accuracyService;
     private final AIKnowledgeService aiKnowledgeService;
 
-    // ────────────────────────────────── ANALYZE ──────────────────────────────────
 
     @Override
     @Transactional
@@ -61,7 +57,7 @@ public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
         }
 
         // 409 if already analyzed
-        analysisRepository.findBySessionRefIdAndSourceType(sessionId, SOURCE_FLASHCARD)
+        analysisRepository.findBySessionRefIdAndSourceType(sessionId, KnowledgeSourceType.FLASHCARD)
                 .ifPresent(existing -> {
                     throw new ResourceAlreadyExistsException("Analysis already exists for this session");
                 });
@@ -78,7 +74,7 @@ public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
 
         KnowledgeAnalysis saved = analysisRepository.save(KnowledgeAnalysis.builder()
                 .userId(userId)
-                .sourceType(SOURCE_FLASHCARD)
+                .sourceType(KnowledgeSourceType.FLASHCARD)
                 .sourceId(flashcardId)
                 .sessionRefId(sessionId)
                 .topicAccuracies(accuracies)
@@ -106,7 +102,7 @@ public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
         }
 
         // 409 if already analyzed
-        analysisRepository.findBySessionRefIdAndSourceType(attemptId, SOURCE_EXAM)
+        analysisRepository.findBySessionRefIdAndSourceType(attemptId, KnowledgeSourceType.EXAM)
                 .ifPresent(existing -> {
                     throw new ResourceAlreadyExistsException("Analysis already exists for this attempt");
                 });
@@ -123,7 +119,7 @@ public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
 
         KnowledgeAnalysis saved = analysisRepository.save(KnowledgeAnalysis.builder()
                 .userId(userId)
-                .sourceType(SOURCE_EXAM)
+                .sourceType(KnowledgeSourceType.EXAM)
                 .sourceId(examId)
                 .sessionRefId(attemptId)
                 .topicAccuracies(accuracies)
@@ -146,9 +142,9 @@ public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
 
         // Gather latest analysis per resource
         List<KnowledgeAnalysis> sources = new ArrayList<>();
-        flashcardIds.forEach(fId -> analysisRepository.findLatestBySourceTypeAndSourceId(SOURCE_FLASHCARD, fId)
+        flashcardIds.forEach(fId -> analysisRepository.findLatestBySourceTypeAndSourceId(KnowledgeSourceType.FLASHCARD, fId)
                 .ifPresent(sources::add));
-        examIds.forEach(eId -> analysisRepository.findLatestBySourceTypeAndSourceId(SOURCE_EXAM, eId)
+        examIds.forEach(eId -> analysisRepository.findLatestBySourceTypeAndSourceId(KnowledgeSourceType.EXAM, eId)
                 .ifPresent(sources::add));
 
         if (sources.isEmpty()) {
@@ -185,7 +181,7 @@ public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
 
         KnowledgeAnalysis saved = analysisRepository.save(KnowledgeAnalysis.builder()
                 .userId(userId)
-                .sourceType(SOURCE_SET)
+                .sourceType(KnowledgeSourceType.SET)
                 .sourceId(setId)
                 .sessionRefId(null)
                 .topicAccuracies(mergedAccuracies)
@@ -198,13 +194,13 @@ public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
         return toDto(saved);
     }
 
-    // ────────────────────────────────── GET ──────────────────────────────────
+
 
     @Override
     public List<KnowledgeAnalysisResponseDto> getAnalysesForFlashcard(Long setId, Long flashcardId) {
         flashcardRepository.findByIdAndSetId(flashcardId, setId)
                 .orElseThrow(() -> new ResourceNotFoundException("Flashcard not found in set"));
-        return analysisRepository.findAllBySourceTypeAndSourceIdOrderByCreatedAtDesc(SOURCE_FLASHCARD, flashcardId)
+        return analysisRepository.findAllBySourceTypeAndSourceIdOrderByCreatedAtDesc(KnowledgeSourceType.FLASHCARD, flashcardId)
                 .stream().map(this::toDto).toList();
     }
 
@@ -212,17 +208,17 @@ public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
     public List<KnowledgeAnalysisResponseDto> getAnalysesForExam(Long setId, Long examId) {
         examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
-        return analysisRepository.findAllBySourceTypeAndSourceIdOrderByCreatedAtDesc(SOURCE_EXAM, examId)
+        return analysisRepository.findAllBySourceTypeAndSourceIdOrderByCreatedAtDesc(KnowledgeSourceType.EXAM, examId)
                 .stream().map(this::toDto).toList();
     }
 
     @Override
     public List<KnowledgeAnalysisResponseDto> getAnalysesForSet(Long setId) {
-        return analysisRepository.findAllBySourceTypeAndSourceIdOrderByCreatedAtDesc(SOURCE_SET, setId)
+        return analysisRepository.findAllBySourceTypeAndSourceIdOrderByCreatedAtDesc(KnowledgeSourceType.SET, setId)
                 .stream().map(this::toDto).toList();
     }
 
-    // ────────────────────────────────── TOPIC ASSIGN ──────────────────────────────────
+
 
     @Override
     public int assignTopicsManualFlashcard(Long setId, Long flashcardId) {
@@ -238,7 +234,7 @@ public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
         return topicAssignmentService.assignTopicsToExam(examId);
     }
 
-    // ────────────────────────────────── MAPPER ──────────────────────────────────
+
 
     private KnowledgeAnalysisResponseDto toDto(KnowledgeAnalysis ka) {
         return new KnowledgeAnalysisResponseDto(

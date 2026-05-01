@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.enums.KnowledgeSourceType;
 import com.cabybara.prolearningplatform.model.knowledge.KnowledgeAnalysis;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,9 +13,9 @@ import java.util.Optional;
 @Repository
 public interface KnowledgeAnalysisRepository extends JpaRepository<KnowledgeAnalysis, Long> {
 
-    Optional<KnowledgeAnalysis> findBySessionRefIdAndSourceType(Long sessionRefId, String sourceType);
+    Optional<KnowledgeAnalysis> findBySessionRefIdAndSourceType(Long sessionRefId, KnowledgeSourceType knowledgeSourceType);
 
-    List<KnowledgeAnalysis> findAllBySourceTypeAndSourceIdOrderByCreatedAtDesc(String sourceType, Long sourceId);
+    List<KnowledgeAnalysis> findAllBySourceTypeAndSourceIdOrderByCreatedAtDesc(KnowledgeSourceType knowledgeSourceType, Long sourceId);
 
     @Query("""
         SELECT ka FROM KnowledgeAnalysis ka
@@ -23,7 +24,7 @@ public interface KnowledgeAnalysisRepository extends JpaRepository<KnowledgeAnal
         LIMIT 1
         """)
     Optional<KnowledgeAnalysis> findLatestBySourceTypeAndSourceId(
-            @Param("sourceType") String sourceType,
+            @Param("sourceType") KnowledgeSourceType knowledgeSourceType,
             @Param("sourceId") Long sourceId);
 
     List<KnowledgeAnalysis> findAllByUserIdOrderByCreatedAtDesc(Long userId);

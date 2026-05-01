@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.model.knowledge;
 
 import com.cabybara.prolearningplatform.dto.response.knowledge.ContributingSourceDto;
 import com.cabybara.prolearningplatform.dto.response.knowledge.TopicAccuracyDto;
+import com.cabybara.prolearningplatform.enums.KnowledgeSourceType;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -28,7 +29,8 @@ public class KnowledgeAnalysis {
     private Long userId;
 
     @Column(name = "source_type", nullable = false, length = 10)
-    private String sourceType;
+    @Enumerated(EnumType.STRING)
+    private KnowledgeSourceType sourceType;
 
     @Column(name = "source_id", nullable = false)
     private Long sourceId;

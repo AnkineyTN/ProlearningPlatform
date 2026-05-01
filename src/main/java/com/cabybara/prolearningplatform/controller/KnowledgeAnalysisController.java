@@ -22,8 +22,6 @@ public class KnowledgeAnalysisController {
 
     private final KnowledgeAnalysisService knowledgeAnalysisService;
 
-    // ──────────── TOPIC ASSIGNMENT ────────────
-
     @PostMapping("/sets/{setId}/flashcards/{flashcardId}/topics/assign")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Manually trigger topic assignment for all cards in a flashcard")
@@ -44,7 +42,7 @@ public class KnowledgeAnalysisController {
         return ResponseEntity.ok(ResponseUtil.success("Topics assigned", Map.of("assigned", assigned), null));
     }
 
-    // ──────────── ANALYSIS TRIGGERS ────────────
+
 
     @PostMapping("/sets/{setId}/flashcards/{flashcardId}/sessions/{sessionId}/analysis")
     @PreAuthorize("isAuthenticated()")
@@ -80,7 +78,7 @@ public class KnowledgeAnalysisController {
                 .body(ResponseUtil.success("Set analysis created", dto, null));
     }
 
-    // ──────────── HISTORY ────────────
+
 
     @GetMapping("/sets/{setId}/flashcards/{flashcardId}/analyses")
     @PreAuthorize("isAuthenticated()")
