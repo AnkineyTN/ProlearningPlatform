@@ -15,4 +15,5 @@ public class CardItemUpdatingRequestDto {
     private String backCard;
     private Long imageAssetId;
     private CardStatus cardStatus;
+    private String topic;
 }

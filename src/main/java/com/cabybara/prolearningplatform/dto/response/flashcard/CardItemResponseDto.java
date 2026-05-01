@@ -15,4 +15,5 @@ public class CardItemResponseDto {
     private String imageUrl;
     private CardStatus cardStatus;
     private OffsetDateTime nextReviewAt;
+    private String topic;
 }

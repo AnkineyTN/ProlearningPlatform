@@ -11,6 +11,7 @@ public record UpdateQuestionRequestDto(
         QuestionType type,
         List<QuestionOptionDto> options,
         // Only applicable for ESSAY type questions
-        String expectedAnswer
+        String expectedAnswer,
+        String topic
 ) {}
 
