@@ -4,22 +4,29 @@ import com.cabybara.prolearningplatform.dto.request.email.VerifyOtpRequest;
 import com.cabybara.prolearningplatform.dto.request.email.VerifyResetOtpRequestDto;
 import com.cabybara.prolearningplatform.dto.request.user.ForgotPasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.request.user.LoginRequestDto;
+import com.cabybara.prolearningplatform.dto.request.user.LogoutRequestDto;
+import com.cabybara.prolearningplatform.dto.request.user.RefreshTokenRequestDto;
 import com.cabybara.prolearningplatform.dto.request.user.RegisterRequestDto;
 import com.cabybara.prolearningplatform.dto.request.user.ResetPasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.response.user.GoogleAuthUrlResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.LoginResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.RefreshTokenResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.RegisterResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.VerifyResetOtpResponseDto;
 import com.cabybara.prolearningplatform.service.auth.AuthService;
 import com.cabybara.prolearningplatform.service.auth.GoogleAuthService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -147,6 +154,38 @@ public class AuthController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Password reset successfully", null, null));
+    }
+
+    @Operation(
+            summary = "Refresh access token",
+            description = "Exchange a valid refresh token for a new access + refresh token pair (rotation)."
+    )
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<RefreshTokenResponseDto>> refresh(
+            @Valid @RequestBody RefreshTokenRequestDto req) {
+        RefreshTokenResponseDto data = authService.refresh(req.getRefreshToken());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Token refreshed", data, null));
+    }
+
+    @Operation(
+            summary = "Logout",
+            description = "Blacklist current access token and revoke the refresh token. Requires Bearer access token."
+    )
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            @Valid @RequestBody LogoutRequestDto req,
+            @AuthenticationPrincipal Jwt jwt) {
+        long ttlSeconds = 0L;
+        Instant exp = jwt.getExpiresAt();
+        if (exp != null) {
+            ttlSeconds = Math.max(0L, exp.getEpochSecond() - Instant.now().getEpochSecond());
+        }
+        authService.logout(jwt.getId(), ttlSeconds, req.getRefreshToken());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Logged out", null, null));
     }
 
 }

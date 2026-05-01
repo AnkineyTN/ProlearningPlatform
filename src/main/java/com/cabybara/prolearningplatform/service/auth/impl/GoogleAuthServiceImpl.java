@@ -10,6 +10,7 @@ import com.cabybara.prolearningplatform.mapper.UserMapper;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.service.auth.GoogleAuthService;
 import com.cabybara.prolearningplatform.service.auth.JwtService;
+import com.cabybara.prolearningplatform.service.auth.RefreshTokenService;
 import com.cabybara.prolearningplatform.service.redis.RedisService;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import com.google.api.client.auth.oauth2.Credential;
@@ -33,6 +34,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class GoogleAuthServiceImpl implements GoogleAuthService {
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
     private final UserMapper userMapper;
     private final UserService userService;
     private final GoogleAuthorizationCodeFlow googleFlow;
@@ -108,8 +110,11 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
         googleFlow.getCredentialDataStore().delete(state);
 
         String accessToken = jwtService.generateToken(userInfo.getEmail());
+        String refreshToken = refreshTokenService.issue(user.getId());
 
-        response.sendRedirect(FRONTEND_DASHBOARD_URL + "&accessToken=" + accessToken);
+        response.sendRedirect(FRONTEND_DASHBOARD_URL
+                + "&accessToken=" + accessToken
+                + "&refreshToken=" + refreshToken);
     }
 
     @Override
@@ -131,9 +136,11 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
 
         UserResponseDto userResponseDto = userMapper.toUserResponseDto(user);
         String accessToken = jwtService.generateToken(user.getEmail());
+        String refreshToken = refreshTokenService.issue(user.getId());
         return LoginResponseDto.builder()
                 .userResponseDto(userResponseDto)
                 .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 }

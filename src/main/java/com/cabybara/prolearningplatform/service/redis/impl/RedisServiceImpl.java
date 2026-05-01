@@ -5,7 +5,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +37,12 @@ public class RedisServiceImpl implements RedisService {
     }
 
     @Override
+    public void delete(Collection<String> keys) {
+        if (keys == null || keys.isEmpty()) return;
+        redisTemplate.delete(keys);
+    }
+
+    @Override
     public boolean hasKey(String key) {
         return redisTemplate.hasKey(key);
     }
@@ -45,5 +55,22 @@ public class RedisServiceImpl implements RedisService {
     @Override
     public Long getTTL(String key) {
         return redisTemplate.getExpire(key, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public void sAdd(String key, String value) {
+        redisTemplate.opsForSet().add(key, value);
+    }
+
+    @Override
+    public void sRemove(String key, String value) {
+        redisTemplate.opsForSet().remove(key, value);
+    }
+
+    @Override
+    public Set<String> sMembers(String key) {
+        Set<Object> raw = redisTemplate.opsForSet().members(key);
+        if (raw == null || raw.isEmpty()) return Collections.emptySet();
+        return raw.stream().map(Object::toString).collect(Collectors.toSet());
     }
 }

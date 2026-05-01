@@ -1,7 +1,8 @@
 package com.cabybara.prolearningplatform.configuration;
 
 import com.cabybara.prolearningplatform.exception.JwtAuthEntryPoint;
-import com.cabybara.prolearningplatform.service.auth.JwtService;
+import com.cabybara.prolearningplatform.service.auth.impl.JwtServiceImpl;
+import com.cabybara.prolearningplatform.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,6 +49,7 @@ public class SecurityConfig {
     private Long JWT_EXPIRATION;
 
     private final JwtAuthEntryPoint unauthorizedHandler;
+    private final RedisService redisService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -61,6 +63,7 @@ public class SecurityConfig {
                 .requestMatchers("/api-docs/**").permitAll()
                 .requestMatchers("/auth/register/**").permitAll()
                 .requestMatchers("/auth/login/**").permitAll()
+                .requestMatchers("/auth/refresh/**").permitAll()
                 .requestMatchers("/auth/google/**").permitAll()
                 .requestMatchers("/auth/verify-email/**").permitAll()
                 .requestMatchers("/auth/forgot-password/**").permitAll()
@@ -116,9 +119,17 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withSecretKey(
+        NimbusJwtDecoder delegate = NimbusJwtDecoder.withSecretKey(
                 new SecretKeySpec(JWT_SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256")
         ).build();
+        return token -> {
+            Jwt jwt = delegate.decode(token);
+            String jti = jwt.getId();
+            if (jti != null && redisService.hasKey(JwtServiceImpl.BLACKLIST_JTI_KEY_PREFIX + jti)) {
+                throw new JwtException("Token has been revoked");
+            }
+            return jwt;
+        };
     }
 
     @Bean
