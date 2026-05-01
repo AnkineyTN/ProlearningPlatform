@@ -69,10 +69,11 @@ public class ActivityLogServiceImpl implements ActivityLogService {
             activityLogRepository.save(log);
         } else {
             // First log of this day: consume freeze token if resuming after a 2-day gap
-            List<LocalDate> prevActiveDays = activityLogRepository.findActiveDays(userId);
+            List<LocalDate> prevActiveDays = activityLogRepository.findActiveDays(userId)
+                    .stream().map(this::toLocalDate).toList();
             if (!prevActiveDays.isEmpty()) {
                 long gap = date.toEpochDay() - prevActiveDays.get(0).toEpochDay();
-                if (gap == 2 && user.getStreakFreezeTokens() > 0) {
+                if (gap == 2 && user.getStreakFreezeTokens() != null && user.getStreakFreezeTokens() > 0) {
                     user.setStreakFreezeTokens(user.getStreakFreezeTokens() - 1);
                     userRepository.save(user);
                 }
@@ -126,7 +127,8 @@ public class ActivityLogServiceImpl implements ActivityLogService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalStateException("User not found"));
 
-        List<LocalDate> activeDays = activityLogRepository.findActiveDays(userId);
+        List<LocalDate> activeDays = activityLogRepository.findActiveDays(userId)
+                .stream().map(this::toLocalDate).toList();
 
         if (activeDays.isEmpty()) {
             return StreakResponseDto.builder()
@@ -142,7 +144,7 @@ public class ActivityLogServiceImpl implements ActivityLogService {
         long daysDiff = today.toEpochDay() - lastActive.toEpochDay();
 
         if (daysDiff > 1) {
-            if (daysDiff == 2 && user.getStreakFreezeTokens() > 0) {
+            if (daysDiff == 2 && user.getStreakFreezeTokens() != null && user.getStreakFreezeTokens() > 0) {
                 // Freeze token covers the gap; token will be consumed on the next logActivity
                 // call
             } else {

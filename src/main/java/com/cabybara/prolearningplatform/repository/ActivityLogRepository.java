@@ -41,7 +41,7 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> 
             HAVING SUM(a.active_duration) >= 300
             ORDER BY a.date DESC
             """, nativeQuery = true)
-    List<LocalDate> findActiveDays(@Param("userId") Long userId);
+    List<Object> findActiveDays(@Param("userId") Long userId);
 
     @Query(value = """
             SELECT a.content_type,
