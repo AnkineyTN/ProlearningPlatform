@@ -6,6 +6,8 @@ import com.cabybara.prolearningplatform.dto.internal.knowledge.TopicAssignmentRe
 import com.cabybara.prolearningplatform.dto.response.knowledge.TopicAccuracyDto;
 import com.cabybara.prolearningplatform.service.ai.AIKnowledgeService;
 import com.cabybara.prolearningplatform.utils.RestHttpClientUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,9 +26,9 @@ public class AIKnowledgeServiceImpl implements AIKnowledgeService {
     @Value("${aiservice.api}")
     private String aiServiceBaseApi;
 
-    private static final String ASSIGN_TOPICS_PATH    = "/knowledge/assign-topics";
-    private static final String NORMALIZE_TOPICS_PATH = "/knowledge/normalize-topics";
-    private static final String ANALYZE_PATH          = "/knowledge/analyze";
+    private static final String ASSIGN_TOPIC_PATH = "/analyze/assign-topic";
+    private static final String NORMALIZE_TOPIC_PATH = "/analyze/normalize-topic";
+    private static final String ANALYZE_PERFORMANCE_PATH = "/analyze/analyze-performance";
 
     private final RestHttpClientUtil restHttpClientUtil;
     private final ObjectMapper objectMapper;
@@ -37,28 +39,36 @@ public class AIKnowledgeServiceImpl implements AIKnowledgeService {
             Map<String, Object> body = new HashMap<>();
             body.put("items", items);
 
-            String raw = restHttpClientUtil.post(aiServiceBaseApi + ASSIGN_TOPICS_PATH, body, String.class);
+            String raw = restHttpClientUtil.post(aiServiceBaseApi + ASSIGN_TOPIC_PATH, body, String.class);
 
-            return objectMapper.readValue(raw,
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, TopicAssignmentResult.class));
+            JsonNode root = objectMapper.readTree(raw);
+            return objectMapper.readValue(
+                    root.path("data").toString(),
+                    objectMapper.getTypeFactory()
+                            .constructCollectionType(
+                                    List.class,
+                                    TopicAssignmentResult.class
+                            )
+            );
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for topic assignment", e);
         }
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Map<String, String> normalizeTopics(List<String> topics) {
         try {
             Map<String, Object> body = new HashMap<>();
             body.put("topics", topics);
 
-            String raw = restHttpClientUtil.post(aiServiceBaseApi + NORMALIZE_TOPICS_PATH, body, String.class);
+            String raw = restHttpClientUtil.post(aiServiceBaseApi + NORMALIZE_TOPIC_PATH, body, String.class);
 
-            Map<String, Object> response = objectMapper.readValue(raw, Map.class);
-            Map<String, String> mapping = new HashMap<>();
-            ((Map<String, String>) response.get("mapping")).forEach(mapping::put);
-            return mapping;
+            JsonNode root = objectMapper.readTree(raw);
+            return objectMapper.readValue(
+                    root.path("data").toString(),
+                    new TypeReference<Map<String, String>>() {
+                    }
+            );
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for topic normalization", e);
         }
@@ -70,13 +80,16 @@ public class AIKnowledgeServiceImpl implements AIKnowledgeService {
             Map<String, Object> body = new HashMap<>();
             body.put("topic_accuracies", topicAccuracies);
 
-            String raw = restHttpClientUtil.post(aiServiceBaseApi + ANALYZE_PATH, body, String.class);
+            String raw = restHttpClientUtil.post(aiServiceBaseApi + ANALYZE_PERFORMANCE_PATH, body, String.class);
 
-            Map<?, ?> response = objectMapper.readValue(raw, Map.class);
+            JsonNode data = objectMapper
+                    .readTree(raw)
+                    .path("data");
+
             return new KnowledgeAIResult(
-                    (String) response.get("strengths"),
-                    (String) response.get("weaknesses"),
-                    (String) response.get("improvements")
+                    data.path("strengths").asText(),
+                    data.path("weaknesses").asText(),
+                    data.path("improvements").asText()
             );
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for knowledge analysis", e);
