@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.dto.helper.ExamAnswerTopicStat;
 import com.cabybara.prolearningplatform.dto.helper.QuestionErrorStat;
 import com.cabybara.prolearningplatform.model.exam.ExamAttempt;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -45,4 +46,21 @@ public interface ExamAttemptRepository extends JpaRepository<ExamAttempt, Long> 
             @Param("examId") Long examId,
             @Param("userId") Long userId,
             @Param("essayThreshold") double essayThreshold);
+
+    @Query(nativeQuery = true, value = """
+            SELECT
+                a.question_id   AS questionId,
+                q.topic         AS topic,
+                a.is_correct    AS isCorrect,
+                a.earned_points AS earnedPoints,
+                eq.points       AS points,
+                a.essay_answer  AS essayAnswer
+            FROM exam_answers a
+            JOIN questions q    ON a.question_id = q.id
+            JOIN exam_questions eq ON eq.question_id = a.question_id AND eq.exam_id = :examId
+            WHERE a.attempt_id = :attemptId
+            """)
+    List<ExamAnswerTopicStat> findAnswerTopicStatsByAttempt(
+            @Param("attemptId") Long attemptId,
+            @Param("examId") Long examId);
 }

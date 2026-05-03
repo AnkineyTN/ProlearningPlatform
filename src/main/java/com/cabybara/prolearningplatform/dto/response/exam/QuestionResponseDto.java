@@ -13,5 +13,6 @@ public record QuestionResponseDto (
     QuestionType type,
     Integer points,
     List<QuestionOptionDto> options,
-    String expectedAnswer
+    String expectedAnswer,
+    String topic
 ) {}

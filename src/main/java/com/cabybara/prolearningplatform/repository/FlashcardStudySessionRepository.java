@@ -22,4 +22,6 @@ public interface FlashcardStudySessionRepository extends JpaRepository<Flashcard
     Long user(User user);
 
     List<FlashcardStudySession> findByUserIdAndSetIdAndFlashcardIdAndStatus(Long userId, Long setId, Long flashcardId, FlashcardStudySessionStatus flashcardStudySessionStatus);
+
+    Optional<FlashcardStudySession> findByIdAndUserId(Long id, Long userId);
 }

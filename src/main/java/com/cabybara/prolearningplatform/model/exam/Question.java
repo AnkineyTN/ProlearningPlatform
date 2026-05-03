@@ -35,4 +35,7 @@ public class Question {
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuestionOption> options = new ArrayList<>();
+
+    @Column(name = "topic")
+    private String topic;
 }

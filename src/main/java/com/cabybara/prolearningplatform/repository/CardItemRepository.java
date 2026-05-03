@@ -51,4 +51,7 @@ public interface CardItemRepository extends JpaRepository<CardItem, Long> {
 
     @Query("SELECT COUNT(c) FROM CardItem c WHERE c.flashcard.id = :flashcardId")
     long countByFlashcardId(@Param("flashcardId") Long flashcardId);
+
+    @Query("SELECT c FROM CardItem c WHERE c.flashcard.id = :flashcardId AND c.topic IS NULL")
+    List<CardItem> findByFlashcardIdAndTopicIsNull(@Param("flashcardId") Long flashcardId);
 }

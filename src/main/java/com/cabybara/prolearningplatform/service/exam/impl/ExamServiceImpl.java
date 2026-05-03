@@ -34,6 +34,7 @@ import com.cabybara.prolearningplatform.service.ai.AIExamService;
 import com.cabybara.prolearningplatform.service.exam.ExamService;
 import com.cabybara.prolearningplatform.service.exam.QuestionService;
 import com.cabybara.prolearningplatform.service.file.FileService;
+import com.cabybara.prolearningplatform.service.knowledge.TopicAssignmentAsyncService;
 import com.cabybara.prolearningplatform.service.permission.impl.ExamPermissionService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +65,7 @@ public class ExamServiceImpl implements ExamService {
     private final NoteRepository noteRepository;
     private final ExamMapper examMapper;
     private final ExamPermissionService examPermissionService;
+    private final TopicAssignmentAsyncService topicAssignmentAsyncService;
 
     @Override
 //    @CacheEvict(value = "set_exams", key = "'set' + #setId")
@@ -128,6 +130,10 @@ public class ExamServiceImpl implements ExamService {
 
         if (content.questions() != null && !content.questions().isEmpty()) {
             questionService.createQuestion(examId, content.questions());
+        }
+
+        if (method == CreationMethod.AI) {
+            topicAssignmentAsyncService.assignTopicsToExamAsync(examId);
         }
 
         return examMapper.toExamResponseDto(examRepository.findById(examId)
