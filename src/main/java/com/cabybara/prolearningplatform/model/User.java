@@ -44,10 +44,10 @@ public class User extends AbstractEntity implements UserDetails {
     @ColumnDefault("false")
     private boolean isEmailVerified;
 
-    @Column(name = "streak_freeze_tokens", nullable = false)
+    @Column(name = "streak_freeze_tokens")
     @ColumnDefault("0")
     @Builder.Default
-    private int streakFreezeTokens = 0;
+    private Integer streakFreezeTokens = 0;
 
     @Column(name = "timezone", nullable = false, length = 50)
     @ColumnDefault("'Asia/Ho_Chi_Minh'")
