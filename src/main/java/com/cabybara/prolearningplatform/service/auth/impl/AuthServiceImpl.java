@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.service.auth.impl;
 
 import com.cabybara.prolearningplatform.dto.request.user.RegisterRequestDto;
 import com.cabybara.prolearningplatform.dto.response.user.LoginResponseDto;
+import com.cabybara.prolearningplatform.dto.response.user.RefreshTokenResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.RegisterResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.Role;
@@ -13,6 +14,7 @@ import com.cabybara.prolearningplatform.mapper.UserMapper;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.service.auth.AuthService;
 import com.cabybara.prolearningplatform.service.auth.JwtService;
+import com.cabybara.prolearningplatform.service.auth.RefreshTokenService;
 import com.cabybara.prolearningplatform.service.email.EmailService;
 import com.cabybara.prolearningplatform.service.otp.OtpService;
 import com.cabybara.prolearningplatform.service.redis.RedisService;
@@ -33,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
     private final UserMapper userMapper;
     private final UserService userService;
     private final GoogleAuthorizationCodeFlow googleFlow;
@@ -57,16 +60,43 @@ public class AuthServiceImpl implements AuthService {
                     new UsernamePasswordAuthenticationToken(email, password)
             );
 
-            UserResponseDto userResponseDto = userMapper.toUserResponseDto((User) authentication.getPrincipal());
+            User user = (User) authentication.getPrincipal();
+            UserResponseDto userResponseDto = userMapper.toUserResponseDto(user);
             String accessToken = jwtService.generateToken(authentication);
+            String refreshToken = refreshTokenService.issue(user.getId());
 
             return LoginResponseDto.builder()
                     .userResponseDto(userResponseDto)
                     .accessToken(accessToken)
+                    .refreshToken(refreshToken)
                     .build();
 
         } catch (BadCredentialsException ex) {
             throw new AuthException(HttpStatus.BAD_REQUEST, ex.getMessage());
+        }
+    }
+
+    @Override
+    public RefreshTokenResponseDto refresh(String refreshToken) {
+        Long userId = refreshTokenService.validateAndConsume(refreshToken);
+        User user = userService.getUserById(userId);
+
+        String newAccess = jwtService.generateToken(user.getUsername());
+        String newRefresh = refreshTokenService.issue(userId);
+
+        return RefreshTokenResponseDto.builder()
+                .accessToken(newAccess)
+                .refreshToken(newRefresh)
+                .build();
+    }
+
+    @Override
+    public void logout(String accessTokenJti, long accessTokenTtlSeconds, String refreshToken) {
+        if (accessTokenJti != null) {
+            jwtService.blacklistAccessTokenByJti(accessTokenJti, accessTokenTtlSeconds);
+        }
+        if (refreshToken != null) {
+            refreshTokenService.revoke(refreshToken);
         }
     }
 
@@ -147,6 +177,8 @@ public class AuthServiceImpl implements AuthService {
         User user = userService.getUserById(userId);
 
         userService.resetPassword(userId, newPassword);
+
+        refreshTokenService.revokeAllForUser(userId);
 
         emailService.sendPasswordChangedNotification(user.getEmail(), user.getUsername());
     }

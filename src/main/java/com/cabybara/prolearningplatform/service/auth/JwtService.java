@@ -14,9 +14,7 @@ public interface JwtService {
 
     Boolean validateToken(String token);
 
-    void blacklistToken(String token);
-
-    Boolean isTokenBlacklisted(String token);
+    void blacklistAccessTokenByJti(String jti, long ttlSeconds);
 
     DecodedJWT decodeGoogleIdToken(String tokenId);
 }

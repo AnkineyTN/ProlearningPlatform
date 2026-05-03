@@ -1,11 +1,11 @@
 package com.cabybara.prolearningplatform.dto.response.user;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Value;
 
 @Value
 @Builder
-public class LoginResponseDto {
-    UserResponseDto userResponseDto;
+public class RefreshTokenResponseDto {
     String accessToken;
     String refreshToken;
 }
