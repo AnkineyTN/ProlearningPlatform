@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -39,6 +40,7 @@ public class FlashcardGameHistoryServiceImpl implements FlashcardGameHistoryServ
                 .user(user)
                 .totalCards(request.totalCards())
                 .durationSeconds(request.durationSeconds())
+                .wrongCardCounts(request.wrongCardCounts() != null ? request.wrongCardCounts() : new HashMap<>())
                 .build();
 
         FlashcardGameHistory saved = flashcardGameHistoryRepository.save(history);
@@ -74,6 +76,6 @@ public class FlashcardGameHistoryServiceImpl implements FlashcardGameHistoryServ
     }
 
     private FlashcardGameHistoryResponseDto toDto(FlashcardGameHistory h) {
-        return new FlashcardGameHistoryResponseDto(h.getId(), h.getTotalCards(), h.getDurationSeconds(), h.getCompletedAt());
+        return new FlashcardGameHistoryResponseDto(h.getId(), h.getTotalCards(), h.getDurationSeconds(), h.getCompletedAt(), h.getWrongCardCounts());
     }
 }
