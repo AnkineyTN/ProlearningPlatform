@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -149,10 +148,7 @@ public class FCMServiceImpl implements FCMService {
 
     @Override
     @Async
-    public void sendPushForNotificationsAsync(List<Notification> notifications) {
-        Map<Long, List<Notification>> notificationsByUser = notifications.stream()
-                .collect(Collectors.groupingBy(n -> n.getUser().getId()));
-
+    public void sendPushForNotificationsAsync(Map<Long, List<Notification>> notificationsByUser) {
         List<Long> successNotificationIds = new ArrayList<>();
 
         for (Map.Entry<Long, List<Notification>> entry : notificationsByUser.entrySet()) {
@@ -162,6 +158,7 @@ public class FCMServiceImpl implements FCMService {
             try {
                 List<String> tokens = deviceTokenRepository.findAllTokensByUserId(userId);
                 if (tokens.isEmpty()) {
+                    log.warn("No device tokens found for user {}, skipping push", userId);
                     continue;
                 }
 
@@ -178,7 +175,6 @@ public class FCMServiceImpl implements FCMService {
             }
         }
 
-        // Use query update instead of saveAll() to avoid Hibernate session issues in async context
         if (!successNotificationIds.isEmpty()) {
             notificationRepository.updatePushSentByIds(successNotificationIds, true);
         }
