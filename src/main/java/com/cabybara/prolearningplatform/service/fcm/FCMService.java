@@ -5,6 +5,7 @@ import com.cabybara.prolearningplatform.model.noti.Notification;
 import com.google.firebase.messaging.BatchResponse;
 
 import java.util.List;
+import java.util.Map;
 
 public interface FCMService {
 
@@ -16,7 +17,6 @@ public interface FCMService {
 
     void sendPushForNotificationAsync(Notification notification, Long userId);
 
-
-    void sendPushForNotificationsAsync(List<Notification> notifications);
+    void sendPushForNotificationsAsync(Map<Long, List<Notification>> notificationsByUser);
 }
 

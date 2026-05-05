@@ -10,7 +10,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -35,12 +38,16 @@ public class NotificationDispatcherImpl implements NotificationDispatcher {
     public List<Notification> dispatchToMany(List<CreateNotificationDto> createDtos) {
         List<Notification> notifications = notificationService.createNotifications(createDtos);
 
-        List<CreateNotificationDto> pushEnabled = createDtos.stream()
-                .filter(CreateNotificationDto::isSendPush)
-                .toList();
+        Map<Long, List<Notification>> pushByUser = new HashMap<>();
+        for (int i = 0; i < createDtos.size(); i++) {
+            if (createDtos.get(i).isSendPush()) {
+                pushByUser.computeIfAbsent(createDtos.get(i).getUserId(), k -> new ArrayList<>())
+                          .add(notifications.get(i));
+            }
+        }
 
-        if (!pushEnabled.isEmpty()) {
-            fcmService.sendPushForNotificationsAsync(notifications);
+        if (!pushByUser.isEmpty()) {
+            fcmService.sendPushForNotificationsAsync(pushByUser);
         }
 
         return notifications;
