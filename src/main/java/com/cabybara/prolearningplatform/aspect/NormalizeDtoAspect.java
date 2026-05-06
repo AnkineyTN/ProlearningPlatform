@@ -57,7 +57,7 @@ public class NormalizeDtoAspect {
         Class<?> clazz = target.getClass();
 
         // Skip if not a DTO class (simple heuristic)
-        if (!clazz.getName().contains("dto") && !clazz.getName().contains("DTO")) {
+        if (!clazz.getName().contains("Dto") && !clazz.getName().contains("DTO")) {
             return target;
         }
 
