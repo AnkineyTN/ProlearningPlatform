@@ -8,9 +8,11 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.RecordComponent;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 @Aspect
 @Component
@@ -22,91 +24,95 @@ public class NormalizeDtoAspect {
     @Around("executionPointcut()")
     public Object trimDtoParameters(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
-
         for (int i = 0; i < args.length; i++) {
-            Object arg = args[i];
-            if (arg != null && !isPrimitiveOrSpringFramework(arg)) {
-                Object normalized = normalizeObject(arg);
-                args[i] = normalized;
+            if (args[i] != null && !isBuiltInType(args[i])) {
+                args[i] = normalizeObject(args[i]);
             }
         }
-
         return joinPoint.proceed(args);
     }
 
-    private boolean isPrimitiveOrSpringFramework(Object obj) {
+    private boolean isBuiltInType(Object obj) {
         Class<?> clazz = obj.getClass();
-        
-        // Skip primitives, strings, and Spring framework classes
-        if (clazz.isPrimitive() || obj instanceof String) {
+        if (clazz.isPrimitive() || obj instanceof String || obj instanceof Number || obj instanceof Boolean) {
             return true;
         }
-        
-        // Skip Spring framework classes
-        String className = clazz.getName();
-        if (className.startsWith("org.springframework") || 
-            className.startsWith("org.apache") ||
-            className.startsWith("java.")) {
-            return true;
-        }
-        
-        return false;
+        String name = clazz.getName();
+        return name.startsWith("org.springframework") || name.startsWith("org.apache") || name.startsWith("java.");
     }
 
     private Object normalizeObject(Object target) throws Exception {
+        if (target == null) return null;
         Class<?> clazz = target.getClass();
-
-        // Skip if not a DTO class (simple heuristic)
-        if (!clazz.getName().contains("Dto") && !clazz.getName().contains("DTO")) {
-            return target;
-        }
-
-        // Nếu là record
-        if (clazz.isRecord()) {
-            RecordComponent[] components = clazz.getRecordComponents();
-            Object[] args = new Object[components.length];
-
-            for (int i = 0; i < components.length; i++) {
-                Field field = clazz.getDeclaredField(components[i].getName());
-                field.setAccessible(true);
-                Object value = field.get(target);
-
-                if (value instanceof String && !field.getName().equals("password")) {
-                    value = ((String) value).trim();
-                }
-
-                args[i] = value;
-            }
-
-            // Tạo instance record mới với constructor
-            Constructor<?> ctor = clazz.getDeclaredConstructor(Arrays.stream(components)
-                    .map(RecordComponent::getType)
-                    .toArray(Class[]::new));
-            return ctor.newInstance(args);
-        }
-
-        // Nếu không phải record → vẫn dùng reflection set như cũ
-        for (Field field : clazz.getDeclaredFields()) {
-            // Skip static/final fields
-            if (field.isEnumConstant() || java.lang.reflect.Modifier.isStatic(field.getModifiers()) || 
-                java.lang.reflect.Modifier.isFinal(field.getModifiers())) {
-                continue;
-            }
-            
-            if (field.getType().equals(String.class) && !field.getName().equals("password")) {
-                try {
-                    field.setAccessible(true);
-                    String value = (String) field.get(target);
-                    if (value != null) {
-                        field.set(target, value.trim());
-                    }
-                } catch (IllegalAccessException e) {
-                    // Skip fields that can't be accessed
-                    continue;
-                }
-            }
-        }
-
+        if (!isDtoClass(clazz)) return target;
+        if (clazz.isRecord()) return normalizeRecord(target, clazz);
+        normalizeBean(target, clazz);
         return target;
+    }
+
+    // Records are immutable — rebuild a new instance with normalized component values.
+    private Object normalizeRecord(Object target, Class<?> clazz) throws Exception {
+        RecordComponent[] components = clazz.getRecordComponents();
+        Object[] args = new Object[components.length];
+        for (int i = 0; i < components.length; i++) {
+            Field field = clazz.getDeclaredField(components[i].getName());
+            field.setAccessible(true);
+            args[i] = normalizeValue(field.get(target), field.getName());
+        }
+        Constructor<?> ctor = clazz.getDeclaredConstructor(
+                Arrays.stream(components).map(RecordComponent::getType).toArray(Class[]::new));
+        return ctor.newInstance(args);
+    }
+
+    // Mutable beans — set normalized values back in place.
+    private void normalizeBean(Object target, Class<?> clazz) throws Exception {
+        for (Field field : clazz.getDeclaredFields()) {
+            if (isSkippableField(field)) continue;
+            field.setAccessible(true);
+            Object normalized = normalizeValue(field.get(target), field.getName());
+            field.set(target, normalized);
+        }
+    }
+
+    // Central dispatch: handles String trimming, List<DTO>, and nested DTO objects.
+    private Object normalizeValue(Object value, String fieldName) throws Exception {
+        if (value == null) return null;
+        if (value instanceof String str) {
+            return "password".equals(fieldName) ? str : str.trim();
+        }
+        if (value instanceof List<?> list) {
+            return normalizeList(list);
+        }
+        if (isDtoClass(value.getClass())) {
+            return normalizeObject(value);
+        }
+        return value;
+    }
+
+    // Normalizes a List only when its elements are DTO objects.
+    // Non-DTO lists (List<Long>, List<String>, etc.) are returned as-is.
+    private List<?> normalizeList(List<?> list) throws Exception {
+        if (list.isEmpty()) return list;
+        Object sample = null;
+        for (Object item : list) {
+            if (item != null) { sample = item; break; }
+        }
+        if (sample == null || !isDtoClass(sample.getClass())) return list;
+
+        List<Object> result = new ArrayList<>(list.size());
+        for (Object item : list) {
+            result.add(item != null ? normalizeObject(item) : null);
+        }
+        return result;
+    }
+
+    private boolean isDtoClass(Class<?> clazz) {
+        String name = clazz.getSimpleName();
+        return name.contains("Dto") || name.contains("DTO");
+    }
+
+    private boolean isSkippableField(Field field) {
+        int mod = field.getModifiers();
+        return field.isEnumConstant() || Modifier.isStatic(mod) || Modifier.isFinal(mod);
     }
 }
