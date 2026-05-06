@@ -8,7 +8,6 @@ import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse
 import com.cabybara.prolearningplatform.enums.CreationMethod;
 import com.cabybara.prolearningplatform.enums.NoteRole;
 import com.cabybara.prolearningplatform.enums.Privacy;
-import com.cabybara.prolearningplatform.event.model.ChildEntityUpdatedEvent;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import com.cabybara.prolearningplatform.model.note.Note;
@@ -24,6 +23,7 @@ import com.cabybara.prolearningplatform.mapper.FlashcardMapper;
 import com.cabybara.prolearningplatform.model.*;
 import com.cabybara.prolearningplatform.repository.FlashcardRepository;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
+import com.cabybara.prolearningplatform.repository.SetRepository;
 import com.cabybara.prolearningplatform.service.ai.AIFlashcardService;
 import com.cabybara.prolearningplatform.service.file.FileService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
@@ -35,12 +35,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +60,7 @@ public class FlashcardServiceImpl implements FlashcardService {
     private final FlashcardMapper flashcardMapper;
     private final AssetService assetService;
     private final CardItemMapper cardItemMapper;
-    private final ApplicationEventPublisher eventPublisher;
+    private final SetRepository setRepository;
 
     private final FileService fileService;
     private final AIFlashcardService aiFlashcardService;
@@ -140,7 +140,7 @@ public class FlashcardServiceImpl implements FlashcardService {
             topicAssignmentAsyncService.assignTopicsToFlashcardAsync(savedFlashcard.getId());
         }
 
-        eventPublisher.publishEvent(new ChildEntityUpdatedEvent(savedFlashcard));
+        setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
         return flashcardMapper.toFlashcardResponseDto(savedFlashcard);
     }
 
@@ -169,7 +169,11 @@ public class FlashcardServiceImpl implements FlashcardService {
 
         flashcard.setCards(copiedCards);
 
-        return flashcardMapper.toFlashcardResponseDto(flashcardRepository.save(flashcard));
+        Flashcard saved = flashcardRepository.save(flashcard);
+        if (setId != null) {
+            setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
+        }
+        return flashcardMapper.toFlashcardResponseDto(saved);
     }
 
     private Map<Long, Asset> activateCardImages(List<CardItemCreateRequestDto> cardDtos, Long userId) {
@@ -212,7 +216,7 @@ public class FlashcardServiceImpl implements FlashcardService {
         if (deletedCount == 0) {
             throw new BadRequestException("Flashcard not found or access denied.");
         }
-        eventPublisher.publishEvent(new ChildEntityUpdatedEvent(deletedFlashcard));
+        setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
     }
 
     @Override
@@ -228,7 +232,7 @@ public class FlashcardServiceImpl implements FlashcardService {
         flashcardMapper.updateFlashcardFromDto(flashcardUpdatingRequestDto, flashcard);
         Flashcard updatedFlashcard = flashcardRepository.save(flashcard);
 
-        eventPublisher.publishEvent(new ChildEntityUpdatedEvent(updatedFlashcard));
+        setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
         return flashcardMapper.toFlashcardResponseDto(updatedFlashcard);
     }
 
@@ -236,7 +240,9 @@ public class FlashcardServiceImpl implements FlashcardService {
     public DetailFlashcardResponseDto updateFlashcard(Flashcard newFlashcard) {
         Flashcard savedFlashcard = flashcardRepository.save(newFlashcard);
 
-        eventPublisher.publishEvent(new ChildEntityUpdatedEvent(savedFlashcard));
+        if (savedFlashcard.getSet() != null) {
+            setRepository.updateLastModifiedDate(savedFlashcard.getSet().getId(), OffsetDateTime.now());
+        }
         return flashcardMapper.toDetailFlashcardResponseDto(savedFlashcard);
     }
 
