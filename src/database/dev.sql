@@ -22,35 +22,400 @@ CREATE TYPE user_hear_app_from AS ENUM (
     'OTHER'
     );
 
-CREATE TABLE "user" (
-                        id SERIAL PRIMARY KEY,
-                        email VARCHAR(255) UNIQUE NOT NULL,
-                        first_name VARCHAR(100) NOT NULL,
-                        last_name VARCHAR(100) NOT NULL,
-                        password VARCHAR(255) NOT NULL,
-                        recovery_code character varying(255) NULL,
-                        language user_language default 'VI',
-
-                        education user_education default 'HIGH_SCHOOL',
-
-                        hear_app_from user_hear_app_from default 'GOOGLE',
-
-                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE "user"
+(
+    id
+                  SERIAL
+        PRIMARY
+            KEY,
+    email
+                  VARCHAR(255) UNIQUE NOT NULL,
+    first_name    VARCHAR(100)        NOT NULL,
+    last_name     VARCHAR(100)        NOT NULL,
+    password      VARCHAR(255)        NOT NULL,
+    recovery_code character varying(255) NULL,
+    language      user_language            NULL,
+    education     user_education           NULL,
+    hear_app_from user_hear_app_from       NULL,
+    account_type  VARCHAR(50)              default 'FREE',
+    created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE
-    public.authorities (
-                           id bigserial primary key NOT NULL,
-                           email character varying(128) NOT NULL,
-                           authority authority NOT NULL DEFAULT 'ROLE_USER'
+CREATE TABLE authorities
+(
+    id        bigserial primary key  NOT NULL,
+    email     character varying(128) NOT NULL,
+    authority authority              NOT NULL DEFAULT 'ROLE_USER'
+);
+
+CREATE TABLE set
+(
+    id          SERIAL PRIMARY KEY,
+    id_user     INTEGER NOT NULL,
+    title       VARCHAR(255),
+    description TEXT,
+    privacy     VARCHAR(50),
+    search_vector tsvector,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_user
+        FOREIGN KEY (id_user)
+            REFERENCES users (id)
+            ON DELETE CASCADE
+);
+
+CREATE INDEX idx_set_search_vector ON set USING GIN(search_vector);
+CREATE INDEX idx_set_title_trgm ON set USING GIN(title gin_trgm_ops);
+CREATE INDEX idx_set_user_privacy_created ON set(id_user, privacy, created_at DESC);
+
+CREATE OR REPLACE FUNCTION update_search_vector() RETURNS trigger AS $$
+BEGIN
+    NEW.search_vector :=
+            setweight(to_tsvector('simple', unaccent(COALESCE(NEW.title, ''))), 'A') ||
+            setweight(to_tsvector('simple', unaccent(COALESCE(NEW.description, ''))), 'C');
+    RETURN NEW;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_search_vector_set
+    BEFORE INSERT OR UPDATE ON "set"
+    FOR EACH ROW EXECUTE FUNCTION update_search_vector();
+
+CREATE TABLE note
+(
+    id          SERIAL PRIMARY KEY,
+    note_url    VARCHAR(255),
+    title       VARCHAR(255),
+    content     TEXT,
+    description TEXT,
+    privacy     VARCHAR(50),
+    status      VARCHAR(50),
+    search_vector tsvector,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    id_set      INT,
+    id_user     BIGINT NOT NULL,
+    CONSTRAINT fk_note_set
+        FOREIGN KEY (id_set)
+            REFERENCES set (id)
+            ON DELETE CASCADE,
+
+    CONSTRAINT fk_note_user
+        FOREIGN KEY (id_user)
+            REFERENCES users(id)
+            ON DELETE CASCADE
+);
+
+CREATE TRIGGER trigger_update_search_vector_note
+    BEFORE INSERT OR UPDATE ON "note"
+    FOR EACH ROW EXECUTE FUNCTION update_search_vector();
+
+CREATE INDEX idx_note_search_vector ON note USING GIN(search_vector);
+CREATE INDEX idx_note_title_trgm ON note USING GIN(title gin_trgm_ops);
+CREATE INDEX idx_note_user_privacy_created ON note(id_user, privacy, created_at DESC);
+
+CREATE TABLE note_docs
+(
+    id_note  BIGINT NOT NULL,
+    id_asset BIGINT NOT NULL,
+    PRIMARY KEY (id_note, id_asset), -- composite primary key
+    FOREIGN KEY (id_note) REFERENCES note (id),
+    FOREIGN KEY (id_asset) REFERENCES asset (id)
+);
+
+CREATE TABLE note_imgs
+(
+    id_note  BIGINT NOT NULL,
+    id_asset BIGINT NOT NULL,
+    PRIMARY KEY (id_note, id_asset), -- composite primary key
+    FOREIGN KEY (id_note) REFERENCES note (id),
+    FOREIGN KEY (id_asset) REFERENCES asset (id)
+);
+
+CREATE TABLE flashcard
+(
+    id            bigserial              NOT NULL,
+    title         character varying(255) NOT NULL,
+    description   text NULL,
+    status        character varying(50)  NOT NULL DEFAULT 'NOT_COMPLETED'::character varying,
+    create_method character varying(50)  NOT NULL,
+    id_user       integer                NOT NULL,
+    privacy       character varying(50)  NOT NULL DEFAULT 'PRIVATE'::character varying,
+    search_vector tsvector,
+    created_at    timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    timestamp without time zone NULL DEFAULT CURRENT_TIMESTAMP,
+    known         integer NULL DEFAULT 0,
+    learning      integer NULL DEFAULT 0,
+    remain        integer NULL DEFAULT 0,
+    id_set        integer                NOT NULL,
+    last_study    timestamp without time zone NULL,
+
+    FOREIGN KEY (id_user) REFERENCES users (id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT chk_status CHECK (status IN ('COMPLETED', 'NOT_COMPLETED', 'LEARNING')),
+    CONSTRAINT chk_privacy CHECK (privacy IN ('PUBLIC', 'PRIVATE')),
+    CONSTRAINT chk_known_non_negative CHECK (known >= 0),
+    CONSTRAINT chk_learning_non_negative CHECK (learning >= 0),
+    CONSTRAINT chk_remain_non_negative CHECK (remain >= 0)
+);
+
+CREATE TRIGGER trigger_update_search_vector_flashcard
+    BEFORE INSERT OR UPDATE ON flashcard
+    FOR EACH ROW EXECUTE FUNCTION update_search_vector();
+
+CREATE INDEX idx_flashcard_search_vector ON flashcard USING GIN(search_vector);
+CREATE INDEX idx_flashcard_title_trgm ON flashcard USING GIN(title gin_trgm_ops);
+CREATE INDEX idx_flashcard_user_privacy_created ON flashcard(id_user, privacy, created_at DESC);
+
+CREATE TABLE card_item
+(
+    id           BIGSERIAL PRIMARY KEY,
+    flashcard_id BIGINT      NOT NULL,
+    front_card   TEXT        NOT NULL,
+    back_card    TEXT        NOT NULL,
+    image_url    VARCHAR(255),
+
+    card_status  VARCHAR(50) NOT NULL DEFAULT 'NEW',
+
+    created_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP            DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (flashcard_id) REFERENCES flashcard (id) ON DELETE CASCADE,
+
+    CONSTRAINT chk_card_status CHECK (card_status IN ('NEW', 'LEARNING', 'KNOWN'))
+);
+
+CREATE TABLE image_asset
+(
+    id         BIGSERIAL PRIMARY KEY,
+    public_id  varchar(255) not null,
+    url        varchar(255) not null,
+    id_user    int          not null,
+    status     varchar(10)  not null default 'PENDING',
+
+    created_at TIMESTAMP             DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP             DEFAULT CURRENT_TIMESTAMP,
+
+    foreign key (id_user) references users (id) on delete cascade,
+    constraint chk_status check (status in ('PENDING', 'ACTIVE'))
+);
+
+CREATE TABLE device_token (
+                            id bigserial PRIMARY KEY NOT NULL,
+                            user_id bigint NOT NULL,
+                            fcm_token text NOT NULL UNIQUE,
+                            platform character varying(20) NULL,
+                            last_active_at timestamp without time zone NULL DEFAULT now()
+);
+
+CREATE TABLE study_session (
+                               id BIGSERIAL PRIMARY KEY,
+                               user_id BIGINT NOT NULL,
+                               set_id BIGINT NOT NULL,
+                               flashcard_set_id BIGINT NOT NULL,
+
+                               status VARCHAR(20) DEFAULT 'IN_PROGRESS',
+
+                               initial_card_ids JSONB,
+                               remaining_card_ids JSONB,
+                               review_log JSONB DEFAULT '[]'::jsonb,
+
+                               correct_count INT DEFAULT 0,
+                               incorrect_count INT DEFAULT 0,
+                               study_mode VARCHAR(255),
+
+                               last_interaction_at TIMESTAMP DEFAULT NOW(),
+                               created_at TIMESTAMP DEFAULT NOW(),
+
+                               FOREIGN KEY (user_id) REFERENCES users(id),
+                               FOREIGN KEY (set_id) REFERENCES set(id),
+                               FOREIGN KEY (flashcard_set_id) REFERENCES flashcard(id),
+
+                               CONSTRAINT chk_status CHECK(status in ('IN_PROGRESS', 'COMPLETED', 'CANCELLED')),
+                               CONSTRAINT chk_mode CHECK(study_mode in ('SPACED_REPETITION', 'REVIEW'))
+);
+
+CREATE INDEX idx_study_session_user ON study_session(user_id);
+
+CREATE TABLE notification
+(
+    id         BIGINT GENERATED BY DEFAULT AS IDENTITY   NOT NULL,
+    user_id    BIGINT                                    NOT NULL,
+    type       VARCHAR(50)                               NOT NULL,
+    title      VARCHAR(255)                              NOT NULL,
+    message    VARCHAR(1000)                             NOT NULL,
+    data       JSONB,
+    action_url VARCHAR(500),
+    is_read    BOOLEAN                     DEFAULT FALSE NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT NOW() NOT NULL,
+    read_at    TIMESTAMP WITHOUT TIME ZONE,
+    push_sent  BOOLEAN                     DEFAULT FALSE NOT NULL,
+    CONSTRAINT pk_notification PRIMARY KEY (id),
+    CONSTRAINT FK_NOTIFICATION_ON_USER FOREIGN KEY (user_id) REFERENCES users (id)
 );
 
 
+-- exam
+CREATE TYPE question_type AS ENUM (
+    'MULTIPLE_CHOICE',
+    'TRUE_FALSE',
+    'ESSAY'
+    );
 
+CREATE TABLE exams (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    privacy VARCHAR(20) DEFAULT 'PUBLIC',
+    duration BIGINT,
+    created_by INTEGER NOT NULL,
+    set_id INTEGER NOT NULL,
+    id_user BIGINT NOT NULL,
+    search_vector tsvector,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+    CONSTRAINT fk_exam_set
+        FOREIGN KEY (set_id)
+            REFERENCES set(id)
+            ON DELETE CASCADE
+);
 
+CREATE TRIGGER trigger_update_search_vector_exam
+    BEFORE INSERT OR UPDATE ON exams
+    FOR EACH ROW EXECUTE FUNCTION update_search_vector();
 
+CREATE INDEX idx_exam_search_vector ON exams USING GIN(search_vector);
+CREATE INDEX idx_exam_title_trgm ON exams USING GIN(title gin_trgm_ops);
+CREATE INDEX idx_exam_user_privacy_created ON exams(id_user, privacy, created_at DESC);
 
+CREATE INDEX idx_exams_created_by ON exams(created_by);
+CREATE INDEX idx_exam_set ON exams(set_id);
 
+CREATE TABLE questions (
+    id BIGSERIAL PRIMARY KEY,
+    content TEXT NOT NULL,
+    type question_type NOT NULL,
+    created_by INTEGER NOT NULL ,
+    expected_answer TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
+CREATE TABLE question_options (
+    id BIGSERIAL PRIMARY KEY,
+    question_id BIGINT NOT NULL,
+    option_text TEXT NOT NULL,
+    is_correct BOOLEAN DEFAULT FALSE,
+
+    CONSTRAINT fk_question_option_question FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_options_question_id
+    ON question_options(question_id);
+
+CREATE TABLE exam_questions (
+    id BIGSERIAL PRIMARY KEY,
+    exam_id BIGINT NOT NULL,
+    question_id BIGINT NOT NULL,
+    order_index INT,
+    points INT DEFAULT 1,
+
+    CONSTRAINT fk_exam_questions_exam FOREIGN KEY (exam_id) REFERENCES exams(id) ON DELETE CASCADE,
+    CONSTRAINT fk_exam_questions_question FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_exam_questions_exam_id
+    ON exam_questions(exam_id);
+
+CREATE INDEX idx_exam_questions_question_id
+    ON exam_questions(question_id);
+
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS unaccent;
+
+CREATE TABLE search_index (
+                              id BIGSERIAL PRIMARY KEY,
+                              user_id BIGINT NOT NULL,
+                              entity_id BIGINT NOT NULL,
+                              set_id BIGINT NOT NULL,
+                              entity_type VARCHAR(50) NOT NULL,
+                              title VARCHAR(255),
+                              description TEXT,
+                              search_vector tsvector
+);
+
+-- index for fts
+CREATE INDEX idx_search_vector ON search_index USING GIN (search_vector);
+
+-- filter user
+CREATE INDEX idx_search_user_id ON search_index (user_id);
+
+-- index to combine pg trigram - fuzzy search
+CREATE INDEX idx_search_title_trgm
+    ON search_index
+        USING GIN (title gin_trgm_ops);
+
+CREATE INDEX idx_search_desc_trgm
+    ON search_index
+        USING GIN (description gin_trgm_ops);
+
+-- update search_index with existed data
+BEGIN;
+
+TRUNCATE TABLE search_index RESTART IDENTITY;
+
+INSERT INTO search_index (entity_id, entity_type, title, description, search_vector, user_id)
+SELECT
+    id,
+    'SET',
+    title,
+    description,
+    setweight(to_tsvector('simple', unaccent(COALESCE(title, ''))), 'A') ||
+    setweight(to_tsvector('simple', unaccent(COALESCE(description, ''))), 'C'),
+    id_user
+FROM "set";
+
+INSERT INTO search_index (entity_id, entity_type, title, description, search_vector, user_id)
+SELECT
+    id,
+    'NOTE',
+    title,
+    description,
+    setweight(to_tsvector('simple', unaccent(COALESCE(title, ''))), 'A') ||
+    setweight(to_tsvector('simple', unaccent(COALESCE(description, ''))), 'C'),
+    id_user
+FROM note;
+
+INSERT INTO search_index (entity_id, entity_type, title, description, search_vector, user_id)
+SELECT
+    id,
+    'FLASHCARD',
+    title,
+    description,
+    setweight(to_tsvector('simple', unaccent(COALESCE(title, ''))), 'A') ||
+    setweight(to_tsvector('simple', unaccent(COALESCE(description, ''))), 'C'),
+    id_user
+FROM flashcard;
+
+INSERT INTO search_index (entity_id, entity_type, title, description, search_vector, user_id)
+SELECT
+    id,
+    'EXAM',
+    title,
+    description,
+    setweight(to_tsvector('simple', unaccent(COALESCE(title, ''))), 'A') ||
+    setweight(to_tsvector('simple', unaccent(COALESCE(description, ''))), 'C'),
+    id_user
+FROM exams;
+
+COMMIT;
+
+ALTER TABLE IF EXISTS users ALTER COLUMN language DROP NOT NULL;
+ALTER TABLE IF EXISTS users ALTER COLUMN language DROP DEFAULT;
+ALTER TABLE IF EXISTS users ALTER COLUMN education DROP NOT NULL;
+ALTER TABLE IF EXISTS users ALTER COLUMN education DROP DEFAULT;
+ALTER TABLE IF EXISTS users ALTER COLUMN hear_app_from DROP NOT NULL;
+ALTER TABLE IF EXISTS users ALTER COLUMN hear_app_from DROP DEFAULT;

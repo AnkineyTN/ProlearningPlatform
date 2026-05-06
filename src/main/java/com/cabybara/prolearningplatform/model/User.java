@@ -1,8 +1,11 @@
 package com.cabybara.prolearningplatform.model;
 
+import com.cabybara.prolearningplatform.enums.AccountType;
 import com.cabybara.prolearningplatform.enums.UserEducation;
 import com.cabybara.prolearningplatform.enums.UserHearAppFrom;
 import com.cabybara.prolearningplatform.enums.UserLanguage;
+import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
+import com.cabybara.prolearningplatform.model.note.Note;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
@@ -13,6 +16,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -36,24 +40,53 @@ public class User extends AbstractEntity implements UserDetails {
     @Column()
     private String password;
 
+    @Column(name = "is_email_verified")
+    @ColumnDefault("false")
+    private boolean isEmailVerified;
+
+    @Column(name = "streak_freeze_tokens")
+    @ColumnDefault("0")
+    @Builder.Default
+    private Integer streakFreezeTokens = 0;
+
+    @Column(name = "timezone", nullable = false, length = 50)
+    @ColumnDefault("'Asia/Ho_Chi_Minh'")
+    @Builder.Default
+    private String timezone = "Asia/Ho_Chi_Minh";
+
     @Column(columnDefinition = "user_language")
     @Enumerated(EnumType.STRING)
-    @ColumnDefault("'vi'")
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private UserLanguage language;
 
     @Enumerated(EnumType.STRING)
-    @ColumnDefault("'High School'")
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private UserEducation education;
 
     @Enumerated(EnumType.STRING)
-    @ColumnDefault("'Google'")
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private UserHearAppFrom hearAppFrom;
 
+    @Enumerated(EnumType.STRING)
+    @ColumnDefault("'FREE'")
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    private AccountType accountType;
+
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
+    @ToString.Exclude
     private Set<Authority> roles;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
+    @ToString.Exclude
+    private List<Flashcard> flashcards;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
+    @ToString.Exclude
+    private List<Asset> assets;
+
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "user")
+    @ToString.Exclude
+    private List<Note> notes;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

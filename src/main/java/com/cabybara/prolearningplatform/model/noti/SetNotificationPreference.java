@@ -1,0 +1,40 @@
+package com.cabybara.prolearningplatform.model.noti;
+
+import com.cabybara.prolearningplatform.model.AbstractEntity;
+import com.cabybara.prolearningplatform.model.Set;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.DayOfWeek;
+import java.time.OffsetDateTime;
+
+@Entity
+@Table(name = "set_notification_preference")
+@Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = "set")
+@EqualsAndHashCode(exclude = "set")
+public class SetNotificationPreference extends AbstractEntity {
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "set_id", nullable = false, unique = true)
+    private Set set;
+
+    @Builder.Default
+    @Column(name = "weekly_summary_enabled", nullable = false)
+    private boolean weeklySummaryEnabled = true;
+
+    @Builder.Default
+    @Column(name = "weekly_summary_day", nullable = false)
+    private int weeklySummaryDay = DayOfWeek.SUNDAY.getValue();
+
+    @Column(name = "last_summary_sent_at")
+    private OffsetDateTime lastSummarySentAt;
+
+    public DayOfWeek getWeeklySummaryDayOfWeek() {
+        return DayOfWeek.of(weeklySummaryDay);
+    }
+}

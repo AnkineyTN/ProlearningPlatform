@@ -1,7 +1,8 @@
 package com.cabybara.prolearningplatform.configuration;
 
 import com.cabybara.prolearningplatform.exception.JwtAuthEntryPoint;
-import com.cabybara.prolearningplatform.service.JwtService;
+import com.cabybara.prolearningplatform.service.auth.impl.JwtServiceImpl;
+import com.cabybara.prolearningplatform.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +16,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.GrantedAuthority;
@@ -47,22 +49,30 @@ public class SecurityConfig {
     private Long JWT_EXPIRATION;
 
     private final JwtAuthEntryPoint unauthorizedHandler;
+    private final RedisService redisService;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/swagger-ui/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-                        .requestMatchers("/swagger-resources/**").permitAll()
-                        .requestMatchers("/webjars/**").permitAll()
-                        .requestMatchers("/api-docs/**").permitAll()
-                        .requestMatchers("/auth/register/**").permitAll()
-                        .requestMatchers("/auth/login/**").permitAll()
-                        .requestMatchers("/auth/google/**").permitAll()
-                        .anyRequest().authenticated()
-                );
-
+        // CORS is already handled by AppConfig.addCorsMappings()
+        
+        http.authorizeHttpRequests((authorize) -> authorize
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
+                .requestMatchers("/swagger-resources/**").permitAll()
+                .requestMatchers("/webjars/**").permitAll()
+                .requestMatchers("/api-docs/**").permitAll()
+                .requestMatchers("/auth/register/**").permitAll()
+                .requestMatchers("/auth/login/**").permitAll()
+                .requestMatchers("/auth/refresh/**").permitAll()
+                .requestMatchers("/auth/google/**").permitAll()
+                .requestMatchers("/auth/verify-email/**").permitAll()
+                .requestMatchers("/auth/forgot-password/**").permitAll()
+                .requestMatchers("/auth/verify-reset-otp/**").permitAll()
+                .requestMatchers("/auth/reset-password/**").permitAll()
+                .requestMatchers("/internal/**").permitAll()
+                .requestMatchers("/ws/**").permitAll()
+                .anyRequest().authenticated()
+        );
 
         http.sessionManagement(
                 session ->
@@ -75,7 +85,7 @@ public class SecurityConfig {
                 .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
         );
 
-        http.csrf(csrf -> csrf.disable());
+        http.csrf(AbstractHttpConfigurer::disable);
 
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
                 .decoder(jwtDecoder())
@@ -109,29 +119,17 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        return NimbusJwtDecoder.withSecretKey(
+        NimbusJwtDecoder delegate = NimbusJwtDecoder.withSecretKey(
                 new SecretKeySpec(JWT_SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256")
         ).build();
-    }
-
-    class CustomJwtAuthenticationConverter extends JwtAuthenticationConverter {
-        private final JwtService jwtService;
-        private final Converter<Jwt, Collection<GrantedAuthority>> authoritiesConverter;
-
-        public CustomJwtAuthenticationConverter(JwtService jwtService, Converter<Jwt, Collection<GrantedAuthority>> authoritiesConverter) {
-            this.jwtService = jwtService;
-            this.authoritiesConverter = authoritiesConverter;
-            super.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
-        }
-
-        protected AbstractAuthenticationToken extractAuthentication(Jwt jwt) {
-            if (jwtService.isTokenBlacklisted(jwt.getTokenValue())) {
-                throw new JwtException("Token is blacklisted");
+        return token -> {
+            Jwt jwt = delegate.decode(token);
+            String jti = jwt.getId();
+            if (jti != null && redisService.hasKey(JwtServiceImpl.BLACKLIST_JTI_KEY_PREFIX + jti)) {
+                throw new JwtException("Token has been revoked");
             }
-
-            Collection<GrantedAuthority> authorities = authoritiesConverter.convert(jwt);
-            return new JwtAuthenticationToken(jwt, authorities);
-        }
+            return jwt;
+        };
     }
 
     @Bean
