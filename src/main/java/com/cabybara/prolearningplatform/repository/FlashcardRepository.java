@@ -121,7 +121,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
     @Query("SELECT f.privacy FROM Flashcard f WHERE f.id = :flashcardId")
     Optional<Privacy> findPrivacyById(@Param("flashcardId") Long flashcardId);
 
-    @EntityGraph(attributePaths = {"cards", "cards.image"})
+    @EntityGraph(attributePaths = {"cards", "cards.image", "set"})
     Optional<Flashcard> findByIdAndSetId(Long flashcardId, Long setId);
 
     @Query("SELECT f.id FROM Flashcard f WHERE f.set.id = :setId")

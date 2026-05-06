@@ -3,6 +3,7 @@ package com.cabybara.prolearningplatform.mapper;
 import com.cabybara.prolearningplatform.dto.request.set.SetUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.set.SetCreationRequestDto;
 import com.cabybara.prolearningplatform.dto.response.set.SetResponseDto;
+import com.cabybara.prolearningplatform.dto.response.set.SetSummaryResponseDto;
 import com.cabybara.prolearningplatform.mapper.helpers.DateTimeMapper;
 import com.cabybara.prolearningplatform.model.exam.Exam;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
@@ -24,6 +25,8 @@ public interface SetMapper {
     @Mapping(source = "flashcards", target = "numFlashcards", qualifiedByName = "listToCount")
     @Mapping(source = "exams", target = "numExams", qualifiedByName = "listToCount")
     SetResponseDto toSetResponseDto(Set set);
+
+    SetSummaryResponseDto toSetSummaryResponseDto(Set set);
 
     @Named("listToCount")
     default Long listToCount(List<?> list) {
