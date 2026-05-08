@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -322,22 +323,33 @@ public class ExamPermissionService {
                     if (existing.getStatus() == ExamMemberStatus.ACTIVE) {
                         throw new IllegalStateException("User is already a member");
                     }
-                    existing.setRole(role);
-                    existing.setStatus(ExamMemberStatus.PENDING);
-                    existing.setInviteToken(token);
-                    existing.setInviteTokenExpiresAt(expiresAt);
+                    
+                    // If DECLINED: delete old record and create new
+                    if (existing.getStatus() == ExamMemberStatus.DECLINED) {
+                        log.info("[exam-invite] Re-inviting user {} with DECLINED status, creating new invite", targetUserId);
+                        examMemberRepository.delete(existing);
+                        createNewInvite(examId, targetUserId, role, token, expiresAt);
+                    } else {
+                        // PENDING: update existing record
+                        existing.setRole(role);
+                        existing.setStatus(ExamMemberStatus.PENDING);
+                        existing.setInviteToken(token);
+                        existing.setInviteTokenExpiresAt(expiresAt);
+                    }
                 },
-                () -> {
-                    ExamMember member = new ExamMember();
-                    member.setExam(examRepository.getReferenceById(examId));
-                    member.setUser(userRepository.getReferenceById(targetUserId));
-                    member.setRole(role);
-                    member.setStatus(ExamMemberStatus.PENDING);
-                    member.setInviteToken(token);
-                    member.setInviteTokenExpiresAt(expiresAt);
-                    examMemberRepository.save(member);
-                }
+                () -> createNewInvite(examId, targetUserId, role, token, expiresAt)
             );
+    }
+
+    private void createNewInvite(Long examId, Long targetUserId, NoteRole role, String token, LocalDateTime expiresAt) {
+        ExamMember member = new ExamMember();
+        member.setExam(examRepository.getReferenceById(examId));
+        member.setUser(userRepository.getReferenceById(targetUserId));
+        member.setRole(role);
+        member.setStatus(ExamMemberStatus.PENDING);
+        member.setInviteToken(token);
+        member.setInviteTokenExpiresAt(expiresAt);
+        examMemberRepository.save(member);
     }
 
     private Long resolveUserId(InviteMemberRequest.InviteTarget target) {
@@ -424,5 +436,21 @@ public class ExamPermissionService {
         // PRIVATE exam: non-member = AccessDenied
         throw new AccessDeniedException(
             "User " + userId + " has no access to exam " + examId);
+    }
+
+    /**
+     * Scheduled cleanup task: Delete old PENDING and DECLINED records (older than 7 days)
+     * Runs daily at 2 AM
+     */
+    @Scheduled(cron = "0 0 2 * * *")
+    @Transactional
+    public void cleanupOldInviteRecords() {
+        try {
+            LocalDateTime cutoffDate = LocalDateTime.now().minusDays(7);
+            examMemberRepository.deleteOldPendingOrDeclinedRecords(cutoffDate);
+            log.info("[exam-invite-cleanup] Successfully cleaned up old PENDING/DECLINED records older than {}", cutoffDate);
+        } catch (Exception e) {
+            log.error("[exam-invite-cleanup] Error cleaning up old invite records: {}", e.getMessage(), e);
+        }
     }
 }
