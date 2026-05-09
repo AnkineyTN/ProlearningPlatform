@@ -16,6 +16,7 @@ import com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermiss
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.SharedFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceAlreadyExistsException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
@@ -314,5 +315,36 @@ public class FlashcardServiceImpl implements FlashcardService {
                     fc.getInvitedAt()
                 ))
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public Page<SharedFlashcardResponseDto> getSharedFlashcards(String q, Privacy privacy, CreationMethod createMethod, Pageable pageable) {
+        Long userId = authenticationContext.getCurrentUserId();
+        String privacyFilter = privacy != null ? privacy.name() : null;
+        String methodFilter = createMethod != null ? createMethod.name() : null;
+
+        return flashcardRepository.findSharedFlashcards(userId, q, privacyFilter, methodFilter, pageable)
+                .map(flashcard -> {
+                    NoteRole role = flashcardPermissionService.getUserRoleInFlashcard(flashcard.getId(), userId);
+                    FlashcardResponseDto dto = flashcardMapper.toFlashcardResponseDto(flashcard);
+                    
+                    return SharedFlashcardResponseDto.builder()
+                            .id(dto.getId())
+                            .title(dto.getTitle())
+                            .description(dto.getDescription())
+                            .status(dto.getStatus())
+                            .privacy(dto.getPrivacy())
+                            .lastStudy(dto.getLastStudy())
+                            .known(dto.getKnown())
+                            .learning(dto.getLearning())
+                            .remain(dto.getRemain())
+                            .createMethod(dto.getCreateMethod())
+                            .numCards(dto.getNumCards())
+                            .createdAt(dto.getCreatedAt())
+                            .updatedAt(dto.getUpdatedAt())
+                            .userRole(role)
+                            .setId(flashcard.getSet() != null ? flashcard.getSet().getId() : null)
+                            .build();
+                });
     }
 }

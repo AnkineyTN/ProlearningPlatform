@@ -5,6 +5,7 @@ import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.note.CreateNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetAllNotesResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.note.SharedNoteResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.GetDetailNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
@@ -48,4 +49,6 @@ public interface NoteService {
     public void removeMember(Long noteId, Long targetUserId);
 
     public AcceptByTokenResponse acceptByToken(String token);
+
+    Page<SharedNoteResponseDto> getSharedNotes(String q, Privacy privacy, Pageable pageable);
 }

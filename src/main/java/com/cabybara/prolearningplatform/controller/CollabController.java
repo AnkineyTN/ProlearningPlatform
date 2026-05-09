@@ -29,12 +29,26 @@ import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 
 import org.springframework.web.bind.annotation.RequestBody;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
+import com.cabybara.prolearningplatform.dto.response.exam.SharedExamResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.SharedFlashcardResponseDto;
+import com.cabybara.prolearningplatform.dto.response.note.SharedNoteResponseDto;
+import com.cabybara.prolearningplatform.enums.CreationMethod;
+import com.cabybara.prolearningplatform.enums.Privacy;
+import com.cabybara.prolearningplatform.utils.ValidateSort;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 @RestController
 @RequiredArgsConstructor
@@ -173,6 +187,71 @@ public class CollabController {
         return ResponseEntity.ok(
             ResponseUtil.success("Pending invites retrieved successfully", pendingInvites, null)
         );
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/exams/shared")
+    @ValidateSort(allowedFields = {"id", "created_at", "updated_at", "title"})
+    @Parameter(name = "sort", description = "Sort criteria: property,(asc|desc). Default: id,asc. Allowed fields: id, created_at, updated_at, title",
+            array = @ArraySchema(schema = @Schema(type = "string", allowableValues = {"id,asc", "id,desc", "created_at,asc", "created_at,desc", "updated_at,asc", "updated_at,desc", "title,asc", "title,desc"})))
+    public ResponseEntity<ApiResponse<List<SharedExamResponseDto>>> getSharedExams(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Privacy privacy,
+            @RequestParam(required = false) CreationMethod createMethod,
+            @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
+    ) {
+        Page<SharedExamResponseDto> result = examService.getSharedExams(q, privacy, createMethod, pageable);
+        PaginationResponseDto pagination = PaginationResponseDto.builder()
+                .currentPage(result.getNumber())
+                .totalPages(result.getTotalPages())
+                .totalItems(result.getTotalElements())
+                .pageSize(result.getSize())
+                .build();
+
+        return ResponseEntity.ok(ResponseUtil.success("Successfully", result.getContent(), pagination));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/flashcards/shared")
+    @ValidateSort(allowedFields = {"id", "created_at", "updated_at", "title"})
+    @Parameter(name = "sort", description = "Sort criteria: property,(asc|desc). Default: id,asc. Allowed fields: id, created_at, updated_at, title",
+            array = @ArraySchema(schema = @Schema(type = "string", allowableValues = {"id,asc", "id,desc", "created_at,asc", "created_at,desc", "updated_at,asc", "updated_at,desc", "title,asc", "title,desc"})))
+    public ResponseEntity<ApiResponse<List<SharedFlashcardResponseDto>>> getSharedFlashcards(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Privacy privacy,
+            @RequestParam(required = false) CreationMethod createMethod,
+            @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
+    ) {
+        Page<SharedFlashcardResponseDto> result = flashcardService.getSharedFlashcards(q, privacy, createMethod, pageable);
+        PaginationResponseDto pagination = PaginationResponseDto.builder()
+                .currentPage(result.getNumber())
+                .totalPages(result.getTotalPages())
+                .totalItems(result.getTotalElements())
+                .pageSize(result.getSize())
+                .build();
+
+        return ResponseEntity.ok(ResponseUtil.success("Successfully", result.getContent(), pagination));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/notes/shared")
+    @ValidateSort(allowedFields = {"id", "created_at", "updated_at", "title"})
+    @Parameter(name = "sort", description = "Sort criteria: property,(asc|desc). Default: id,asc. Allowed fields: id, created_at, updated_at, title",
+            array = @ArraySchema(schema = @Schema(type = "string", allowableValues = {"id,asc", "id,desc", "created_at,asc", "created_at,desc", "updated_at,asc", "updated_at,desc", "title,asc", "title,desc"})))
+    public ResponseEntity<ApiResponse<List<SharedNoteResponseDto>>> getSharedNotes(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Privacy privacy,
+            @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
+    ) {
+        Page<SharedNoteResponseDto> result = noteService.getSharedNotes(q, privacy, pageable);
+        PaginationResponseDto pagination = PaginationResponseDto.builder()
+                .currentPage(result.getNumber())
+                .totalPages(result.getTotalPages())
+                .totalItems(result.getTotalElements())
+                .pageSize(result.getSize())
+                .build();
+
+        return ResponseEntity.ok(ResponseUtil.success("Successfully", result.getContent(), pagination));
     }
 
     @PatchMapping("/notes/{noteId}/members/{targetUserId}/role")

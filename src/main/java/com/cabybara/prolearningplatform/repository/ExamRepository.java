@@ -102,4 +102,36 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
 
     @Query("SELECT e.id FROM Exam e WHERE e.set.id = :setId")
     List<Long> findIdsBySetId(@Param("setId") Long setId);
+
+    @Query(value = """
+        SELECT e.* FROM exams e
+        INNER JOIN exam_members em ON e.id = em.exam_id
+        WHERE em.user_id = :userId AND em.status = 'ACTIVE'
+        AND (:privacy IS NULL OR e.privacy = :privacy)
+        AND ((:createMethod IS NULL AND e.create_method != 'REVIEW')
+            OR (:createMethod IS NOT NULL AND e.create_method = :createMethod))
+        AND (:q IS NULL OR :q = '' OR (
+            e.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+            OR (e.title || ' ' || e.description) % unaccent(:q)
+        ))
+    """, 
+    countQuery = """
+        SELECT count(*) FROM exams e
+        INNER JOIN exam_members em ON e.id = em.exam_id
+        WHERE em.user_id = :userId AND em.status = 'ACTIVE'
+        AND (:privacy IS NULL OR e.privacy = :privacy)
+        AND ((:createMethod IS NULL AND e.create_method != 'REVIEW')
+            OR (:createMethod IS NOT NULL AND e.create_method = :createMethod))
+        AND (:q IS NULL OR :q = '' OR (
+            e.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+            OR (e.title || ' ' || e.description) % unaccent(:q)
+        ))
+    """,
+    nativeQuery = true)
+    Page<Exam> findSharedExams(
+        @Param("userId") Long userId, 
+        @Param("q") String q, 
+        @Param("privacy") String privacy, 
+        @Param("createMethod") String createMethod, 
+        Pageable pageable);
 }
