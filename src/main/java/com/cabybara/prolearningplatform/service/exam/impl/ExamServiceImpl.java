@@ -43,6 +43,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +69,7 @@ public class ExamServiceImpl implements ExamService {
     private final TopicAssignmentAsyncService topicAssignmentAsyncService;
 
     @Override
+    @Transactional
 //    @CacheEvict(value = "set_exams", key = "'set' + #setId")
     public ExamResponseDto createExam(Long setId, CreateExamRequestDto createExamRequestDto) {
         Long userId = authenticationContext.getCurrentUserId();
@@ -85,6 +87,7 @@ public class ExamServiceImpl implements ExamService {
 
         Exam savedExam = examRepository.save(exam);
         examPermissionService.addOwner(savedExam.getId(), userId);
+        setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
         return examMapper.toExamResponseDto(savedExam);
     }
 
@@ -136,6 +139,9 @@ public class ExamServiceImpl implements ExamService {
             topicAssignmentAsyncService.assignTopicsToExamAsync(examId);
         }
 
+        if (setId != null) {
+            setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
+        }
         return examMapper.toExamResponseDto(examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found after save")));
     }
@@ -230,6 +236,7 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
+    @Transactional
     public ExamResponseDto updateExam(Long setId, Long examId, UpdateExamRequestDto updateExamRequestDto) {
         if (!examRepository.existsBySetIdAndId(setId, examId)) {
             throw new ResourceNotFoundException("Cannot find exam with id: " + examId + " in set with id: " + setId);
@@ -240,15 +247,19 @@ public class ExamServiceImpl implements ExamService {
 
         examMapper.updateExamFromDto(updateExamRequestDto, exam);
 
-        return examMapper.toExamResponseDto(examRepository.save(exam));
+        ExamResponseDto result = examMapper.toExamResponseDto(examRepository.save(exam));
+        setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
+        return result;
     }
 
     @Override
+    @Transactional
     public void deleteExam(Long setId, Long examId) {
         Exam exam = examRepository.findBySetIdAndId(setId, examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cannot find exam with id: " + examId));
 
         examRepository.delete(exam);
+        setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
     }
 
     @Override

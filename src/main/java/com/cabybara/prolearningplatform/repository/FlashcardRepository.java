@@ -14,6 +14,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -121,9 +122,13 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
     @Query("SELECT f.privacy FROM Flashcard f WHERE f.id = :flashcardId")
     Optional<Privacy> findPrivacyById(@Param("flashcardId") Long flashcardId);
 
-    @EntityGraph(attributePaths = {"cards", "cards.image"})
+    @EntityGraph(attributePaths = {"cards", "cards.image", "set"})
     Optional<Flashcard> findByIdAndSetId(Long flashcardId, Long setId);
 
     @Query("SELECT f.id FROM Flashcard f WHERE f.set.id = :setId")
     List<Long> findIdsBySetId(@Param("setId") Long setId);
+
+    @Modifying
+    @Query("UPDATE Flashcard f SET f.updatedAt = :now WHERE f.id = :id")
+    void updateUpdatedAt(@Param("id") Long id, @Param("now") OffsetDateTime now);
 }
