@@ -34,6 +34,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -81,6 +82,7 @@ public class NoteServiceImpl implements NoteService {
         log.info("✅ Created note '{}' in set id {} by user {}", note.getTitle(), set.getId(), userId);
 
         notePermissionService.addOwner(saved.getId(), userId);
+        setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
 
         return CreateNoteResponseDTO.builder()
                 .noteId(saved.getId())
@@ -89,6 +91,7 @@ public class NoteServiceImpl implements NoteService {
 
     // [PATCH]: /sets/{setId}/notes/save
     @Override
+    @Transactional
     public void saveNote(Long setId, Long noteId, SaveNoteRequestDTO request) {
         Long userId = authenticationContext.getCurrentUserId();
 
@@ -97,11 +100,13 @@ public class NoteServiceImpl implements NoteService {
         note.setTitle(request.getTitle());
         note.setContent(request.getContent());
         noteRepository.save(note);
+        setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
         log.info("✅ Save note with noteId '{}'", noteId);
     }
 
     // [POST]: /sets/{setId}/notes/save-doc
     @Override
+    @Transactional
     public void saveDocInNote(Long setId, SaveDocInNoteRequestDto request) {
         Long userId = authenticationContext.getCurrentUserId();
         Note note = getNoteByIdAndUserIdAndSetId(request.getNoteId(), userId, setId);
@@ -110,11 +115,13 @@ public class NoteServiceImpl implements NoteService {
         NoteDocs noteDocs = new NoteDocs(note, asset);
 
         noteDocsRepository.save(noteDocs);
+        setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
         log.info("✅ Save document in note with noteId {} and assetId {}", note.getTitle(), asset.getId());
     }
 
     // [DELETE]: /sets/{setId}/notes/delete-doc
     @Override
+    @Transactional
     public void deleteDocInNote(DeleteNoteDocRequestDTO request) {
         noteFileRegionCommentService.deleteAllForNoteAndAsset(request.getNoteId(), request.getAssetId());
         // Mark status "DELETED" in asset table
@@ -125,11 +132,16 @@ public class NoteServiceImpl implements NoteService {
         NoteDocsId noteDocsId = new NoteDocsId(request.getNoteId(), request.getAssetId());
         noteDocsRepository.deleteById(noteDocsId);
 
+        Note note = getNoteById(request.getNoteId());
+        if (note.getSet() != null) {
+            setRepository.updateLastModifiedDate(note.getSet().getId(), OffsetDateTime.now());
+        }
         log.info("✅ Delete doc in note with noteId {} and assetId {}", request.getNoteId(), request.getAssetId());
     }
 
     // [POST]: /sets/{setId}/notes/save-img
     @Override
+    @Transactional
     public void saveImgInNote(Long setId, SaveImgInNoteRequestDto request) {
         Long userId = authenticationContext.getCurrentUserId();
         Note note = getNoteByIdAndUserIdAndSetId(request.getNoteId(), userId, setId);
@@ -138,11 +150,13 @@ public class NoteServiceImpl implements NoteService {
         NoteImgs noteImgs = new NoteImgs(note, asset);
 
         noteImgsRepository.save(noteImgs);
+        setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
         log.info("✅ Save image in note with noteId {} and assetId {}", note.getTitle(), asset.getId());
     }
 
     // [DELETE]: /sets/{setId}/notes/delete-img
     @Override
+    @Transactional
     public void deleteImgInNote(DeleteNoteImgRequestDTO request) {
         Asset asset = assetRepository.findByUrl(request.getFileUrl());
         noteFileRegionCommentService.deleteAllForNoteAndAsset(request.getNoteId(), asset.getId());
@@ -153,6 +167,10 @@ public class NoteServiceImpl implements NoteService {
         NoteImgsId noteImgsId = new NoteImgsId(request.getNoteId(), asset.getId());
         noteImgsRepository.deleteById(noteImgsId);
 
+        Note note = getNoteById(request.getNoteId());
+        if (note.getSet() != null) {
+            setRepository.updateLastModifiedDate(note.getSet().getId(), OffsetDateTime.now());
+        }
         log.info("✅ Delete img in note with noteId {} and assetId {}", request.getNoteId(), asset.getId());
     }
 

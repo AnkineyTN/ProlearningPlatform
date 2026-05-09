@@ -15,7 +15,7 @@ public class SetCreationRequestDto {
     @NotNull
     @Length(min = 3, max = 50)
     @Schema(minLength = 3, maxLength = 50)
-    @Pattern(regexp = "^[\\p{L}\\p{Nd}\\s]+$", message = "Not contains special characters")
+//    @Pattern(regexp = "^[\\p{L}\\p{Nd}\\s]+$", message = "Not contains special characters")
     private String title;
     private String description;
     private Privacy privacy;
