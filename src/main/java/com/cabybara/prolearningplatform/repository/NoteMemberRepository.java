@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,7 +40,7 @@ public interface NoteMemberRepository extends JpaRepository<NoteMember, Long> {
         SELECT m FROM NoteMember m
         JOIN m.user u
         WHERE m.note.id = :noteId
-        AND m.status != 'DECLINED'
+        AND m.status = 'ACTIVE'
         ORDER BY u.lastName ASC, u.firstName ASC
         """)
     Page<NoteMember> findPagedByNoteId(
@@ -51,7 +52,7 @@ public interface NoteMemberRepository extends JpaRepository<NoteMember, Long> {
         SELECT m FROM NoteMember m
         JOIN m.user u
         WHERE m.note.id = :noteId
-        AND m.status != 'DECLINED'
+        AND m.status = 'ACTIVE'
         AND (
             LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%'))
             OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%'))
@@ -65,4 +66,14 @@ public interface NoteMemberRepository extends JpaRepository<NoteMember, Long> {
         @Param("keyword") String keyword,
         Pageable pageable
     );
+
+    // Delete old PENDING/DECLINED records (> 7 days)
+    @Modifying
+    @Transactional
+    @Query("""
+        DELETE FROM NoteMember m
+        WHERE (m.status = 'PENDING' OR m.status = 'DECLINED')
+        AND m.createdAt < :cutoffDate
+        """)
+    void deleteOldPendingOrDeclinedRecords(@Param("cutoffDate") LocalDateTime cutoffDate);
 }

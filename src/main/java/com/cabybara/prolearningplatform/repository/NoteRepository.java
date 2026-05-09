@@ -104,4 +104,31 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
     Optional<com.cabybara.prolearningplatform.enums.Privacy> findPrivacyById(@Param("noteId") Long noteId);
 
     Optional<Note> findByIdAndSetId(Long noteId, Long setId);
+
+    @Query(value = """
+        SELECT n.* FROM note n
+        INNER JOIN note_members nm ON n.id = nm.note_id
+        WHERE nm.user_id = :userId AND nm.status = 'ACTIVE'
+        AND (:privacy IS NULL OR n.privacy = :privacy)
+        AND (:q IS NULL OR :q = '' OR (
+            n.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+            OR (n.title || ' ' || n.description) % unaccent(:q)
+        ))
+    """,
+    countQuery = """
+        SELECT count(*) FROM note n
+        INNER JOIN note_members nm ON n.id = nm.note_id
+        WHERE nm.user_id = :userId AND nm.status = 'ACTIVE'
+        AND (:privacy IS NULL OR n.privacy = :privacy)
+        AND (:q IS NULL OR :q = '' OR (
+            n.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+            OR (n.title || ' ' || n.description) % unaccent(:q)
+        ))
+    """,
+    nativeQuery = true)
+    Page<Note> findSharedNotes(
+        @Param("userId") Long userId,
+        @Param("q") String q,
+        @Param("privacy") String privacy,
+        Pageable pageable);
 }
