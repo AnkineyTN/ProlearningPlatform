@@ -32,6 +32,7 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 public class AIExamServiceImpl implements AIExamService {
+    
     // ##################################################
     // #################  PREPARATION  ##################
     // ##################################################
@@ -141,6 +142,7 @@ public class AIExamServiceImpl implements AIExamService {
     // ##################################################
     // #################  MAIN METHOD  ##################
     // ##################################################
+
     @Override
     public GenerateExamByAIResponseDto generateExamByFiles(GenerateExamByFileRequestDto request) {
         try {
