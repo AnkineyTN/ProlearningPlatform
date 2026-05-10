@@ -6,6 +6,7 @@ import com.cabybara.prolearningplatform.dto.response.roadmap.RoadmapDetailRespon
 import com.cabybara.prolearningplatform.dto.response.roadmap.RoadmapListItemResponseDto;
 import com.cabybara.prolearningplatform.dto.response.roadmap.RoadmapPreviewResponseDto;
 import com.cabybara.prolearningplatform.dto.response.roadmap.TopicCompleteResponseDto;
+import com.cabybara.prolearningplatform.dto.response.roadmap.TopicStartResponseDto;
 import com.cabybara.prolearningplatform.enums.ChapterStatus;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.enums.RoadmapStatus;
@@ -58,23 +59,12 @@ public class RoadmapServiceImpl implements RoadmapService {
     @Override
     @Transactional
     public RoadmapDetailResponseDto acceptRoadmap(Long userId, AcceptRoadmapRequestDto dto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
-
         Roadmap savedRoadmap = createAndSaveRoadmap(userId, dto);
-        List<TopicDispatchInfo> dispatchInfos = new ArrayList<>();
 
         List<AcceptRoadmapRequestDto.ChapterDto> chapterDtos = dto.getChapters();
         for (int ci = 0; ci < chapterDtos.size(); ci++) {
-            createChapterWithTopics(savedRoadmap, user, chapterDtos.get(ci), ci, dispatchInfos);
+            createChapterWithTopics(savedRoadmap, chapterDtos.get(ci), ci);
         }
-
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                dispatchContentGeneration(dispatchInfos);
-            }
-        });
 
         return buildDetailResponse(savedRoadmap,
                 roadmapChapterRepository.findByRoadmapIdOrderByOrderIndex(savedRoadmap.getId()),
@@ -121,6 +111,42 @@ public class RoadmapServiceImpl implements RoadmapService {
 
     @Override
     @Transactional
+    public TopicStartResponseDto startTopic(Long userId, Long roadmapId, Long topicId) {
+        Roadmap roadmap = roadmapRepository.findByIdAndUserId(roadmapId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Roadmap not found: " + roadmapId));
+
+        RoadmapTopic topic = roadmapTopicRepository.findById(topicId)
+                .orElseThrow(() -> new ResourceNotFoundException("Topic not found: " + topicId));
+
+        validateTopicAccess(topic, roadmapId);
+
+        if (topic.getSetId() != null) {
+            return TopicStartResponseDto.builder()
+                    .topicId(topicId)
+                    .setId(topic.getSetId())
+                    .contentStatus(topic.getContentStatus())
+                    .build();
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
+        Set savedSet = createSetForTopic(topic, user);
+        topic.setSetId(savedSet.getId());
+        topic.setContentStatus(TopicContentStatus.GENERATING);
+        roadmapTopicRepository.save(topic);
+
+        scheduleContentGeneration(topicId, savedSet.getId(), topic, topic.getChapter(), roadmap);
+
+        return TopicStartResponseDto.builder()
+                .topicId(topicId)
+                .setId(savedSet.getId())
+                .contentStatus(TopicContentStatus.GENERATING)
+                .build();
+    }
+
+    @Override
+    @Transactional
     public TopicCompleteResponseDto markTopicComplete(Long userId, Long roadmapId, Long topicId) {
         Roadmap roadmap = roadmapRepository.findByIdAndUserId(roadmapId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Roadmap not found: " + roadmapId));
@@ -128,14 +154,8 @@ public class RoadmapServiceImpl implements RoadmapService {
         RoadmapTopic topic = roadmapTopicRepository.findById(topicId)
                 .orElseThrow(() -> new ResourceNotFoundException("Topic not found: " + topicId));
 
+        validateTopicAccess(topic, roadmapId);
         RoadmapChapter chapter = topic.getChapter();
-        if (!chapter.getRoadmap().getId().equals(roadmapId)) {
-            throw new AccessDeniedException("Topic does not belong to this roadmap");
-        }
-
-        if (chapter.getStatus() != ChapterStatus.IN_PROGRESS) {
-            throw new AccessDeniedException("Chapter is not accessible");
-        }
 
         if (topic.getCompleted()) {
             return TopicCompleteResponseDto.builder()
@@ -170,6 +190,47 @@ public class RoadmapServiceImpl implements RoadmapService {
         roadmapRepository.save(roadmap);
     }
 
+    private void validateTopicAccess(RoadmapTopic topic, Long roadmapId) {
+        RoadmapChapter chapter = topic.getChapter();
+        if (!chapter.getRoadmap().getId().equals(roadmapId)) {
+            throw new AccessDeniedException("Topic does not belong to this roadmap");
+        }
+        if (chapter.getStatus() != ChapterStatus.IN_PROGRESS) {
+            throw new AccessDeniedException("Chapter is not accessible");
+        }
+    }
+
+    private Set createSetForTopic(RoadmapTopic topic, User user) {
+        return setRepository.save(Set.builder()
+                .title(topic.getTitle())
+                .description(topic.getDescription())
+                .privacy(Privacy.PRIVATE)
+                .user(user)
+                .notes(new ArrayList<>())
+                .flashcards(new ArrayList<>())
+                .build());
+    }
+
+    private void scheduleContentGeneration(Long topicId, Long setId,
+                                            RoadmapTopic topic, RoadmapChapter chapter,
+                                            Roadmap roadmap) {
+        String topicTitle = topic.getTitle();
+        String description = topic.getDescription();
+        String chapterTitle = chapter.getTitle();
+        String chapterObjective = chapter.getObjective();
+        Long roadmapId = roadmap.getId();
+        String roadmapTitle = roadmap.getTitle();
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                topicSetupAsyncService.generateTopicContent(
+                        topicId, setId, topicTitle, description,
+                        chapterTitle, chapterObjective, roadmapId, roadmapTitle);
+            }
+        });
+    }
+
     private Roadmap createAndSaveRoadmap(Long userId, AcceptRoadmapRequestDto dto) {
         return roadmapRepository.save(Roadmap.builder()
                 .userId(userId)
@@ -180,9 +241,9 @@ public class RoadmapServiceImpl implements RoadmapService {
                 .build());
     }
 
-    private void createChapterWithTopics(Roadmap roadmap, User user,
+    private void createChapterWithTopics(Roadmap roadmap,
                                           AcceptRoadmapRequestDto.ChapterDto chapterDto,
-                                          int chapterIndex, List<TopicDispatchInfo> dispatchInfos) {
+                                          int chapterIndex) {
         RoadmapChapter savedChapter = roadmapChapterRepository.save(RoadmapChapter.builder()
                 .roadmap(roadmap)
                 .chapterKey(chapterDto.getChapterId())
@@ -194,48 +255,22 @@ public class RoadmapServiceImpl implements RoadmapService {
 
         List<AcceptRoadmapRequestDto.TopicDto> topicDtos = chapterDto.getTopics();
         for (int ti = 0; ti < topicDtos.size(); ti++) {
-            createTopicEntry(savedChapter, user, chapterDto, topicDtos.get(ti), ti, dispatchInfos);
+            createTopicEntry(savedChapter, topicDtos.get(ti), ti);
         }
     }
 
-    private void createTopicEntry(RoadmapChapter chapter, User user,
-                                   AcceptRoadmapRequestDto.ChapterDto chapterDto,
+    private void createTopicEntry(RoadmapChapter chapter,
                                    AcceptRoadmapRequestDto.TopicDto topicDto,
-                                   int topicIndex, List<TopicDispatchInfo> dispatchInfos) {
-        Set savedSet = setRepository.save(Set.builder()
-                .title(topicDto.getTopicTitle())
-                .description(topicDto.getDescription())
-                .privacy(Privacy.PRIVATE)
-                .user(user)
-                .notes(new ArrayList<>())
-                .flashcards(new ArrayList<>())
-                .build());
-
-        RoadmapTopic savedTopic = roadmapTopicRepository.save(RoadmapTopic.builder()
+                                   int topicIndex) {
+        roadmapTopicRepository.save(RoadmapTopic.builder()
                 .chapter(chapter)
                 .topicKey(topicDto.getTopicId())
                 .title(topicDto.getTopicTitle())
                 .description(topicDto.getDescription())
                 .orderIndex(topicIndex)
                 .completed(false)
-                .contentStatus(TopicContentStatus.GENERATING)
-                .setId(savedSet.getId())
+                .contentStatus(TopicContentStatus.IDLE)
                 .build());
-
-        dispatchInfos.add(new TopicDispatchInfo(
-                savedTopic.getId(), savedSet.getId(),
-                topicDto.getTopicTitle(), topicDto.getDescription(),
-                chapterDto.getChapterTitle(), chapterDto.getObjective()
-        ));
-    }
-
-    private void dispatchContentGeneration(List<TopicDispatchInfo> dispatchInfos) {
-        for (TopicDispatchInfo info : dispatchInfos) {
-            topicSetupAsyncService.generateTopicContent(
-                    info.topicId(), info.setId(), info.topicTitle(),
-                    info.description(), info.chapterTitle(), info.chapterObjective()
-            );
-        }
     }
 
     private boolean isChapterComplete(Long chapterId) {
@@ -318,9 +353,5 @@ public class RoadmapServiceImpl implements RoadmapService {
                 .createdAt(roadmap.getCreatedAt())
                 .chapters(chapterDtos)
                 .build();
-    }
-
-    private record TopicDispatchInfo(Long topicId, Long setId, String topicTitle,
-                                     String description, String chapterTitle, String chapterObjective) {
     }
 }

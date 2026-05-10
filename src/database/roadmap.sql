@@ -33,7 +33,8 @@ CREATE TABLE roadmap_topics (
     description    TEXT,
     order_index    INTEGER     NOT NULL,
     is_completed   BOOLEAN     NOT NULL DEFAULT FALSE,
-    content_status VARCHAR(20) NOT NULL DEFAULT 'GENERATING',
+    content_status VARCHAR(20) NOT NULL DEFAULT 'IDLE',
+    summary        TEXT,
     set_id         BIGINT REFERENCES set (id) ON DELETE SET NULL,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -42,11 +43,4 @@ CREATE TABLE roadmap_topics (
 CREATE INDEX idx_roadmap_topics_chapter_id ON roadmap_topics (chapter_id);
 CREATE INDEX idx_roadmap_topics_set_id ON roadmap_topics (set_id);
 
--- Phase 2 (run separately after Phase 1 is stable):
--- CREATE TABLE roadmap_notification_preferences (
---     id                   BIGSERIAL PRIMARY KEY,
---     roadmap_id           BIGINT  NOT NULL UNIQUE REFERENCES roadmaps (id) ON DELETE CASCADE,
---     reminder_enabled     BOOLEAN NOT NULL DEFAULT TRUE,
---     reminder_day         INTEGER NOT NULL DEFAULT 7,
---     last_reminder_sent_at TIMESTAMPTZ
--- );
+

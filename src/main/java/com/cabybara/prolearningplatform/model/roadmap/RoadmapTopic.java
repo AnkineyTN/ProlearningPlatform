@@ -37,9 +37,11 @@ public class RoadmapTopic extends AbstractEntity {
     @Column(name = "content_status", length = 20, nullable = false)
     @Enumerated(EnumType.STRING)
     @Builder.Default
-    private TopicContentStatus contentStatus = TopicContentStatus.GENERATING;
+    private TopicContentStatus contentStatus = TopicContentStatus.IDLE;
 
-    // Loose FK — Set exists independently; ON DELETE SET NULL at DB level
+    @Column(columnDefinition = "TEXT")
+    private String summary;
+
     @Column(name = "set_id")
     private Long setId;
 }

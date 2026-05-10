@@ -7,6 +7,7 @@ import com.cabybara.prolearningplatform.dto.response.roadmap.RoadmapDetailRespon
 import com.cabybara.prolearningplatform.dto.response.roadmap.RoadmapListItemResponseDto;
 import com.cabybara.prolearningplatform.dto.response.roadmap.RoadmapPreviewResponseDto;
 import com.cabybara.prolearningplatform.dto.response.roadmap.TopicCompleteResponseDto;
+import com.cabybara.prolearningplatform.dto.response.roadmap.TopicStartResponseDto;
 import com.cabybara.prolearningplatform.service.roadmap.RoadmapService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -93,6 +94,21 @@ public class RoadmapController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully", response, null));
+    }
+
+    @Operation(summary = "Start learning a topic: creates its Set and triggers async note generation")
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/{roadmapId}/topics/{topicId}/start")
+    public ResponseEntity<ApiResponse<TopicStartResponseDto>> startTopic(
+            @PathVariable Long roadmapId,
+            @PathVariable Long topicId,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        Long userId = (Long) jwt.getClaims().get("id");
+        TopicStartResponseDto response = roadmapService.startTopic(userId, roadmapId, topicId);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Topic started", response, null));
     }
 
     @Operation(summary = "Mark a topic as done; auto-completes chapter and unlocks the next one")

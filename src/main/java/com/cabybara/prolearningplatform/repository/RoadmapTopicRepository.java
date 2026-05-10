@@ -23,4 +23,7 @@ public interface RoadmapTopicRepository extends JpaRepository<RoadmapTopic, Long
 
     @Query("SELECT t FROM RoadmapTopic t WHERE t.chapter.roadmap.id = :roadmapId ORDER BY t.chapter.orderIndex, t.orderIndex")
     List<RoadmapTopic> findAllByRoadmapIdOrdered(@Param("roadmapId") Long roadmapId);
+
+    @Query("SELECT t FROM RoadmapTopic t WHERE t.chapter.roadmap.id = :roadmapId AND t.summary IS NOT NULL ORDER BY t.chapter.orderIndex, t.orderIndex")
+    List<RoadmapTopic> findTopicsWithSummaryByRoadmapId(@Param("roadmapId") Long roadmapId);
 }
