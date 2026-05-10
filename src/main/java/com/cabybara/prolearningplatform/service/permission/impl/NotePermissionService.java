@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -308,23 +309,33 @@ public class NotePermissionService implements ResourcePermissionService  {
                     if (existing.getStatus() == NoteMemberStatus.ACTIVE) {
                         throw new IllegalStateException("User is already a member");
                     }
-                    // Re-invite nếu đã decline trước đó
-                    existing.setRole(role);
-                    existing.setStatus(NoteMemberStatus.PENDING);
-                    existing.setInviteToken(token);
-                    existing.setInviteTokenExpiresAt(expiresAt);
+                    
+                    // If DECLINED: delete old record and create new
+                    if (existing.getStatus() == NoteMemberStatus.DECLINED) {
+                        log.info("[note-invite] Re-inviting user {} with DECLINED status, creating new invite", targetUserId);
+                        noteMemberRepository.delete(existing);
+                        createNewInvite(noteId, targetUserId, role, token, expiresAt);
+                    } else {
+                        // PENDING: update existing record
+                        existing.setRole(role);
+                        existing.setStatus(NoteMemberStatus.PENDING);
+                        existing.setInviteToken(token);
+                        existing.setInviteTokenExpiresAt(expiresAt);
+                    }
                 },
-                () -> {
-                    NoteMember member = new NoteMember();
-                    member.setNote(noteRepository.getReferenceById(noteId));
-                    member.setUser(userRepository.getReferenceById(targetUserId));
-                    member.setRole(role);
-                    member.setStatus(NoteMemberStatus.PENDING);
-                    member.setInviteToken(token);
-                    member.setInviteTokenExpiresAt(expiresAt);
-                    noteMemberRepository.save(member);
-                }
+                () -> createNewInvite(noteId, targetUserId, role, token, expiresAt)
             );
+    }
+
+    private void createNewInvite(Long noteId, Long targetUserId, NoteRole role, String token, LocalDateTime expiresAt) {
+        NoteMember member = new NoteMember();
+        member.setNote(noteRepository.getReferenceById(noteId));
+        member.setUser(userRepository.getReferenceById(targetUserId));
+        member.setRole(role);
+        member.setStatus(NoteMemberStatus.PENDING);
+        member.setInviteToken(token);
+        member.setInviteTokenExpiresAt(expiresAt);
+        noteMemberRepository.save(member);
     }
 
     public NoteRole getUserRoleInNote(Long noteId, Long userId) {
@@ -419,5 +430,21 @@ public class NotePermissionService implements ResourcePermissionService  {
             users = userRepository.searchByNameOrEmail(keyword, noteId, pageable);
         }
         return users.map(UserSearchResponse::from);
+    }
+
+    /**
+     * Scheduled cleanup task: Delete old PENDING and DECLINED records (older than 7 days)
+     * Runs daily at 2 AM
+     */
+    @Scheduled(cron = "0 0 2 * * *")
+    @Transactional
+    public void cleanupOldInviteRecords() {
+        try {
+            LocalDateTime cutoffDate = LocalDateTime.now().minusDays(7);
+            noteMemberRepository.deleteOldPendingOrDeclinedRecords(cutoffDate);
+            log.info("[note-invite-cleanup] Successfully cleaned up old PENDING/DECLINED records older than {}", cutoffDate);
+        } catch (Exception e) {
+            log.error("[note-invite-cleanup] Error cleaning up old invite records: {}", e.getMessage(), e);
+        }
     }
 }

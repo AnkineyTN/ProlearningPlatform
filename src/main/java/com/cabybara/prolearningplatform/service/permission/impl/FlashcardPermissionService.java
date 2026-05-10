@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -322,22 +323,33 @@ public class FlashcardPermissionService {
                     if (existing.getStatus() == FlashcardMemberStatus.ACTIVE) {
                         throw new IllegalStateException("User is already a member");
                     }
-                    existing.setRole(role);
-                    existing.setStatus(FlashcardMemberStatus.PENDING);
-                    existing.setInviteToken(token);
-                    existing.setInviteTokenExpiresAt(expiresAt);
+                    
+                    // If DECLINED: delete old record and create new
+                    if (existing.getStatus() == FlashcardMemberStatus.DECLINED) {
+                        log.info("[flashcard-invite] Re-inviting user {} with DECLINED status, creating new invite", targetUserId);
+                        flashcardMemberRepository.delete(existing);
+                        createNewInvite(flashcardId, targetUserId, role, token, expiresAt);
+                    } else {
+                        // PENDING: update existing record
+                        existing.setRole(role);
+                        existing.setStatus(FlashcardMemberStatus.PENDING);
+                        existing.setInviteToken(token);
+                        existing.setInviteTokenExpiresAt(expiresAt);
+                    }
                 },
-                () -> {
-                    FlashcardMember member = new FlashcardMember();
-                    member.setFlashcard(flashcardRepository.getReferenceById(flashcardId));
-                    member.setUser(userRepository.getReferenceById(targetUserId));
-                    member.setRole(role);
-                    member.setStatus(FlashcardMemberStatus.PENDING);
-                    member.setInviteToken(token);
-                    member.setInviteTokenExpiresAt(expiresAt);
-                    flashcardMemberRepository.save(member);
-                }
+                () -> createNewInvite(flashcardId, targetUserId, role, token, expiresAt)
             );
+    }
+
+    private void createNewInvite(Long flashcardId, Long targetUserId, NoteRole role, String token, LocalDateTime expiresAt) {
+        FlashcardMember member = new FlashcardMember();
+        member.setFlashcard(flashcardRepository.getReferenceById(flashcardId));
+        member.setUser(userRepository.getReferenceById(targetUserId));
+        member.setRole(role);
+        member.setStatus(FlashcardMemberStatus.PENDING);
+        member.setInviteToken(token);
+        member.setInviteTokenExpiresAt(expiresAt);
+        flashcardMemberRepository.save(member);
     }
 
     private Long resolveUserId(InviteMemberRequest.InviteTarget target) {
@@ -424,5 +436,21 @@ public class FlashcardPermissionService {
         // PRIVATE flashcard: non-member = AccessDenied
         throw new AccessDeniedException(
             "User " + userId + " has no access to flashcard " + flashcardId);
+    }
+
+    /**
+     * Scheduled cleanup task: Delete old PENDING and DECLINED records (older than 7 days)
+     * Runs daily at 2 AM
+     */
+    @Scheduled(cron = "0 0 2 * * *")
+    @Transactional
+    public void cleanupOldInviteRecords() {
+        try {
+            LocalDateTime cutoffDate = LocalDateTime.now().minusDays(7);
+            flashcardMemberRepository.deleteOldPendingOrDeclinedRecords(cutoffDate);
+            log.info("[flashcard-invite-cleanup] Successfully cleaned up old PENDING/DECLINED records older than {}", cutoffDate);
+        } catch (Exception e) {
+            log.error("[flashcard-invite-cleanup] Error cleaning up old invite records: {}", e.getMessage(), e);
+        }
     }
 }

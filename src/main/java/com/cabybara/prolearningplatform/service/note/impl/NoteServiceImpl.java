@@ -6,6 +6,7 @@ import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.note.CreateNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetAllNotesResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.note.SharedNoteResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.GetDetailNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetDocsInNoteResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
@@ -372,5 +373,26 @@ public class NoteServiceImpl implements NoteService {
         AcceptByTokenResponse response = notePermissionService.acceptByToken(token);
 
         return response;
+    }
+
+    @Override
+    public Page<SharedNoteResponseDto> getSharedNotes(String q, Privacy privacy, Pageable pageable) {
+        Long userId = authenticationContext.getCurrentUserId();
+        String privacyFilter = privacy != null ? privacy.name() : null;
+
+        return noteRepository.findSharedNotes(userId, q, privacyFilter, pageable)
+                .map(note -> {
+                    NoteRole role = notePermissionService.getUserRoleInNote(note.getId(), userId);
+                    return SharedNoteResponseDto.builder()
+                            .id(note.getId())
+                            .title(note.getTitle())
+                            .description(note.getDescription())
+                            .privacy(note.getPrivacy())
+                            .created_at(note.getCreatedAt() != null ? note.getCreatedAt().toString() : null)
+                            .updated_at(note.getUpdatedAt() != null ? note.getUpdatedAt().toString() : null)
+                            .setId(note.getSet() != null ? note.getSet().getId() : null)
+                            .userRole(role)
+                            .build();
+                });
     }
 }

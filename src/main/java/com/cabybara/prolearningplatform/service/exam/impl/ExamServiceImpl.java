@@ -8,6 +8,7 @@ import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByNoteReque
 import com.cabybara.prolearningplatform.dto.request.exam.UpdateExamRequestDto;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
+import com.cabybara.prolearningplatform.dto.response.exam.SharedExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
@@ -333,5 +334,30 @@ public class ExamServiceImpl implements ExamService {
                 ))
                 .collect(java.util.stream.Collectors.toList());
     }
-    
+
+    @Override
+    public Page<SharedExamResponseDto> getSharedExams(String q, Privacy privacy, CreationMethod createMethod, Pageable pageable) {
+        Long userId = authenticationContext.getCurrentUserId();
+        String privacyFilter = privacy != null ? privacy.name() : null;
+        String methodFilter = createMethod != null ? createMethod.name() : null;
+
+        return examRepository.findSharedExams(userId, q, privacyFilter, methodFilter, pageable)
+                .map(exam -> {
+                    NoteRole role = examPermissionService.getUserRoleInExam(exam.getId(), userId);
+                    ExamResponseDto dto = examMapper.toExamResponseDto(exam);
+                    return new SharedExamResponseDto(
+                            dto.id(),
+                            dto.title(),
+                            dto.privacy(),
+                            dto.description(),
+                            dto.duration(),
+                            dto.numQuestions(),
+                            dto.creationMethod(),
+                            dto.createdAt(),
+                            dto.updatedAt(),
+                            role,
+                            exam.getSet() != null ? exam.getSet().getId() : null
+                    );
+                });
+    }
 }

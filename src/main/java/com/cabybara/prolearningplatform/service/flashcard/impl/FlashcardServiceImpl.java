@@ -16,6 +16,7 @@ import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.SharedFlashcardResponseDto;
 import com.cabybara.prolearningplatform.exception.ResourceAlreadyExistsException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.CardItemMapper;
@@ -25,7 +26,6 @@ import com.cabybara.prolearningplatform.repository.FlashcardRepository;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
 import com.cabybara.prolearningplatform.service.ai.AIFlashcardService;
-import com.cabybara.prolearningplatform.service.file.FileService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.service.set.SetService;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
@@ -34,11 +34,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -62,7 +60,6 @@ public class FlashcardServiceImpl implements FlashcardService {
     private final CardItemMapper cardItemMapper;
     private final SetRepository setRepository;
 
-    private final FileService fileService;
     private final AIFlashcardService aiFlashcardService;
     private final FlashcardPermissionService flashcardPermissionService;
     private final com.cabybara.prolearningplatform.service.knowledge.TopicAssignmentAsyncService topicAssignmentAsyncService;
@@ -321,4 +318,36 @@ public class FlashcardServiceImpl implements FlashcardService {
                 ))
                 .collect(java.util.stream.Collectors.toList());
     }
+
+    @Override
+    public Page<SharedFlashcardResponseDto> getSharedFlashcards(String q, Privacy privacy, CreationMethod createMethod, Pageable pageable) {
+        Long userId = authenticationContext.getCurrentUserId();
+        String privacyFilter = privacy != null ? privacy.name() : null;
+        String methodFilter = createMethod != null ? createMethod.name() : null;
+
+        return flashcardRepository.findSharedFlashcards(userId, q, privacyFilter, methodFilter, pageable)
+                .map(flashcard -> {
+                    NoteRole role = flashcardPermissionService.getUserRoleInFlashcard(flashcard.getId(), userId);
+                    FlashcardResponseDto dto = flashcardMapper.toFlashcardResponseDto(flashcard);
+                    
+                    return SharedFlashcardResponseDto.builder()
+                            .id(dto.getId())
+                            .title(dto.getTitle())
+                            .description(dto.getDescription())
+                            .status(dto.getStatus())
+                            .privacy(dto.getPrivacy())
+                            .lastStudy(dto.getLastStudy())
+                            .known(dto.getKnown())
+                            .learning(dto.getLearning())
+                            .remain(dto.getRemain())
+                            .createMethod(dto.getCreateMethod())
+                            .numCards(dto.getNumCards())
+                            .createdAt(dto.getCreatedAt())
+                            .updatedAt(dto.getUpdatedAt())
+                            .userRole(role)
+                            .setId(flashcard.getSet() != null ? flashcard.getSet().getId() : null)
+                            .build();
+                });
+    }
 }
+
