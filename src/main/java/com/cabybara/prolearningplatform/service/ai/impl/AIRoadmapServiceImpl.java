@@ -67,13 +67,34 @@ public class AIRoadmapServiceImpl implements AIRoadmapService {
 
     @Override
     public TopicContentAiResponseDto generateTopicContent(TopicContentAiRequestDto request) {
-        log.info("Generating topic content for '{}' with {} previous summaries (placeholder)",
+        log.info("Generating topic content for '{}' with {} previous summaries",
                 request.getTopicTitle(),
                 request.getPreviousSummaries() == null ? 0 : request.getPreviousSummaries().size());
 
-        // TODO: replace mock with real AI call
+        try {
+            Map<String, Object> body = new HashMap<>();
+            body.put("topic_title", request.getTopicTitle());
+            body.put("description", request.getDescription());
+            body.put("chapter_title", request.getChapterTitle());
+            body.put("chapter_objective", request.getChapterObjective());
+            body.put("roadmap_title", request.getRoadmapTitle());
+            body.put("previous_summaries", request.getPreviousSummaries());
 
-        return buildMockTopicContent(request.getTopicTitle());
+            String raw = restHttpClientUtil.post(
+                    aiServiceBaseApi + GENERATE_TOPIC_CONTENT_PATH,
+                    body,
+                    String.class
+            );
+
+            // Parse the AI service response and convert to TopicContentAiResponseDto
+            Map<String, Object> responseData = objectMapper.readValue(raw, Map.class);
+
+            return objectMapper.convertValue(responseData, TopicContentAiResponseDto.class);
+
+        } catch (Exception e) {
+            log.error("Failed to call AI service for generating topic content", e);
+            throw new RuntimeException("Failed to call AI service for generating topic content", e);
+        }
     }
 
     private RoadmapPreviewResponseDto buildMockRoadmapPreview(RoadmapPreviewRequestDto request) {
