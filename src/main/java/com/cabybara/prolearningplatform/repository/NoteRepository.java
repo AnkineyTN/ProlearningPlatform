@@ -109,6 +109,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
         SELECT n.* FROM note n
         INNER JOIN note_members nm ON n.id = nm.note_id
         WHERE nm.user_id = :userId AND nm.status = 'ACTIVE'
+        AND n.id_user != :userId
         AND (:privacy IS NULL OR n.privacy = :privacy)
         AND (:q IS NULL OR :q = '' OR (
             n.search_vector @@ plainto_tsquery('simple', unaccent(:q))
@@ -119,6 +120,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
         SELECT count(*) FROM note n
         INNER JOIN note_members nm ON n.id = nm.note_id
         WHERE nm.user_id = :userId AND nm.status = 'ACTIVE'
+        AND n.id_user != :userId
         AND (:privacy IS NULL OR n.privacy = :privacy)
         AND (:q IS NULL OR :q = '' OR (
             n.search_vector @@ plainto_tsquery('simple', unaccent(:q))

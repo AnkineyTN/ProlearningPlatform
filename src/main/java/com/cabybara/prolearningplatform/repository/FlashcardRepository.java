@@ -132,6 +132,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
         SELECT f.* FROM flashcard f
         INNER JOIN flashcard_members fm ON f.id = fm.flashcard_id
         WHERE fm.user_id = :userId AND fm.status = 'ACTIVE'
+        AND f.id_user != :userId
         AND (:privacy IS NULL OR f.privacy = :privacy)
         AND ((:createMethod IS NULL AND f.create_method != 'REVIEW')
             OR (:createMethod IS NOT NULL AND f.create_method = :createMethod))
@@ -139,11 +140,12 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
             f.search_vector @@ plainto_tsquery('simple', unaccent(:q))
             OR (f.title || ' ' || f.description) % unaccent(:q)
         ))
-    """,
+    """, 
     countQuery = """
         SELECT count(*) FROM flashcard f
         INNER JOIN flashcard_members fm ON f.id = fm.flashcard_id
         WHERE fm.user_id = :userId AND fm.status = 'ACTIVE'
+        AND f.id_user != :userId
         AND (:privacy IS NULL OR f.privacy = :privacy)
         AND ((:createMethod IS NULL AND f.create_method != 'REVIEW')
             OR (:createMethod IS NOT NULL AND f.create_method = :createMethod))
