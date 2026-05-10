@@ -26,7 +26,6 @@ import com.cabybara.prolearningplatform.repository.FlashcardRepository;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
 import com.cabybara.prolearningplatform.service.ai.AIFlashcardService;
-import com.cabybara.prolearningplatform.service.file.FileService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.service.set.SetService;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
@@ -35,11 +34,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -63,7 +60,6 @@ public class FlashcardServiceImpl implements FlashcardService {
     private final CardItemMapper cardItemMapper;
     private final SetRepository setRepository;
 
-    private final FileService fileService;
     private final AIFlashcardService aiFlashcardService;
     private final FlashcardPermissionService flashcardPermissionService;
     private final com.cabybara.prolearningplatform.service.knowledge.TopicAssignmentAsyncService topicAssignmentAsyncService;
@@ -354,3 +350,4 @@ public class FlashcardServiceImpl implements FlashcardService {
                 });
     }
 }
+

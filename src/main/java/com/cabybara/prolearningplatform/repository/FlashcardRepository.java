@@ -127,7 +127,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
 
     @Query("SELECT f.id FROM Flashcard f WHERE f.set.id = :setId")
     List<Long> findIdsBySetId(@Param("setId") Long setId);
-
+    
     @Query(value = """
         SELECT f.* FROM flashcard f
         INNER JOIN flashcard_members fm ON f.id = fm.flashcard_id
@@ -161,6 +161,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
         @Param("privacy") String privacy,
         @Param("createMethod") String createMethod,
         Pageable pageable);
+
     @Modifying
     @Query("UPDATE Flashcard f SET f.updatedAt = :now WHERE f.id = :id")
     void updateUpdatedAt(@Param("id") Long id, @Param("now") OffsetDateTime now);
