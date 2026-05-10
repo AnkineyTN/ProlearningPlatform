@@ -89,7 +89,9 @@ public class CardItemServiceImpl implements CardItemService {
             cardItem.setImage(newAsset);
         }
 
-        return cardItemMapper.toCardItemResponseDto(cardItemRepository.save(cardItem));
+        CardItemResponseDto result = cardItemMapper.toCardItemResponseDto(cardItemRepository.save(cardItem));
+        flashcardRepository.updateUpdatedAt(flashcardId, OffsetDateTime.now());
+        return result;
     }
 
     @Override
@@ -107,6 +109,7 @@ public class CardItemServiceImpl implements CardItemService {
         applyUpdatesAndValidateOwnership(setId, flashcardId, cardItemsToUpdate, updateDtoMap, userId);
 
         cardItemRepository.saveAll(cardItemsToUpdate);
+        flashcardRepository.updateUpdatedAt(flashcardId, OffsetDateTime.now());
 
         return cardItemsToUpdate.stream()
                 .map(cardItemMapper::toCardItemResponseDto)
@@ -132,6 +135,7 @@ public class CardItemServiceImpl implements CardItemService {
         }
 
         cardItemRepository.delete(cardItem);
+        flashcardRepository.updateUpdatedAt(flashcardId, OffsetDateTime.now());
     }
 
     @Override
@@ -194,6 +198,7 @@ public class CardItemServiceImpl implements CardItemService {
                 .forEach(assetService::markDeletedAsset);
 
         cardItemRepository.deleteAll(cards);
+        flashcardRepository.updateUpdatedAt(flashcardId, OffsetDateTime.now());
     }
 
     private Map<Long, CardItemUpdatingRequestDto> prepareUpdateDtoMap(
@@ -275,7 +280,9 @@ public class CardItemServiceImpl implements CardItemService {
         assetService.markDeletedAsset(cardItem.getImage());
         cardItem.setImage(null);
 
-        return cardItemMapper.toCardItemResponseDto(cardItemRepository.save(cardItem));
+        CardItemResponseDto result = cardItemMapper.toCardItemResponseDto(cardItemRepository.save(cardItem));
+        flashcardRepository.updateUpdatedAt(flashcardId, OffsetDateTime.now());
+        return result;
     }
 
     private void updateCardImage(CardItem cardItem, CardItemUpdatingRequestDto dto, Long userId) {

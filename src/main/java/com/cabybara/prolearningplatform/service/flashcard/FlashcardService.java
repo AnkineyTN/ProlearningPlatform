@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.flashcard.*;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
+import com.cabybara.prolearningplatform.dto.response.flashcard.SharedFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
@@ -49,4 +50,6 @@ public interface FlashcardService {
     AcceptByTokenResponse acceptByToken(String token);
 
     List<PendingInviteResponse> getPendingInvites();
+    
+    Page<SharedFlashcardResponseDto> getSharedFlashcards(String q, Privacy privacy, CreationMethod createMethod, Pageable pageable);
 }

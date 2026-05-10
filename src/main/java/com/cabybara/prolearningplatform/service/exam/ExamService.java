@@ -6,6 +6,7 @@ import com.cabybara.prolearningplatform.dto.request.exam.GenerateExamByNoteReque
 import com.cabybara.prolearningplatform.dto.request.exam.UpdateExamRequestDto;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
+import com.cabybara.prolearningplatform.dto.response.exam.SharedExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
@@ -50,4 +51,5 @@ public interface ExamService {
 
     List<PendingInviteResponse> getPendingInvites();
 
+    Page<SharedExamResponseDto> getSharedExams(String q, Privacy privacy, CreationMethod createMethod, Pageable pageable);
 }

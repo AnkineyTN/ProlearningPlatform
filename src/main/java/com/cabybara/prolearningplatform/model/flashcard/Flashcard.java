@@ -6,7 +6,6 @@ import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.AbstractEntity;
 import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.User;
-import com.cabybara.prolearningplatform.utils.SetChild;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -21,7 +20,7 @@ import java.util.List;
 @AllArgsConstructor
 @Entity
 @Table(name = "flashcard")
-public class Flashcard extends AbstractEntity implements SetChild {
+public class Flashcard extends AbstractEntity {
     @Column(name = "title", nullable = false)
     private String title;
 

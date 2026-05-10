@@ -9,3 +9,11 @@ CREATE TABLE flashcard_game_history (
 
 CREATE INDEX idx_game_history_ranking ON flashcard_game_history (flashcard_id, duration_seconds ASC);
 CREATE INDEX idx_game_history_user    ON flashcard_game_history (user_id, flashcard_id, completed_at DESC);
+
+CREATE TABLE flashcard_game_wrong_card (
+                                           history_id   BIGINT  NOT NULL REFERENCES flashcard_game_history(id) ON DELETE CASCADE,
+                                           card_item_id BIGINT  NOT NULL REFERENCES card_item(id) ON DELETE CASCADE,
+                                           wrong_count  INTEGER NOT NULL DEFAULT 1,
+                                           PRIMARY KEY (history_id, card_item_id)
+);
+CREATE INDEX idx_game_wrong_card_history ON flashcard_game_wrong_card(history_id);

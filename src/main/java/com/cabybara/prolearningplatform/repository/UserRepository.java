@@ -40,7 +40,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
             """, nativeQuery = true)
     List<Object[]> aggregateAccountType();
 
-    // bỏ qua những user đã là member của note đó
+    // bỏ qua những user đã là ACTIVE member của note (cho phép re-invite pending members)
     @Query("""
     SELECT u FROM User u
     WHERE (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%'))
@@ -48,13 +48,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
     OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :keyword, '%')))
     AND u.id NOT IN (
-        SELECT nm.user.id FROM NoteMember nm WHERE nm.note.id = :noteId
+        SELECT nm.user.id FROM NoteMember nm WHERE nm.note.id = :noteId AND nm.status = 'ACTIVE'
     )
     ORDER BY u.lastName ASC, u.firstName ASC
     """)
    Page<User> searchByNameOrEmail(@Param("keyword") String keyword, @Param("noteId") Long noteId, Pageable pageable);
 
-    // bỏ qua những user đã là member của flashcard đó
+    // bỏ qua những user đã là ACTIVE member của flashcard (cho phép re-invite pending members)
     @Query("""
     SELECT u FROM User u
     WHERE (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%'))
@@ -62,13 +62,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
     OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :keyword, '%')))
     AND u.id NOT IN (
-        SELECT fm.user.id FROM FlashcardMember fm WHERE fm.flashcard.id = :flashcardId
+        SELECT fm.user.id FROM FlashcardMember fm WHERE fm.flashcard.id = :flashcardId AND fm.status = 'ACTIVE'
     )
     ORDER BY u.lastName ASC, u.firstName ASC
     """)
    Page<User> searchByNameOrEmailForFlashcard(@Param("keyword") String keyword, @Param("flashcardId") Long flashcardId, Pageable pageable);
 
-    // bỏ qua những user đã là member của exam đó
+    // bỏ qua những user đã là ACTIVE member của exam đó (cho phép re-invite pending members)
     @Query("""
     SELECT u FROM User u
     WHERE (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%'))
@@ -76,37 +76,37 @@ public interface UserRepository extends JpaRepository<User, Long> {
     OR LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%'))
     OR LOWER(CONCAT(u.firstName, ' ', u.lastName)) LIKE LOWER(CONCAT('%', :keyword, '%')))
     AND u.id NOT IN (
-        SELECT em.user.id FROM ExamMember em WHERE em.exam.id = :examId
+        SELECT em.user.id FROM ExamMember em WHERE em.exam.id = :examId AND em.status = 'ACTIVE'
     )
     ORDER BY u.lastName ASC, u.firstName ASC
     """)
    Page<User> searchByNameOrEmailForExam(@Param("keyword") String keyword, @Param("examId") Long examId, Pageable pageable);
 
-    // lấy tất cả users không phải là member của note
+    // lấy tất cả users không phải là ACTIVE member của note (cho phép re-invite pending members)
     @Query("""
     SELECT u FROM User u
     WHERE u.id NOT IN (
-        SELECT nm.user.id FROM NoteMember nm WHERE nm.note.id = :noteId
+        SELECT nm.user.id FROM NoteMember nm WHERE nm.note.id = :noteId AND nm.status = 'ACTIVE'
     )
     ORDER BY u.lastName ASC, u.firstName ASC
     """)
     Page<User> findAllExcludingNoteMembers(@Param("noteId") Long noteId, Pageable pageable);
 
-    // lấy tất cả users không phải là member của flashcard
+    // lấy tất cả users không phải là ACTIVE member của flashcard (cho phép re-invite pending members)
     @Query("""
     SELECT u FROM User u
     WHERE u.id NOT IN (
-        SELECT fm.user.id FROM FlashcardMember fm WHERE fm.flashcard.id = :flashcardId
+        SELECT fm.user.id FROM FlashcardMember fm WHERE fm.flashcard.id = :flashcardId AND fm.status = 'ACTIVE'
     )
     ORDER BY u.lastName ASC, u.firstName ASC
     """)
     Page<User> findAllExcludingFlashcardMembers(@Param("flashcardId") Long flashcardId, Pageable pageable);
 
-    // lấy tất cả users không phải là member của exam
+    // lấy tất cả users không phải là ACTIVE member của exam (cho phép re-invite pending members)
     @Query("""
     SELECT u FROM User u
     WHERE u.id NOT IN (
-        SELECT em.user.id FROM ExamMember em WHERE em.exam.id = :examId
+        SELECT em.user.id FROM ExamMember em WHERE em.exam.id = :examId AND em.status = 'ACTIVE'
     )
     ORDER BY u.lastName ASC, u.firstName ASC
     """)

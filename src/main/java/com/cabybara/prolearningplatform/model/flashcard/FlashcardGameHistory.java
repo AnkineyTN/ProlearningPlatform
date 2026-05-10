@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Entity
 @Table(name = "flashcard_game_history")
@@ -39,4 +41,14 @@ public class FlashcardGameHistory {
     @CreationTimestamp
     @Column(name = "completed_at", nullable = false, updatable = false)
     private OffsetDateTime completedAt;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "flashcard_game_wrong_card",
+            joinColumns = @JoinColumn(name = "history_id")
+    )
+    @MapKeyColumn(name = "card_item_id")
+    @Column(name = "wrong_count")
+    @Builder.Default
+    private Map<Long, Integer> wrongCardCounts = new HashMap<>();
 }
