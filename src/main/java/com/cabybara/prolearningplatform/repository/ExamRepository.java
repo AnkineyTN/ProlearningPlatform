@@ -107,6 +107,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
         SELECT e.* FROM exams e
         INNER JOIN exam_members em ON e.id = em.exam_id
         WHERE em.user_id = :userId AND em.status = 'ACTIVE'
+        AND e.created_by != :userId
         AND (:privacy IS NULL OR e.privacy = :privacy)
         AND ((:createMethod IS NULL AND e.create_method != 'REVIEW')
             OR (:createMethod IS NOT NULL AND e.create_method = :createMethod))
@@ -119,6 +120,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
         SELECT count(*) FROM exams e
         INNER JOIN exam_members em ON e.id = em.exam_id
         WHERE em.user_id = :userId AND em.status = 'ACTIVE'
+        AND e.created_by != :userId
         AND (:privacy IS NULL OR e.privacy = :privacy)
         AND ((:createMethod IS NULL AND e.create_method != 'REVIEW')
             OR (:createMethod IS NOT NULL AND e.create_method = :createMethod))
