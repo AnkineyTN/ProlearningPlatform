@@ -11,6 +11,7 @@ import com.cabybara.prolearningplatform.repository.NoteRepository;
 import com.cabybara.prolearningplatform.repository.RoadmapTopicRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
 import com.cabybara.prolearningplatform.service.ai.AIRoadmapService;
+import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
 import com.cabybara.prolearningplatform.service.roadmap.RoadmapTopicSetupAsyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
@@ -28,12 +30,13 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
     private final RoadmapTopicRepository roadmapTopicRepository;
     private final SetRepository setRepository;
     private final NoteRepository noteRepository;
+    private final NotePermissionService notePermissionService;
     private final AIRoadmapService aiRoadmapService;
 
     @Override
     @Async("heavyTaskExecutor")
     @Transactional
-    public void generateTopicContent(Long topicId, Long setId, String topicTitle,
+    public void generateTopicContent(Long userId, Long topicId, Long setId, String topicTitle,
                                      String description, String chapterTitle, String chapterObjective,
                                      Long roadmapId, String roadmapTitle) {
         try {
@@ -55,13 +58,16 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
             TopicContentAiResponseDto aiResponse = callAiForTopicContent(
                     topicTitle, description, chapterTitle, chapterObjective, roadmapTitle, roadmapId);
 
-            noteRepository.save(Note.builder()
+            Note savedNote = noteRepository.save(Note.builder()
                     .title(topicTitle)
                     .content(aiResponse.getContent())
                     .privacy(Privacy.PRIVATE)
                     .set(set)
                     .user(set.getUser())
                     .build());
+
+            notePermissionService.addOwner(savedNote.getId(), userId);
+            setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
 
             topic.setSummary(aiResponse.getSummary());
             topic.setContentStatus(TopicContentStatus.READY);

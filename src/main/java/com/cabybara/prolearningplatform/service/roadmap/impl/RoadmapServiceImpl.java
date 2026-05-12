@@ -136,7 +136,7 @@ public class RoadmapServiceImpl implements RoadmapService {
         topic.setContentStatus(TopicContentStatus.GENERATING);
         roadmapTopicRepository.save(topic);
 
-        scheduleContentGeneration(topicId, savedSet.getId(), topic, topic.getChapter(), roadmap);
+        scheduleContentGeneration(userId, topicId, savedSet.getId(), topic, topic.getChapter(), roadmap);
 
         return TopicStartResponseDto.builder()
                 .topicId(topicId)
@@ -211,7 +211,7 @@ public class RoadmapServiceImpl implements RoadmapService {
                 .build());
     }
 
-    private void scheduleContentGeneration(Long topicId, Long setId,
+    private void scheduleContentGeneration(Long userId, Long topicId, Long setId,
                                             RoadmapTopic topic, RoadmapChapter chapter,
                                             Roadmap roadmap) {
         String topicTitle = topic.getTitle();
@@ -224,7 +224,7 @@ public class RoadmapServiceImpl implements RoadmapService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                topicSetupAsyncService.generateTopicContent(
+                topicSetupAsyncService.generateTopicContent(userId,
                         topicId, setId, topicTitle, description,
                         chapterTitle, chapterObjective, roadmapId, roadmapTitle);
             }
