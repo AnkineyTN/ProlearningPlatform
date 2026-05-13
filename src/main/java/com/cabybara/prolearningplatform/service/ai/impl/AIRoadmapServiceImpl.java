@@ -45,7 +45,7 @@ public class AIRoadmapServiceImpl implements AIRoadmapService {
         try {
             Map<String, Object> body = new HashMap<>();
             body.put("goal", request.getGoal());
-            body.put("level", request.getLevel());
+            body.put("level", request.getLevel().getDescription());
             body.put("language", request.getLanguage() != null ? request.getLanguage() : "English");
 
             String raw = restHttpClientUtil.post(
