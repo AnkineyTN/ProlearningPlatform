@@ -1,6 +1,5 @@
 package com.cabybara.prolearningplatform.dto.response.social;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 public record SocialItemResponseDto(
@@ -8,8 +7,8 @@ public record SocialItemResponseDto(
         String type,
         String title,
         String description,
-        LocalDateTime createdAt,
-        LocalDateTime updatedAt,
+        OffsetDateTime createdAt,
+        OffsetDateTime updatedAt,
         Long ownerId,
         String ownerName,
         Long numCards,

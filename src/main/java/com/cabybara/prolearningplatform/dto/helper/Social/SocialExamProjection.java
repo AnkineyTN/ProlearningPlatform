@@ -1,14 +1,14 @@
 package com.cabybara.prolearningplatform.dto.helper.Social;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 public interface SocialExamProjection {
     Long getId();
     String getTitle();
     String getDescription();
     Long getDuration();
-    LocalDateTime getCreatedAt();
-    LocalDateTime getUpdatedAt();
+    Timestamp getCreatedAt();
+    Timestamp getUpdatedAt();
     Long getOwnerId();
     String getOwnerFirstName();
     String getOwnerLastName();
