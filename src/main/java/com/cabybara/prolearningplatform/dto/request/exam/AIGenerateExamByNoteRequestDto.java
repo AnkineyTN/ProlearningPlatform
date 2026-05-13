@@ -1,9 +1,13 @@
 package com.cabybara.prolearningplatform.dto.request.exam;
 
 import com.cabybara.prolearningplatform.enums.Language;
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.List;
 import java.util.Map;
 
@@ -12,15 +16,14 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GenerateExamByNoteRequestDto {
-    private List<NoteRequestDto> notes;
+public class AIGenerateExamByNoteRequestDto {
+    private List<NoteContentDto> notes;
 
     private Map<String, Integer> questions;
 
     private Map<String, Double> difficulty;
 
     @JsonProperty("free_text")
-    @JsonAlias("freeText")
     private String freeText;
 
     private Language language;

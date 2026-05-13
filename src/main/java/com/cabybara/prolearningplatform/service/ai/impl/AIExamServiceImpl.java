@@ -184,14 +184,9 @@ public class AIExamServiceImpl implements AIExamService {
     }
 
     @Override
-    public GenerateExamByAIResponseDto generateExamByNotes(List<String> contents, Map<String, Integer> questions, Map<String, Double> difficulty, String freeText, Language language) {
+    public GenerateExamByAIResponseDto generateExamByNotes(AIGenerateExamByNoteRequestDto request) {
         try {
-            Map<String, Object> body = new HashMap<>();
-            body.put("contents", contents);
-            body.put("questions", questions);
-            body.put("difficulty", difficulty);
-            body.put("free_text", freeText != null ? freeText : "");
-            body.put("language", language != null ? language : "English");
+            Map<String, Object> body = objectMapper.convertValue(request, Map.class);
 
             String raw = restHttpClientUtil.post(
                     aiServiceBaseApi + GENERATE_EXAM_BY_NOTE_PATH,
