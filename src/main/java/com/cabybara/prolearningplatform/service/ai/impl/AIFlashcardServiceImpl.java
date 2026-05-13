@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.service.ai.impl;
 
 import com.cabybara.prolearningplatform.dto.internal.CardContent;
+import com.cabybara.prolearningplatform.dto.request.flashcard.AIGenerateFlashcardByNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByWebRequestDto;
@@ -51,6 +52,19 @@ public class AIFlashcardServiceImpl implements AIFlashcardService {
         }
     }
 
+    private GenerateFlashcardByAIResponseDto parseResponse(String json) {
+        try {
+            var root = objectMapper.readTree(json);
+            return GenerateFlashcardByAIResponseDto.builder()
+                    .title(root.path("title").asText(""))
+                    .description(root.path("description").asText(""))
+                    .content(root.path("data").asText(""))
+                    .build();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse AI service response", e);
+        }
+    }
+
     private Resource convertToResource(MultipartFile file) throws IOException {
         return new ByteArrayResource(file.getBytes()) {
             @Override
@@ -80,9 +94,7 @@ public class AIFlashcardServiceImpl implements AIFlashcardService {
                     String.class
             );
 
-            return GenerateFlashcardByAIResponseDto.builder()
-                    .content(parseData(raw))
-                    .build();
+            return parseResponse(raw);
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Flashcard by Files", e);
@@ -90,13 +102,9 @@ public class AIFlashcardServiceImpl implements AIFlashcardService {
     }
 
     @Override
-    public GenerateFlashcardByAIResponseDto generateFlashcardByNotes(List<String> contents, String freeText, Language language
-    ) {
+    public GenerateFlashcardByAIResponseDto generateFlashcardByNotes(AIGenerateFlashcardByNoteRequestDto request) {
         try {
-            Map<String, Object> body = new HashMap<>();
-            body.put("contents", contents);
-            body.put("free_text", freeText != null ? freeText : "");
-            body.put("language", language != null ? language : "English");
+            Map<String, Object> body = objectMapper.convertValue(request, Map.class);
 
             String raw = restHttpClientUtil.post(
                     aiServiceBaseApi + GENERATE_FLASHCARD_BY_NOTE_PATH,
@@ -104,9 +112,7 @@ public class AIFlashcardServiceImpl implements AIFlashcardService {
                     String.class
             );
 
-            return GenerateFlashcardByAIResponseDto.builder()
-                    .content(parseData(raw))
-                    .build();
+            return parseResponse(raw);
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Flashcard by Notes", e);
@@ -127,9 +133,7 @@ public class AIFlashcardServiceImpl implements AIFlashcardService {
                     String.class
             );
 
-            return GenerateFlashcardByAIResponseDto.builder()
-                    .content(parseData(raw))
-                    .build();
+            return parseResponse(raw);
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Flashcard by Web", e);
