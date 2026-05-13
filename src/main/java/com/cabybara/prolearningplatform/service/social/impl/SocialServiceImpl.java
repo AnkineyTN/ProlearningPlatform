@@ -10,6 +10,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Objects;
 
 @Service
@@ -28,8 +31,8 @@ public class SocialServiceImpl implements SocialService {
                         "NOTE",
                         sn.getTitle(),
                         sn.getDescription(),
-                        sn.getCreatedAt(),
-                        sn.getUpdatedAt(),
+                        toOffsetDateTime(sn.getCreatedAt()),
+                        toOffsetDateTime(sn.getUpdatedAt()),
                         sn.getOwnerId(),
                         buildOwnerName(sn.getOwnerFirstName(), sn.getOwnerLastName()),
                         null,
@@ -46,8 +49,8 @@ public class SocialServiceImpl implements SocialService {
                         "FLASHCARD",
                         sf.getTitle(),
                         sf.getDescription(),
-                        sf.getCreatedAt(),
-                        sf.getUpdatedAt(),
+                        toOffsetDateTime(sf.getCreatedAt()),
+                        toOffsetDateTime(sf.getUpdatedAt()),
                         sf.getOwnerId(),
                         buildOwnerName(sf.getOwnerFirstName(), sf.getOwnerLastName()),
                         sf.getNumCards(),
@@ -64,14 +67,18 @@ public class SocialServiceImpl implements SocialService {
                         "EXAM",
                         se.getTitle(),
                         se.getDescription(),
-                        se.getCreatedAt(),
-                        se.getUpdatedAt(),
+                        toOffsetDateTime(se.getCreatedAt()),
+                        toOffsetDateTime(se.getUpdatedAt()),
                         se.getOwnerId(),
                         buildOwnerName(se.getOwnerFirstName(), se.getOwnerLastName()),
                         null,
                         se.getNumQuestions(),
                         se.getDuration()
                 ));
+    }
+
+    private OffsetDateTime toOffsetDateTime(Timestamp ts) {
+        return ts != null ? ts.toInstant().atOffset(ZoneOffset.UTC) : null;
     }
 
     private String buildOwnerName(String firstName, String lastName) {

@@ -153,6 +153,15 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
                OR (n.title || ' ' || COALESCE(n.description, '')) % unaccent(:q)
           ))
     """,
+    countQuery = """
+            SELECT count(*) FROM note n
+                 INNER JOIN users u ON n.id_user = u.id
+                 WHERE n.privacy = 'PUBLIC'
+                   AND (:q IS NULL OR :q = '' OR (
+                        n.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                        OR (n.title || ' ' || COALESCE(n.description, '')) % unaccent(:q)
+                   ))
+    """,
     nativeQuery = true)
     Page<SocialNoteProjection> findSocialNotes(String q, Pageable pageable);
 }

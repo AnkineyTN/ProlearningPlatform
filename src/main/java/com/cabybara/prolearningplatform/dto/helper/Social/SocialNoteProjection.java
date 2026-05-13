@@ -1,13 +1,13 @@
 package com.cabybara.prolearningplatform.dto.helper.Social;
 
-import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 public interface SocialNoteProjection {
     Long getId();
     String getTitle();
     String getDescription();
-    LocalDateTime getCreatedAt();
-    LocalDateTime getUpdatedAt();
+    Timestamp getCreatedAt();
+    Timestamp getUpdatedAt();
     Long getOwnerId();
     String getOwnerFirstName();
     String getOwnerLastName();
