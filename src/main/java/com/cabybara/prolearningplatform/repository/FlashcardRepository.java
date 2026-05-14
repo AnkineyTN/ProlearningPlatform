@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.dto.helper.Social.SocialFlashcardProjection;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import jakarta.validation.constraints.NotBlank;
@@ -165,4 +166,39 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
     @Modifying
     @Query("UPDATE Flashcard f SET f.updatedAt = :now WHERE f.id = :id")
     void updateUpdatedAt(@Param("id") Long id, @Param("now") OffsetDateTime now);
+
+    @Query(value = """
+        SELECT
+            f.id          AS id,
+            f.title       AS title,
+            f.description AS description,
+            f.created_at  AS createdAt,
+            f.updated_at  AS updatedAt,
+            u.id          AS ownerId,
+            u.first_name  AS ownerFirstName,
+            u.last_name   AS ownerLastName,
+            COUNT(ci.id)  AS numCards
+        FROM flashcard f
+        INNER JOIN users u ON f.id_user = u.id
+        LEFT  JOIN card_item ci ON ci.flashcard_id = f.id
+        WHERE f.privacy = 'PUBLIC'
+          AND f.create_method IN ('MANUAL', 'AI')
+          AND (:q IS NULL OR :q = '' OR (
+               f.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+               OR (f.title || ' ' || COALESCE(f.description, '')) % unaccent(:q)
+          ))
+        GROUP BY f.id, u.id, u.first_name, u.last_name
+    """,
+    countQuery = """
+        SELECT COUNT(DISTINCT f.id)
+        FROM flashcard f
+        WHERE f.privacy = 'PUBLIC'
+          AND f.create_method IN ('MANUAL', 'AI')
+          AND (:q IS NULL OR :q = '' OR (
+               f.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+               OR (f.title || ' ' || COALESCE(f.description, '')) % unaccent(:q)
+          ))
+    """,
+    nativeQuery = true)
+    Page<SocialFlashcardProjection> findSocialFlashcards(String q, Pageable pageable);
 }

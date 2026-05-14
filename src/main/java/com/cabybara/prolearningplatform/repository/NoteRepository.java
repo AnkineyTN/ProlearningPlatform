@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.dto.helper.Social.SocialNoteProjection;
 import com.cabybara.prolearningplatform.model.note.Note;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -133,4 +134,34 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
         @Param("q") String q,
         @Param("privacy") String privacy,
         Pageable pageable);
+
+    @Query(value = """
+        SELECT
+            n.id          AS id,
+            n.title       AS title,
+            n.description AS description,
+            n.created_at  AS createdAt,
+            n.updated_at  AS updatedAt,
+            u.id          AS ownerId,
+            u.first_name  AS ownerFirstName,
+            u.last_name   AS ownerLastName
+        FROM note n
+        INNER JOIN users u ON n.id_user = u.id
+        WHERE n.privacy = 'PUBLIC'
+          AND (:q IS NULL OR :q = '' OR (
+               n.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+               OR (n.title || ' ' || COALESCE(n.description, '')) % unaccent(:q)
+          ))
+    """,
+    countQuery = """
+            SELECT count(*) FROM note n
+                 INNER JOIN users u ON n.id_user = u.id
+                 WHERE n.privacy = 'PUBLIC'
+                   AND (:q IS NULL OR :q = '' OR (
+                        n.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                        OR (n.title || ' ' || COALESCE(n.description, '')) % unaccent(:q)
+                   ))
+    """,
+    nativeQuery = true)
+    Page<SocialNoteProjection> findSocialNotes(String q, Pageable pageable);
 }

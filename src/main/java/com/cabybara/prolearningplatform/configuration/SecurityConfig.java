@@ -71,6 +71,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/reset-password/**").permitAll()
                 .requestMatchers("/internal/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
+                .requestMatchers("/social/**").permitAll()
                 .anyRequest().authenticated()
         );
 
