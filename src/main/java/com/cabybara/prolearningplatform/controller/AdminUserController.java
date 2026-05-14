@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.controller;
 
+import com.cabybara.prolearningplatform.dto.request.admin.AdminBlockUserRequestDto;
 import com.cabybara.prolearningplatform.dto.request.admin.AdminUserUpdateRequestDto;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.admin.AdminUserListItemResponseDto;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -112,5 +114,26 @@ public class AdminUserController {
         adminUserManagementService.deleteUser(userId);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully", null, null));
+    }
+
+    @Operation(summary = "Block a user", description = "Suspends the account and sends a notification to the user.")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PostMapping("/{userId}/block")
+    public ResponseEntity<ApiResponse<UserResponseDto>> blockUser(
+            @PathVariable Long userId,
+            @Valid @RequestBody AdminBlockUserRequestDto request) {
+        UserResponseDto updated = adminUserManagementService.blockUser(userId, request.getReason());
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ResponseUtil.success("User blocked", updated, null));
+    }
+
+    @Operation(summary = "Unblock a user", description = "Reinstates the account and notifies the user.")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @PostMapping("/{userId}/unblock")
+    public ResponseEntity<ApiResponse<UserResponseDto>> unblockUser(
+            @PathVariable Long userId) {
+        UserResponseDto updated = adminUserManagementService.unblockUser(userId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ResponseUtil.success("User unblocked", updated, null));
     }
 }

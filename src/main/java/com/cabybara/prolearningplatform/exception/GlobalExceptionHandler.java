@@ -120,12 +120,23 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
     }
 
-   @ExceptionHandler(EmailNotVerifiedException.class)
+    @ExceptionHandler(EmailNotVerifiedException.class)
     public ResponseEntity<ApiResponse<Object>> handleEmailNotVerified(EmailNotVerifiedException ex, WebRequest request) {
         log.warn("Email not verified | {}", ex.getMessage());
         String path = request.getDescription(false).replace("uri=", "");
         ApiResponse<Object> body = ResponseUtil.error(
                 ex.getMessage(), null, "EMAIL_NOT_VERIFIED", path
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(AccountBlockedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAccountBlocked(AccountBlockedException ex, WebRequest request) {
+        log.warn("Blocked account login attempt");
+        String path = request.getDescription(false).replace("uri=", "");
+        ApiResponse<Object> body = ResponseUtil.error(
+                "Your account has been suspended. Please submit an appeal to request reinstatement.",
+                null, "ACCOUNT_BLOCKED", path
         );
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }

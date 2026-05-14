@@ -13,4 +13,8 @@ public interface AdminUserManagementService {
     UserResponseDto updateUser(Long userId, AdminUserUpdateRequestDto request);
 
     void deleteUser(Long userId);
+
+    UserResponseDto blockUser(Long userId, String reason);
+
+    UserResponseDto unblockUser(Long userId);
 }
