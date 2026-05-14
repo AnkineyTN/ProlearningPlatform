@@ -15,7 +15,7 @@ import java.util.Map;
 public interface AIExamService {
     public GenerateExamByAIResponseDto generateExamByFiles(GenerateExamByFileRequestDto request);
 
-    public GenerateExamByAIResponseDto generateExamByNotes(List<String> contents, Map<String, Integer> questions, Map<String, Double> difficulty, String freeText, Language language);
+    public GenerateExamByAIResponseDto generateExamByNotes(AIGenerateExamByNoteRequestDto request);
 
     public GenerateExamByAIResponseDto generateExamByWeb(GenerateExamByWebRequestDto request);
 

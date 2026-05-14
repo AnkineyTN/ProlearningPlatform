@@ -11,4 +11,6 @@ import lombok.Setter;
 @Builder
 public class GenerateFlashcardByAIResponseDto {
     private String content;
+    private String title;
+    private String description;
 }

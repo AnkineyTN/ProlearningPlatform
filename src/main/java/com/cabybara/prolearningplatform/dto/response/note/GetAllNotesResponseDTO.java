@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -17,4 +19,5 @@ public class GetAllNotesResponseDTO {
     private Privacy privacy;
     private String created_at;
     private String updated_at;
+    private List<GetDocsInNoteResponseDTO> noteDocs;
 }

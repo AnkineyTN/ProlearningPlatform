@@ -1,10 +1,12 @@
 package com.cabybara.prolearningplatform.dto.request.flashcard;
 
-import com.cabybara.prolearningplatform.enums.Language;
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
-import org.springframework.web.multipart.MultipartFile;
+import com.cabybara.prolearningplatform.enums.Language;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -13,11 +15,10 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GenerateFlashcardByNoteRequestDto {
-    private List<NoteRequestDto> notes;
+public class AIGenerateFlashcardByNoteRequestDto {
+    private List<NoteContentDto> notes;
 
     @JsonProperty("free_text")
-    @JsonAlias("freeText")
     private String freeText;
 
     private Language language;
