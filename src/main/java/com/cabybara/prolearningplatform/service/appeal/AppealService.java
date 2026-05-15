@@ -7,7 +7,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface AppealService {
-    AppealResponseDto submitAppeal(Long userId, String reason);
     AppealResponseDto submitPublicAppeal(String email, String reason);
     Page<AppealResponseDto> listAppeals(AppealStatus status, Pageable pageable);
     AppealResponseDto reviewAppeal(Long appealId, AdminAppealReviewDto dto);
