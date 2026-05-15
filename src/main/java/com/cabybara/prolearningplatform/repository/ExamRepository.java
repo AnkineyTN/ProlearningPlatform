@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.dto.helper.Social.SocialExamProjection;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.exam.Exam;
@@ -136,4 +137,40 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
         @Param("privacy") String privacy, 
         @Param("createMethod") String createMethod, 
         Pageable pageable);
+
+    @Query(value = """
+        SELECT
+            e.id          AS id,
+            e.title       AS title,
+            e.description AS description,
+            e.duration    AS duration,
+            e.created_at  AS createdAt,
+            e.updated_at  AS updatedAt,
+            u.id          AS ownerId,
+            u.first_name  AS ownerFirstName,
+            u.last_name   AS ownerLastName,
+            COUNT(eq.id)  AS numQuestions
+        FROM exams e
+        INNER JOIN users u ON e.created_by = u.id
+        LEFT  JOIN exam_questions eq ON eq.exam_id = e.id
+        WHERE e.privacy = 'PUBLIC'
+          AND e.create_method IN ('MANUAL', 'AI')
+          AND (:q IS NULL OR :q = '' OR (
+               e.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+               OR (e.title || ' ' || COALESCE(e.description, '')) % unaccent(:q)
+          ))
+        GROUP BY e.id, u.id, u.first_name, u.last_name
+    """,
+    countQuery = """
+        SELECT COUNT(DISTINCT e.id)
+        FROM exams e
+        WHERE e.privacy = 'PUBLIC'
+          AND e.create_method IN ('MANUAL', 'AI')
+          AND (:q IS NULL OR :q = '' OR (
+               e.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+               OR (e.title || ' ' || COALESCE(e.description, '')) % unaccent(:q)
+          ))
+    """,
+    nativeQuery = true)
+    Page<SocialExamProjection> findSocialExams(String q, Pageable pageable);
 }

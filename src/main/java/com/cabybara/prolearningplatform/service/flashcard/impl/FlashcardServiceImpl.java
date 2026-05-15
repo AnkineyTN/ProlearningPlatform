@@ -245,24 +245,46 @@ public class FlashcardServiceImpl implements FlashcardService {
 
     @Override
     public GenerateFlashcardByAIResponseDto generateFlashcardByNotes(GenerateFlashcardByNoteRequestDto request) {
-        List<Long> noteIds = request.getNoteIds();
+        // Get note IDs from the request
+        List<Long> noteIds = request.getNotes().stream()
+                .map(NoteRequestDto::getNoteId)
+                .collect(Collectors.toList());
+        
         List<Note> notes = noteRepository.findAllById(noteIds);
 
         if (notes.isEmpty()) {
             throw new RuntimeException("No notes found with provided IDs");
         }
 
-        List<String> contents = new ArrayList<>();
+        // Build a map of noteId to document URLs for quick lookup
+        Map<Long, List<String>> noteIdToUrlsMap = request.getNotes().stream()
+                .collect(Collectors.toMap(
+                        NoteRequestDto::getNoteId,
+                        NoteRequestDto::getDocumentUrls
+                ));
+
+        // Build NoteContentDto list with content and URLs
+        List<NoteContentDto> noteContents = new ArrayList<>();
         for (Note note : notes) {
-            String content = "=== Note: " + note.getTitle() + " ===\n" + note.getContent();
-            contents.add(content);
+            List<String> documentUrls = noteIdToUrlsMap.getOrDefault(note.getId(), new ArrayList<>());
+            
+            NoteContentDto noteContent = NoteContentDto.builder()
+                    .noteId(note.getId())
+                    .content(note.getContent())
+                    .documentUrls(documentUrls)
+                    .build();
+
+            noteContents.add(noteContent);
         }
 
-        return aiFlashcardService.generateFlashcardByNotes(
-                contents,
-                request.getFreeText(),
-                request.getLanguage()
-        );
+        // Build the AI request DTO
+        AIGenerateFlashcardByNoteRequestDto aiRequest = AIGenerateFlashcardByNoteRequestDto.builder()
+                .notes(noteContents)
+                .freeText(request.getFreeText())
+                .language(request.getLanguage())
+                .build();
+
+        return aiFlashcardService.generateFlashcardByNotes(aiRequest);
     }
 
     @Override

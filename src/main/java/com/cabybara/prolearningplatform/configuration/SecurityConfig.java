@@ -71,6 +71,8 @@ public class SecurityConfig {
                 .requestMatchers("/auth/reset-password/**").permitAll()
                 .requestMatchers("/internal/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
+                .requestMatchers("/social/**").permitAll()
+                .requestMatchers("/public/**").permitAll()
                 .anyRequest().authenticated()
         );
 
@@ -127,6 +129,11 @@ public class SecurityConfig {
             String jti = jwt.getId();
             if (jti != null && redisService.hasKey(JwtServiceImpl.BLACKLIST_JTI_KEY_PREFIX + jti)) {
                 throw new JwtException("Token has been revoked");
+            }
+            Object userIdClaim = jwt.getClaims().get("id");
+            if (userIdClaim != null && redisService.hasKey(
+                    com.cabybara.prolearningplatform.service.admin.impl.AdminUserManagementServiceImpl.BLOCKED_USER_KEY_PREFIX + userIdClaim)) {
+                throw new JwtException("Account has been suspended");
             }
             return jwt;
         };

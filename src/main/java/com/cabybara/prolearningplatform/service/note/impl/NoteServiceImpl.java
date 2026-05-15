@@ -202,6 +202,14 @@ public class NoteServiceImpl implements NoteService {
                 .privacy(note.getPrivacy())
                 .created_at(note.getCreatedAt() != null ? note.getCreatedAt().toString() : null)
                 .updated_at(note.getUpdatedAt() != null ? note.getUpdatedAt().toString() : null)
+                .noteDocs(note.getNoteDocs() != null ? note.getNoteDocs().stream()
+                        .map(doc -> GetDocsInNoteResponseDTO.builder()
+                                .assetId(doc.getAsset().getId())
+                                .fileName(doc.getAsset().getFileName())
+                                .fileUrl(doc.getAsset().getUrl())
+                                .publicId(doc.getAsset().getPublicId())
+                                .build())
+                        .toList() : null)
                 .build());
     }
 

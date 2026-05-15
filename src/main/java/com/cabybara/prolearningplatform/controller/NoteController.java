@@ -3,15 +3,14 @@ package com.cabybara.prolearningplatform.controller;
 import com.cabybara.prolearningplatform.dto.request.note.*;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.*;
-import com.cabybara.prolearningplatform.dto.response.exam.ExamResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.*;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
 import com.cabybara.prolearningplatform.dto.response.share.NoteMemberResponse;
-import com.cabybara.prolearningplatform.dto.response.share.PendingInviteResponse;
 import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.service.ai.AINoteService;
+import com.cabybara.prolearningplatform.service.note.NoteExplainService;
 import com.cabybara.prolearningplatform.service.note.NoteFileRegionCommentService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
 import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
@@ -36,12 +35,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-
-
-
-
 
 @RestController
 @RequestMapping("/sets/{setId}/notes")
@@ -61,6 +55,7 @@ public class NoteController {
     private final NoteFileRegionCommentService noteFileRegionCommentService;
     private final AuthenticationContext authenticationContext;
     private final NotePermissionService notePermissionService;
+    private final NoteExplainService noteExplainService;
 
     // ##################################################
     // ###################  MAIN API  ###################
@@ -354,6 +349,111 @@ public class NoteController {
         } catch (Exception e) {
             log.error(ERROR_MESSAGE, e);
             return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Summarize file with AI fail");
+        }
+    }
+    
+    // ##################################################
+    // ##############  EXPLANATION API  ################
+    // ##################################################
+
+    @Operation(summary = "Get all explanations for a note", description = "Get all explanations/definitions for a specific note")
+    @PreAuthorize("isAuthenticated() and @notePermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #noteId)")
+    @GetMapping("/{noteId}/explains")
+    public ResponseData<List<NoteExplainResponseDTO>> getExplanations(
+        @Parameter(description = "The ID of the Set", required = true)
+        @PathVariable Long setId,
+        @PathVariable @Min(1) Long noteId
+    ) {
+        log.info("Get explanations for note, noteId={}", noteId);
+        try {
+            return new ResponseData<>(HttpStatus.OK.value(), "Get explanations successfully", 
+                noteExplainService.getExplanationsByNote(noteId));
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Get explanations fail");
+        }
+    }
+
+    @Operation(summary = "Save new explanation for a note", description = "Save a new explanation/definition for a term in the note")
+    @PreAuthorize("isAuthenticated() and @notePermissionService.canEdit(@authenticationContext.getCurrentUserId(), #noteId)")
+    @PostMapping("/{noteId}/explains")
+    public ResponseData<NoteExplainResponseDTO> saveExplanation(
+        @Parameter(description = "The ID of the Set", required = true)
+        @PathVariable Long setId,
+        @PathVariable @Min(1) Long noteId,
+        @Valid @RequestBody SaveNoteExplainRequestDTO request
+    ) {
+        log.info("Save explanation for note, noteId={}", noteId);
+        try {
+            return new ResponseData<>(HttpStatus.CREATED.value(), "Save explanation successfully", 
+                noteExplainService.saveExplanation(request));
+        } catch (ResourceNotFoundException e) {
+            log.error(ERROR_MESSAGE, e.getMessage());
+            return new ResponseError(HttpStatus.NOT_FOUND.value(), e.getMessage());
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Save explanation fail");
+        }
+    }
+
+    @Operation(summary = "Get explanation by ID", description = "Get a specific explanation by its ID")
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/{noteId}/explains/{explainId}")
+    public ResponseData<NoteExplainResponseDTO> getExplanationById(
+        @PathVariable Long setId,
+        @PathVariable Long noteId,
+        @PathVariable @Min(1) Long explainId
+    ) {
+        log.info("Get explanation, explainId={}", explainId);
+        try {
+            return new ResponseData<>(HttpStatus.OK.value(), "Get explanation successfully", 
+                noteExplainService.getExplanationById(explainId));
+        } catch (ResourceNotFoundException e) {
+            return new ResponseError(HttpStatus.NOT_FOUND.value(), e.getMessage());
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Get explanation fail");
+        }
+    }
+
+    @Operation(summary = "Update explanation", description = "Update an existing explanation")
+    @PreAuthorize("isAuthenticated() and @notePermissionService.canEdit(@authenticationContext.getCurrentUserId(), #noteId)")
+    @PatchMapping("/{noteId}/explains/{explainId}")
+    public ResponseData<NoteExplainResponseDTO> updateExplanation(
+        @PathVariable Long setId,
+        @PathVariable Long noteId,
+        @PathVariable @Min(1) Long explainId,
+        @Valid @RequestBody UpdateNoteExplainRequestDTO request
+    ) {
+        log.info("Update explanation, explainId={}", explainId);
+        try {
+            return new ResponseData<>(HttpStatus.OK.value(), "Update explanation successfully", 
+                noteExplainService.updateExplanation(explainId, request));
+        } catch (ResourceNotFoundException e) {
+            return new ResponseError(HttpStatus.NOT_FOUND.value(), e.getMessage());
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Update explanation fail");
+        }
+    }
+
+    @Operation(summary = "Delete explanation", description = "Delete an explanation")
+    @PreAuthorize("isAuthenticated() and @notePermissionService.canEdit(@authenticationContext.getCurrentUserId(), #noteId)")
+    @DeleteMapping("/{noteId}/explains/{explainId}")
+    public ResponseData<Void> deleteExplanation(
+        @PathVariable Long setId,
+        @PathVariable Long noteId,
+        @PathVariable @Min(1) Long explainId
+    ) {
+        log.info("Delete explanation, explainId={}", explainId);
+        try {
+            noteExplainService.deleteExplanation(explainId);
+            return new ResponseData<>(HttpStatus.NO_CONTENT.value(), "Delete explanation successfully");
+        } catch (ResourceNotFoundException e) {
+            return new ResponseError(HttpStatus.NOT_FOUND.value(), e.getMessage());
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Delete explanation fail");
         }
     }
     

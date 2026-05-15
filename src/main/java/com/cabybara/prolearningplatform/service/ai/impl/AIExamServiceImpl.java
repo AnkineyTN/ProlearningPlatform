@@ -32,6 +32,7 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 public class AIExamServiceImpl implements AIExamService {
+    
     // ##################################################
     // #################  PREPARATION  ##################
     // ##################################################
@@ -58,6 +59,20 @@ public class AIExamServiceImpl implements AIExamService {
     private String parseData(String json) {
         try {
             return objectMapper.readTree(json).path("data").asText("");
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to parse AI service response", e);
+        }
+    }
+
+    private GenerateExamByAIResponseDto parseExamResponse(String json) {
+        try {
+            JsonNode root = objectMapper.readTree(json);
+            return GenerateExamByAIResponseDto.builder()
+                    .title(root.path("title").asText(""))
+                    .description(root.path("description").asText(""))
+                    .duration(root.path("duration").asInt(0))
+                    .content(root.path("data").asText(""))
+                    .build();
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse AI service response", e);
         }
@@ -141,6 +156,7 @@ public class AIExamServiceImpl implements AIExamService {
     // ##################################################
     // #################  MAIN METHOD  ##################
     // ##################################################
+
     @Override
     public GenerateExamByAIResponseDto generateExamByFiles(GenerateExamByFileRequestDto request) {
         try {
@@ -160,9 +176,7 @@ public class AIExamServiceImpl implements AIExamService {
                     String.class
             );
 
-            return GenerateExamByAIResponseDto.builder()
-                    .content(parseData(raw))
-                    .build();
+            return parseExamResponse(raw);
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Exam by Files", e);
@@ -170,14 +184,9 @@ public class AIExamServiceImpl implements AIExamService {
     }
 
     @Override
-    public GenerateExamByAIResponseDto generateExamByNotes(List<String> contents, Map<String, Integer> questions, Map<String, Double> difficulty, String freeText, Language language) {
+    public GenerateExamByAIResponseDto generateExamByNotes(AIGenerateExamByNoteRequestDto request) {
         try {
-            Map<String, Object> body = new HashMap<>();
-            body.put("contents", contents);
-            body.put("questions", questions);
-            body.put("difficulty", difficulty);
-            body.put("free_text", freeText != null ? freeText : "");
-            body.put("language", language != null ? language : "English");
+            Map<String, Object> body = objectMapper.convertValue(request, Map.class);
 
             String raw = restHttpClientUtil.post(
                     aiServiceBaseApi + GENERATE_EXAM_BY_NOTE_PATH,
@@ -185,9 +194,7 @@ public class AIExamServiceImpl implements AIExamService {
                     String.class
             );
 
-            return GenerateExamByAIResponseDto.builder()
-                    .content(parseData(raw))
-                    .build();
+            return parseExamResponse(raw);
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Exam by Notes", e);
@@ -210,9 +217,7 @@ public class AIExamServiceImpl implements AIExamService {
                     String.class
             );
 
-            return GenerateExamByAIResponseDto.builder()
-                    .content(parseData(raw))
-                    .build();
+            return parseExamResponse(raw);
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Exam by Web", e);
@@ -234,9 +239,7 @@ public class AIExamServiceImpl implements AIExamService {
                     String.class
             );
 
-            return GenerateExamByAIResponseDto.builder()
-                    .content(parseData(raw))
-                    .build();
+            return parseExamResponse(raw);
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Exam by Existing exam", e);

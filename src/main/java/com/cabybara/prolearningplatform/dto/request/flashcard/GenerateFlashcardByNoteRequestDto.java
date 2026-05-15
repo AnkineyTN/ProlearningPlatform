@@ -14,7 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GenerateFlashcardByNoteRequestDto {
-    private List<Long> noteIds;
+    private List<NoteRequestDto> notes;
 
     @JsonProperty("free_text")
     @JsonAlias("freeText")

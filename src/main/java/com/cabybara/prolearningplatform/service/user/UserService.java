@@ -43,5 +43,7 @@ public interface UserService extends UserDetailsService {
 
     void resendVerifyOtp(Long userId);
 
+    UserResponseDto setAvatar(Long userId, Long assetId);
+
     Page<UserSearchResponse> searchNoteUsers(String keyword, int page, int size, Long noteId);
 }
