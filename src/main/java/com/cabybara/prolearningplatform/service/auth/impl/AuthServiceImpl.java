@@ -25,7 +25,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import com.cabybara.prolearningplatform.exception.AccountBlockedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,6 +73,8 @@ public class AuthServiceImpl implements AuthService {
                     .refreshToken(refreshToken)
                     .build();
 
+        } catch (LockedException ex) {
+            throw new AccountBlockedException("ACCOUNT_BLOCKED");
         } catch (BadCredentialsException ex) {
             throw new AuthException(HttpStatus.BAD_REQUEST, ex.getMessage());
         }
