@@ -3,6 +3,7 @@ package com.cabybara.prolearningplatform.service.admin.impl;
 import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
 import com.cabybara.prolearningplatform.dto.request.admin.AdminUserUpdateRequestDto;
 import com.cabybara.prolearningplatform.dto.response.admin.AdminUserListItemResponseDto;
+import com.cabybara.prolearningplatform.dto.response.admin.AdminUserStatsResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
 import com.cabybara.prolearningplatform.enums.NotificationType;
 import com.cabybara.prolearningplatform.enums.Role;
@@ -11,7 +12,11 @@ import com.cabybara.prolearningplatform.exception.BadRequestException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.UserMapper;
 import com.cabybara.prolearningplatform.model.User;
+import com.cabybara.prolearningplatform.repository.ExamRepository;
+import com.cabybara.prolearningplatform.repository.FlashcardRepository;
+import com.cabybara.prolearningplatform.repository.NoteRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
+import com.cabybara.prolearningplatform.repository.PomodoroSessionRepository;
 import com.cabybara.prolearningplatform.service.admin.AdminUserManagementService;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
 import com.cabybara.prolearningplatform.service.onboarding.OnboardingProfileHelper;
@@ -39,11 +44,29 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
     private final AuthenticationContext authenticationContext;
     private final RedisService redisService;
     private final NotificationDispatcher notificationDispatcher;
+    private final NoteRepository noteRepository;
+    private final FlashcardRepository flashcardRepository;
+    private final ExamRepository examRepository;
+    private final PomodoroSessionRepository pomodoroSessionRepository;
 
     @Override
     @Transactional(readOnly = true)
     public Page<AdminUserListItemResponseDto> listUsers(Pageable pageable) {
         return userRepository.findAll(pageable).map(this::toListItem);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AdminUserListItemResponseDto> listUsers(String keyword, String accountType, Pageable pageable) {
+        String kw = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
+        String at = (accountType == null || accountType.isBlank()) ? null : accountType.trim();
+        return userRepository.searchForAdmin(kw, at, pageable).map(this::toListItem);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<AdminUserListItemResponseDto> listBlockedUsers(Pageable pageable) {
+        return userRepository.findByIsBlocked(true, pageable).map(this::toListItem);
     }
 
     private AdminUserListItemResponseDto toListItem(User user) {
@@ -154,6 +177,20 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
                 NotificationType.ACCOUNT_UNBLOCKED);
 
         return userMapper.toUserResponseDto(user);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public AdminUserStatsResponseDto getUserStats(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found"));
+        return AdminUserStatsResponseDto.builder()
+                .noteCount(noteRepository.countByUserId(userId))
+                .flashcardCount(flashcardRepository.countByUserId(userId))
+                .examCount(examRepository.countByCreatedBy(userId))
+                .pomodoroSessionCount(pomodoroSessionRepository.countByUser_Id(userId))
+                .registeredAt(user.getCreatedAt())
+                .build();
     }
 
     private static boolean hasAdminRole(User user) {

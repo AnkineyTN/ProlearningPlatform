@@ -164,4 +164,6 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
     """,
     nativeQuery = true)
     Page<SocialNoteProjection> findSocialNotes(String q, Pageable pageable);
+
+    long countByUserId(Long userId);
 }
