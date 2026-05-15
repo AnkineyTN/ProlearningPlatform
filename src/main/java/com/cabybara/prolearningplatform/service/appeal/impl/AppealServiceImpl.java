@@ -27,26 +27,6 @@ public class AppealServiceImpl implements AppealService {
 
     @Override
     @Transactional
-    public AppealResponseDto submitAppeal(Long userId, String reason) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        if (!user.isBlocked()) {
-            throw new BadRequestException("Account is not suspended");
-        }
-        if (appealRepository.existsByUserIdAndStatus(userId, AppealStatus.PENDING)) {
-            throw new BadRequestException("A pending appeal already exists for this account");
-        }
-        UserAppeal appeal = UserAppeal.builder()
-                .user(user)
-                .email(user.getEmail())
-                .reason(reason)
-                .status(AppealStatus.PENDING)
-                .build();
-        return toDto(appealRepository.save(appeal));
-    }
-
-    @Override
-    @Transactional
     public AppealResponseDto submitPublicAppeal(String email, String reason) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("No account found with this email"));
@@ -85,6 +65,12 @@ public class AppealServiceImpl implements AppealService {
         appeal.setStatus(dto.getStatus());
         appeal.setAdminNote(dto.getAdminNote());
         appeal.setResolvedAt(OffsetDateTime.now());
+        if (dto.getStatus() == AppealStatus.ACCEPTED) {
+            User user = appeal.getUser();
+            user.setBlocked(false);
+            user.setBlockedAt(null);
+            userRepository.save(user);
+        }
         return toDto(appealRepository.save(appeal));
     }
 

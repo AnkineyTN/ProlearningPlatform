@@ -5,6 +5,7 @@ import com.cabybara.prolearningplatform.dto.request.admin.AdminUserUpdateRequest
 import com.cabybara.prolearningplatform.dto.response.admin.AdminUserListItemResponseDto;
 import com.cabybara.prolearningplatform.dto.response.admin.AdminUserStatsResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
+import com.cabybara.prolearningplatform.enums.AccountType;
 import com.cabybara.prolearningplatform.enums.NotificationType;
 import com.cabybara.prolearningplatform.enums.Role;
 import com.cabybara.prolearningplatform.exception.AuthException;
@@ -59,7 +60,14 @@ public class AdminUserManagementServiceImpl implements AdminUserManagementServic
     @Transactional(readOnly = true)
     public Page<AdminUserListItemResponseDto> listUsers(String keyword, String accountType, Pageable pageable) {
         String kw = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
-        String at = (accountType == null || accountType.isBlank()) ? null : accountType.trim();
+        AccountType at = null;
+        if (accountType != null && !accountType.isBlank()) {
+            try {
+                at = AccountType.valueOf(accountType.trim().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                throw new BadRequestException("Invalid accountType: " + accountType);
+            }
+        }
         return userRepository.searchForAdmin(kw, at, pageable).map(this::toListItem);
     }
 
