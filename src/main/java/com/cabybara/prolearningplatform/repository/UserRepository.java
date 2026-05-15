@@ -16,6 +16,22 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
 
+    Page<User> findByIsBlocked(boolean isBlocked, Pageable pageable);
+
+    @Query("""
+        SELECT u FROM User u
+        WHERE (:keyword IS NULL
+            OR LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(u.lastName)  LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(u.email)     LIKE LOWER(CONCAT('%', :keyword, '%')))
+        AND (:accountType IS NULL OR CAST(u.accountType AS string) = :accountType)
+    """)
+    Page<User> searchForAdmin(
+        @Param("keyword")     String keyword,
+        @Param("accountType") String accountType,
+        Pageable pageable
+    );
+
     @Query(value = """
             SELECT COALESCE(CAST(u.education AS text), 'UNSET'), CAST(COUNT(*) AS bigint)
             FROM users u

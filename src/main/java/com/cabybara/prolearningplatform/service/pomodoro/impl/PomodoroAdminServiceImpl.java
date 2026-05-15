@@ -3,6 +3,7 @@ package com.cabybara.prolearningplatform.service.pomodoro.impl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.cabybara.prolearningplatform.dto.request.pomodoro.AdminCreatePomodoroAssetRequestDto;
 import com.cabybara.prolearningplatform.dto.request.pomodoro.CreateSystemSoundRequestDto;
 import com.cabybara.prolearningplatform.dto.request.pomodoro.CreateSystemSpaceRequestDto;
 import com.cabybara.prolearningplatform.dto.request.pomodoro.UpdateSystemSoundRequestDto;
@@ -10,9 +11,13 @@ import com.cabybara.prolearningplatform.dto.request.pomodoro.UpdateSystemSpaceRe
 import com.cabybara.prolearningplatform.dto.response.pomodoro.SoundResponseDto;
 import com.cabybara.prolearningplatform.dto.response.pomodoro.SpaceResponseDto;
 import com.cabybara.prolearningplatform.enums.AssetSource;
+import com.cabybara.prolearningplatform.enums.AssetStatus;
 import com.cabybara.prolearningplatform.enums.AssetType;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.Asset;
+
+import java.util.List;
+import java.util.UUID;
 import com.cabybara.prolearningplatform.model.pomodoro.PomodoroSound;
 import com.cabybara.prolearningplatform.model.pomodoro.PomodoroSpace;
 import com.cabybara.prolearningplatform.repository.AssetRepository;
@@ -156,6 +161,56 @@ public class PomodoroAdminServiceImpl implements PomodoroAdminService {
         assetService.markDeletedAsset(sound.getAsset());
         sound.setIsActive(false);
         soundRepository.save(sound);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SpaceResponseDto> listSystemSpaces() {
+        return spaceRepository.findSystemSpaces().stream().map(this::toSpaceDto).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<SoundResponseDto> listSystemSounds() {
+        return soundRepository.findSystemSounds().stream().map(this::toSoundDto).toList();
+    }
+
+    @Override
+    @Transactional
+    public SpaceResponseDto createSystemSpaceFromUrl(AdminCreatePomodoroAssetRequestDto dto) {
+        Asset asset = assetRepository.save(Asset.builder()
+                .publicId(UUID.randomUUID().toString())
+                .url(dto.getUrl())
+                .type(dto.getAssetType())
+                .fileName(dto.getName())
+                .status(AssetStatus.ACTIVE)
+                .build());
+        PomodoroSpace space = PomodoroSpace.builder()
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .source("SYSTEM")
+                .asset(asset)
+                .build();
+        return toSpaceDto(spaceRepository.save(space));
+    }
+
+    @Override
+    @Transactional
+    public SoundResponseDto createSystemSoundFromUrl(AdminCreatePomodoroAssetRequestDto dto) {
+        Asset asset = assetRepository.save(Asset.builder()
+                .publicId(UUID.randomUUID().toString())
+                .url(dto.getUrl())
+                .type(dto.getAssetType())
+                .fileName(dto.getName())
+                .status(AssetStatus.ACTIVE)
+                .build());
+        PomodoroSound sound = PomodoroSound.builder()
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .source("SYSTEM")
+                .asset(asset)
+                .build();
+        return toSoundDto(soundRepository.save(sound));
     }
 
     private SpaceResponseDto toSpaceDto(PomodoroSpace s) {
