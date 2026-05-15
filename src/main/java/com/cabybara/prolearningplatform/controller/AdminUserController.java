@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.admin.AdminBlockUserRequestD
 import com.cabybara.prolearningplatform.dto.request.admin.AdminUserUpdateRequestDto;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.admin.AdminUserListItemResponseDto;
+import com.cabybara.prolearningplatform.dto.response.admin.AdminUserStatsResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
 import com.cabybara.prolearningplatform.service.admin.AdminUserManagementService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -61,9 +63,38 @@ public class AdminUserController {
     @GetMapping
     @ValidateSort(allowedFields = {"id", "createdAt", "updatedAt", "email", "firstName", "lastName", "accountType"})
     public ResponseEntity<ApiResponse<Object>> listUsers(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String accountType,
             @ParameterObject @PageableDefault(page = 0, size = 20, sort = "id", direction = Sort.Direction.DESC)
             Pageable pageable) {
-        Page<AdminUserListItemResponseDto> page = adminUserManagementService.listUsers(pageable);
+        boolean hasFilter = (keyword != null && !keyword.isBlank()) || (accountType != null && !accountType.isBlank());
+        Page<AdminUserListItemResponseDto> page = hasFilter
+                ? adminUserManagementService.listUsers(keyword, accountType, pageable)
+                : adminUserManagementService.listUsers(pageable);
+        PaginationResponseDto meta = PaginationResponseDto.builder()
+                .currentPage(page.getNumber())
+                .totalPages(page.getTotalPages())
+                .totalItems(page.getTotalElements())
+                .pageSize(page.getSize())
+                .build();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ResponseUtil.success("Successfully", page.getContent(), meta));
+    }
+
+    @Operation(
+            summary = "List blocked users",
+            description = "Paginated list of users whose accounts are currently suspended.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "OK"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @GetMapping("/blocked")
+    public ResponseEntity<ApiResponse<Object>> listBlockedUsers(
+            @ParameterObject @PageableDefault(page = 0, size = 20, sort = "id", direction = Sort.Direction.DESC)
+            Pageable pageable) {
+        Page<AdminUserListItemResponseDto> page = adminUserManagementService.listBlockedUsers(pageable);
         PaginationResponseDto meta = PaginationResponseDto.builder()
                 .currentPage(page.getNumber())
                 .totalPages(page.getTotalPages())
@@ -135,5 +166,15 @@ public class AdminUserController {
         UserResponseDto updated = adminUserManagementService.unblockUser(userId);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ResponseUtil.success("User unblocked", updated, null));
+    }
+
+    @Operation(summary = "Get user stats", description = "Returns notes, flashcards, exams, pomodoro session counts for a user.")
+    @PreAuthorize("hasAuthority('ROLE_ADMIN')")
+    @GetMapping("/{userId}/stats")
+    public ResponseEntity<ApiResponse<AdminUserStatsResponseDto>> getUserStats(
+            @PathVariable Long userId) {
+        AdminUserStatsResponseDto stats = adminUserManagementService.getUserStats(userId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ResponseUtil.success("Successfully", stats, null));
     }
 }

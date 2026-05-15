@@ -173,4 +173,6 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
     """,
     nativeQuery = true)
     Page<SocialExamProjection> findSocialExams(String q, Pageable pageable);
+
+    long countByCreatedBy(Long createdBy);
 }
