@@ -201,4 +201,6 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
     """,
     nativeQuery = true)
     Page<SocialFlashcardProjection> findSocialFlashcards(String q, Pageable pageable);
+
+    long countByUserId(Long userId);
 }

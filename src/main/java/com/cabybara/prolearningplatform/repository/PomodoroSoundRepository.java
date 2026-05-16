@@ -87,4 +87,7 @@ public interface PomodoroSoundRepository extends JpaRepository<PomodoroSound, Lo
     );
 
     Optional<PomodoroSound> findByIdAndUserId(Long id, Long userId);
+
+    @Query("SELECT s FROM PomodoroSound s LEFT JOIN FETCH s.asset WHERE s.source = 'SYSTEM' AND s.isActive = true ORDER BY s.createdAt DESC")
+    List<PomodoroSound> findSystemSounds();
 }

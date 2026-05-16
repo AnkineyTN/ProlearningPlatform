@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.enums.AccountType;
 import com.cabybara.prolearningplatform.model.User;
 
 import org.springframework.data.domain.Page;
@@ -15,6 +16,22 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findById(Long id);
 
     Optional<User> findByEmail(String email);
+
+    Page<User> findByIsBlocked(boolean isBlocked, Pageable pageable);
+
+    @Query("""
+        SELECT u FROM User u
+        WHERE (:keyword IS NULL
+            OR LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(u.lastName)  LIKE LOWER(CONCAT('%', :keyword, '%'))
+            OR LOWER(u.email)     LIKE LOWER(CONCAT('%', :keyword, '%')))
+        AND (:accountType IS NULL OR u.accountType = :accountType)
+    """)
+    Page<User> searchForAdmin(
+        @Param("keyword")     String keyword,
+        @Param("accountType") AccountType accountType,
+        Pageable pageable
+    );
 
     @Query(value = """
             SELECT COALESCE(CAST(u.education AS text), 'UNSET'), CAST(COUNT(*) AS bigint)
