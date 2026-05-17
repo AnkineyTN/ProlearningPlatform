@@ -95,4 +95,11 @@ public interface StudySessionReviewLogRepository
             @Param("setId") Long setId,
             @Param("from") OffsetDateTime from,
             @Param("to") OffsetDateTime to);
+
+    @Query("""
+        SELECT DISTINCT rl.session.user.id
+        FROM StudySessionReviewLog rl
+        WHERE rl.reviewedAt >= :since
+        """)
+    List<Long> findUserIdsWithActivitySince(@Param("since") OffsetDateTime since);
 }
