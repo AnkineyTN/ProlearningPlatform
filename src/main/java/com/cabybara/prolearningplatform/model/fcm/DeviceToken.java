@@ -24,6 +24,9 @@ public class DeviceToken {
     @Column(name = "fcm_token", nullable = false, unique = true, length = 512)
     private String token;
 
+    @Column(name = "device_id", length = 128)
+    private String deviceId;
+
     @Enumerated(EnumType.STRING)
     private FCMPlatform platform;
 

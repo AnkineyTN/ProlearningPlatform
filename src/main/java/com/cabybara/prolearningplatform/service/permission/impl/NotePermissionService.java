@@ -2,21 +2,17 @@ package com.cabybara.prolearningplatform.service.permission.impl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
@@ -32,8 +28,7 @@ import com.cabybara.prolearningplatform.repository.NoteMemberRepository;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
 import com.cabybara.prolearningplatform.repository.NotificationRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
-import com.cabybara.prolearningplatform.service.email.EmailService;
-import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
+import com.cabybara.prolearningplatform.service.notification.impl.InviteNotificationSender;
 import com.cabybara.prolearningplatform.service.permission.ResourcePermissionService;
 import com.cabybara.prolearningplatform.model.User;
 
@@ -49,11 +44,7 @@ public class NotePermissionService implements ResourcePermissionService  {
     private final NoteRepository noteRepository;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
-    private final NotificationDispatcher notificationDispatcher;
-    private final EmailService emailService;
-
-    @Value("${app.frontend-url}")
-    private String frontendUrl;
+    private final InviteNotificationSender inviteNotificationSender;
 
     @Value("${app.token.invite-token-expiry-hours:72}")
     private int inviteTokenExpiryHours;
@@ -174,7 +165,7 @@ public class NotePermissionService implements ResourcePermissionService  {
         // Gửi notification cho tất cả user được invite thành công
         if (!successUserIds.isEmpty()) {
             LocalDateTime expiresAt = LocalDateTime.now().plusHours(inviteTokenExpiryHours);
-            sendInviteNotifications(successUserIds, inviterName, noteTitle, noteId, setId, expiresAt);
+            inviteNotificationSender.sendNoteInviteNotifications(successUserIds, inviterName, noteTitle, noteId, setId, expiresAt);
         }
 
         return results;
@@ -374,53 +365,6 @@ public class NotePermissionService implements ResourcePermissionService  {
             .getId();
     }
 
-    @Async
-    protected void sendInviteNotifications(
-            List<Long> userIds,
-            String inviterName,
-            String noteTitle,
-            Long noteId,
-            Long setId,
-            LocalDateTime expiresAt
-    ) {
-        Map<String, Object> data = new HashMap<>();
-        
-        data.put("noteId", noteId);
-        data.put("setId", setId);
-        data.put("expiresAt", expiresAt.toString());
-
-        List<CreateNotificationDto> notifications = userIds.stream()
-            .map(userId -> CreateNotificationDto.builder()
-                .userId(userId)
-                .type(NotificationType.NOTE_INVITE)
-                .title(inviterName + " invited you to collaborate")
-                .message("Note: " + noteTitle)
-                .sendPush(true)
-                .referenceId(noteId)
-                .referenceParentId(setId)
-                .referenceType("NOTE")
-                .data(data)
-                .build())
-            .toList();
-
-        notificationDispatcher.dispatchToMany(notifications);
-
-        userIds.forEach(userId ->
-            noteMemberRepository.findByNoteIdAndUserId(noteId, userId)
-                .ifPresent(member -> {
-                    String acceptUrl = frontendUrl
-                        + "/invites/accept?token=" + member.getInviteToken();
-
-                    emailService.sendNoteInviteNotification(
-                        member.getUser().getEmail(),
-                        inviterName,
-                        noteTitle,
-                        member.getRole().name(),
-                        acceptUrl
-                    );
-                })
-        );
-    }
 
     public Page<UserSearchResponse> searchUsers(String keyword, Long noteId, Pageable pageable) {
         Page<User> users;

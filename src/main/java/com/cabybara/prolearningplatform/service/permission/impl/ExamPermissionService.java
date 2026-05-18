@@ -2,21 +2,17 @@ package com.cabybara.prolearningplatform.service.permission.impl;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.cabybara.prolearningplatform.dto.internal.CreateNotificationDto;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.share.InviteResultResponse;
@@ -31,8 +27,7 @@ import com.cabybara.prolearningplatform.repository.ExamMemberRepository;
 import com.cabybara.prolearningplatform.repository.ExamRepository;
 import com.cabybara.prolearningplatform.repository.NotificationRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
-import com.cabybara.prolearningplatform.service.email.EmailService;
-import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
+import com.cabybara.prolearningplatform.service.notification.impl.InviteNotificationSender;
 import com.cabybara.prolearningplatform.model.User;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -47,11 +42,7 @@ public class ExamPermissionService {
     private final ExamRepository examRepository;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
-    private final NotificationDispatcher notificationDispatcher;
-    private final EmailService emailService;
-
-    @Value("${app.frontend-url}")
-    private String frontendUrl;
+    private final InviteNotificationSender inviteNotificationSender;
 
     @Value("${app.token.invite-token-expiry-hours:72}")
     private int inviteTokenExpiryHours;
@@ -171,7 +162,7 @@ public class ExamPermissionService {
         // Send notifications for successful invites
         if (!successUserIds.isEmpty()) {
             LocalDateTime expiresAt = LocalDateTime.now().plusHours(inviteTokenExpiryHours);
-            sendInviteNotifications(successUserIds, inviterName, examTitle, examId, setId, expiresAt);
+            inviteNotificationSender.sendExamInviteNotifications(successUserIds, inviterName, examTitle, examId, setId, expiresAt);
         }
 
         return results;
@@ -361,51 +352,6 @@ public class ExamPermissionService {
             .getId();
     }
 
-    @Async
-    protected void sendInviteNotifications(
-            List<Long> userIds,
-            String inviterName,
-            String examTitle,
-            Long examId,
-            Long setId,
-            LocalDateTime expiresAt
-    ) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("examId", examId);
-        data.put("setId", setId);
-        data.put("expiresAt", expiresAt.toString());
-
-        List<CreateNotificationDto> notifications = userIds.stream()
-            .map(userId -> CreateNotificationDto.builder()
-                .userId(userId)
-                .type(NotificationType.EXAM_INVITE)
-                .title(inviterName + " invited you to collaborate")
-                .message("Exam: " + examTitle)
-                .sendPush(true)
-                .referenceId(examId)
-                .referenceType("EXAM")
-                .data(data)
-                .build())
-            .toList();
-
-        notificationDispatcher.dispatchToMany(notifications);
-
-        userIds.forEach(userId ->
-            examMemberRepository.findByExamIdAndUserId(examId, userId)
-                .ifPresent(member -> {
-                    String acceptUrl = frontendUrl
-                        + "/exam-invites/accept?token=" + member.getInviteToken();
-
-                    emailService.sendExamInviteNotification(
-                        member.getUser().getEmail(),
-                        inviterName,
-                        examTitle,
-                        member.getRole().name(),
-                        acceptUrl
-                    );
-                })
-        );
-    }
 
     public Page<UserSearchResponse> searchUsers(String keyword, Long examId, Pageable pageable) {
         Page<User> users;
