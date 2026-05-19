@@ -21,4 +21,11 @@ public interface SetNotificationPreferenceRepository
           AND p.weeklySummaryDay = :dayValue
         """)
     List<SetNotificationPreference> findAllByWeeklySummaryDay(@Param("dayValue") int dayValue);
+
+    @Query("""
+        SELECT p FROM SetNotificationPreference p
+        WHERE p.weeklySummaryEnabled = true
+          AND p.set.user.id = :userId
+        """)
+    List<SetNotificationPreference> findEnabledByUserId(@Param("userId") Long userId);
 }

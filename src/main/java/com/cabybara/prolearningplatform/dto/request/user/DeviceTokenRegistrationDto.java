@@ -11,4 +11,6 @@ public class DeviceTokenRegistrationDto {
 
     @NotNull
     private FCMPlatform platform;
+
+    private String deviceId;
 }
