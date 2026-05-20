@@ -23,7 +23,7 @@ public class NotificationScheduler implements NotificationSchedulerService {
     @Value("${notification.cleanup.days-old:30}")
     private int cleanupDaysOld;
 
-    @Scheduled(cron = "${notification.due-card-reminder.cron:0 0 8 * * *}", zone = SCHEDULER_TIME_ZONE)
+    @Scheduled(cron = "${schedule.due-card-reminder.cron:0 0 8 * * *}", zone = SCHEDULER_TIME_ZONE)
     public void sendDueCardReminders() {
         log.info("Starting due card reminder scheduler");
         try {
@@ -43,7 +43,7 @@ public class NotificationScheduler implements NotificationSchedulerService {
 //        }
 //    }
 
-    @Scheduled(cron = "${notification.weekly-summary.cron:0 0 9 * * *}", zone = SCHEDULER_TIME_ZONE)
+    @Scheduled(cron = "${schedule.weekly-summary.cron:0 0 9 * * *}", zone = SCHEDULER_TIME_ZONE)
     public void processWeeklySummaries() {
         log.info("Starting weekly process scheduler");
         try {
@@ -54,7 +54,7 @@ public class NotificationScheduler implements NotificationSchedulerService {
         log.info("Done weekly process scheduler");
     }
 
-    @Scheduled(cron = "${notification.cleanup.cron:0 0 2 * * SUN}", zone = SCHEDULER_TIME_ZONE)
+    @Scheduled(cron = "${schedule.cleanup.cron:0 0 2 * * SUN}", zone = SCHEDULER_TIME_ZONE)
     public void cleanupOldNotifications() {
         try {
             int deleted = notificationService.cleanupOldNotifications(cleanupDaysOld);

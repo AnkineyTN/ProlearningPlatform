@@ -18,6 +18,7 @@ public enum NotificationType {
     // Account moderation
     ACCOUNT_BLOCKED("Your account has been suspended"),
     ACCOUNT_UNBLOCKED("Your account has been reinstated"),
+    ACCOUNT_UPGRADED("Your account has been upgraded to PRO"),
 
     // System
     SYSTEM_ANNOUNCEMENT("System announcement"),

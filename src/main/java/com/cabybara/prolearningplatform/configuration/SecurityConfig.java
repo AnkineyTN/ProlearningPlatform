@@ -73,6 +73,7 @@ public class SecurityConfig {
                 .requestMatchers("/ws/**").permitAll()
                 .requestMatchers("/social/**").permitAll()
                 .requestMatchers("/public/**").permitAll()
+                .requestMatchers("/webhook/payos").permitAll()
                 .anyRequest().authenticated()
         );
 

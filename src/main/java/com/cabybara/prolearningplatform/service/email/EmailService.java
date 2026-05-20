@@ -7,4 +7,5 @@ public interface EmailService {
     void sendNoteInviteNotification(String toEmail, String inviterName, String noteTitle, String role, String acceptUrl);
     void sendFlashcardInviteNotification(String toEmail, String inviterName, String flashcardTitle, String role, String acceptUrl);
     void sendExamInviteNotification(String toEmail, String inviterName, String examTitle, String role, String acceptUrl);
+    void sendProUpgradeNotification(String toEmail, String username);
 }
