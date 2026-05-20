@@ -24,7 +24,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
 
     /** Đếm số Flashcard thuộc sở hữu của user (dùng để kiểm tra quota). */
     @Query("SELECT COUNT(f) FROM Flashcard f WHERE f.user.id = :userId")
-    long countByUserId(@Param("userId") Long userId);
+    long countNumOfFlashcardByCreatedUser(@Param("userId") Long userId);
 
     Optional<Flashcard> findByTitle(String title);
 

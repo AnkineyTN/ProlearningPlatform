@@ -18,7 +18,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
 
     /** Đếm số Note thuộc sở hữu của user (dùng để kiểm tra quota). */
     @Query("SELECT COUNT(n) FROM Note n WHERE n.user.id = :userId")
-    long countByUserId(@Param("userId") Long userId);
+    long countNumOfNoteByCreatedUser(@Param("userId") Long userId);
 
     @Query("""
                 SELECT n

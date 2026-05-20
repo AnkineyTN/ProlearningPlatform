@@ -79,7 +79,7 @@ public class AccountPermissionServiceImpl implements AccountPermissionService {
     public boolean canCreateNote(Long userId) {
         if (isPro(userId)) return true;
 
-        long current = noteRepository.countByUserId(userId);
+        long current = noteRepository.countNumOfNoteByCreatedUser(userId);
         boolean allowed = current < freeMaxNotes;
 
         if (!allowed) {
@@ -92,7 +92,7 @@ public class AccountPermissionServiceImpl implements AccountPermissionService {
     public boolean canCreateFlashcard(Long userId) {
         if (isPro(userId)) return true;
 
-        long current = flashcardRepository.countByUserId(userId);
+        long current = flashcardRepository.countNumOfFlashcardByCreatedUser(userId);
         boolean allowed = current < freeMaxFlashcards;
 
         if (!allowed) {
@@ -105,7 +105,7 @@ public class AccountPermissionServiceImpl implements AccountPermissionService {
     public boolean canCreateExam(Long userId) {
         if (isPro(userId)) return true;
 
-        long current = examRepository.countByCreatedBy(userId);
+        long current = examRepository.countNumOfExamByCreatedBy(userId);
         boolean allowed = current < freeMaxExams;
 
         if (!allowed) {
