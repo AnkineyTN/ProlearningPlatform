@@ -12,7 +12,8 @@ public enum EmailType {
     PASSWORD_CHANGED("Your password has been changed","email/password-changed"),
     NOTE_INVITE     ("You've been invited to collaborate on a note", "email/note-invite"),
     FLASHCARD_INVITE("You've been invited to collaborate on a flashcard", "email/flashcard-invite"),
-    EXAM_INVITE     ("You've been invited to collaborate on an exam", "email/exam-invite");
+    EXAM_INVITE     ("You've been invited to collaborate on an exam", "email/exam-invite"),
+    PRO_UPGRADE     ("Your ProLearning account has been upgraded to PRO", "email/pro-upgrade");
 
     private final String subject;
     private final String template;

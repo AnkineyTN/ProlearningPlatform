@@ -23,7 +23,7 @@ public class AssetCleanupServiceImpl implements AssetCleanupService {
     private final AssetService assetService;
     private final CloudinaryService cloudinaryService;
 
-    @Scheduled(cron = "0 0 3 * * ?", zone = SCHEDULER_TIME_ZONE)
+    @Scheduled(cron = "${schedule.cleanup.cron:0 0 3 * * ?}", zone = SCHEDULER_TIME_ZONE)
     @Async("heavyTaskExecutor")
     public void cleanupAssets() {
         OffsetDateTime cutoffTime = OffsetDateTime.now().minusHours(24);

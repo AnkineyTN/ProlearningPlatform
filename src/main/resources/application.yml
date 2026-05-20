@@ -4,7 +4,16 @@ aiservice:
 firebase:
     googleCredentials: ${FIREBASE_CONFIG_PATH:prolearningplatform-bc37d-firebase-adminsdk-fbsvc-5dfd0cf044.json}
 
-notification:
+payos:
+    client-id: ${PAYOS_CLIENT_ID}
+    api-key: ${PAYOS_API_KEY}
+    checksum-key: ${PAYOS_CHECKSUM_KEY}
+    base-url: https://api-merchant.payos.vn
+    webhook-url: ${APP_BASE_URL}/api/webhook/payos
+    return-url: ${FRONTEND_URL}/payment/success
+    cancel-url: ${FRONTEND_URL}/payment/cancel
+
+schedule:
     due-card-reminder:
         cron: "0 0 8 * * *"
     weekly-summary:
@@ -12,6 +21,8 @@ notification:
     cleanup:
         cron: "0 0 2 * * SUN"
         days-old: 30
+    payment-expired-cleanup:
+        cron: "0 0 2 * * *"
 
 server:
     forward-headers-strategy: framework
