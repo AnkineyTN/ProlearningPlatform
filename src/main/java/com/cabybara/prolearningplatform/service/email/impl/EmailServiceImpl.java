@@ -100,6 +100,11 @@ public class EmailServiceImpl implements EmailService {
         ));
     }
 
+    @Override
+    public void sendProUpgradeNotification(String toEmail, String username) {
+        publish(toEmail, EmailType.PRO_UPGRADE, Map.of("username", username));
+    }
+
     private void publish(String toEmail, EmailType type, Map<String, Object> variables) {
         EmailMessage message = EmailMessage.builder()
                 .to(toEmail)

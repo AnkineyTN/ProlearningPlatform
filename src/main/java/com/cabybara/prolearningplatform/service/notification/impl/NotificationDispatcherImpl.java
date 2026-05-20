@@ -60,7 +60,7 @@ public class NotificationDispatcherImpl implements NotificationDispatcher {
                 .type(type)
                 .title(title)
                 .message(message)
-                .sendPush(false)
+                .sendPush(true)
                 .build();
 
         return dispatch(createDto);
