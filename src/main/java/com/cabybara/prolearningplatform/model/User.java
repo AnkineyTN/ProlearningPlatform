@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.enums.AccountType;
 import com.cabybara.prolearningplatform.enums.UserEducation;
 import com.cabybara.prolearningplatform.enums.UserHearAppFrom;
 import com.cabybara.prolearningplatform.enums.UserLanguage;
+import java.time.OffsetDateTime;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import com.cabybara.prolearningplatform.model.note.Note;
 import jakarta.persistence.*;
@@ -72,6 +73,20 @@ public class User extends AbstractEntity implements UserDetails {
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     private AccountType accountType;
 
+    @Column(name = "avatar_url", length = 1024)
+    private String avatarUrl;
+
+    @Column(name = "is_blocked", nullable = false)
+    @ColumnDefault("false")
+    @Builder.Default
+    private boolean isBlocked = false;
+
+    @Column(name = "block_reason", columnDefinition = "TEXT")
+    private String blockReason;
+
+    @Column(name = "blocked_at")
+    private OffsetDateTime blockedAt;
+
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, mappedBy = "user")
     @ToString.Exclude
     private Set<Authority> roles;
@@ -115,7 +130,7 @@ public class User extends AbstractEntity implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return !isBlocked;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.user.ChangePasswordRequestDto;
+import com.cabybara.prolearningplatform.dto.request.user.SetAvatarRequestDto;
 import com.cabybara.prolearningplatform.dto.request.user.UserUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
@@ -85,6 +86,18 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully", null, null));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Set user avatar", description = "Pass the assetId returned from the upload callback to link the image as the user avatar.")
+    @PostMapping("/me/avatar")
+    public ResponseEntity<ApiResponse<UserResponseDto>> setAvatar(
+            @AuthenticationPrincipal Jwt jwt,
+            @Valid @RequestBody SetAvatarRequestDto request) {
+        UserResponseDto updated = userService.setAvatar(userIdFromJwt(jwt), request.getAssetId());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Avatar updated", updated, null));
     }
 
     @PreAuthorize("isAuthenticated()")

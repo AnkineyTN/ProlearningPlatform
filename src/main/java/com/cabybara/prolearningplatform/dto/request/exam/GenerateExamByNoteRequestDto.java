@@ -13,7 +13,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GenerateExamByNoteRequestDto {
-    private List<Long> noteIds;
+    private List<NoteRequestDto> notes;
 
     private Map<String, Integer> questions;
 

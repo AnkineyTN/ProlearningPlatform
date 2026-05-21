@@ -66,7 +66,31 @@ public class RestHttpClientUtil {
         log.info("PUT {} | body: {}", url, body);
 
         ResponseEntity<R> response = restTemplate.exchange(url, HttpMethod.PUT, entity, responseType);
-        log.info("✅ Response [{}]: {}", response.getStatusCode(), response.getBody());
+        log.info("Response [{}]: {}", response.getStatusCode(), response.getBody());
+
+        return response.getBody();
+    }
+
+    public <T, R> R post(String url, T body, HttpHeaders extraHeaders, Class<R> responseType) {
+        HttpHeaders headers = buildJsonHeaders();
+        headers.addAll(extraHeaders);
+        HttpEntity<T> entity = new HttpEntity<>(body, headers);
+        log.info("POST {} | body: {}", url, body);
+
+        ResponseEntity<R> response = restTemplate.exchange(url, HttpMethod.POST, entity, responseType);
+        log.info("Response [{}]: {}", response.getStatusCode(), response.getBody());
+
+        return response.getBody();
+    }
+
+    public <R> R get(String url, HttpHeaders extraHeaders, Class<R> responseType) {
+        HttpHeaders headers = buildJsonHeaders();
+        headers.addAll(extraHeaders);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        log.info("GET {}", url);
+
+        ResponseEntity<R> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
+        log.info("Response [{}]: {}", response.getStatusCode(), response.getBody());
 
         return response.getBody();
     }

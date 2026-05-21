@@ -15,6 +15,10 @@ import java.util.Optional;
 
 public interface ExamRepository extends JpaRepository<Exam,Long> {
 
+    /** Đếm số Exam do user tạo (dùng để kiểm tra quota). */
+    @Query("SELECT COUNT(e) FROM Exam e WHERE e.createdBy = :userId")
+    long countNumOfExamByCreatedBy(@Param("userId") Long userId);
+
     @Query("select (count(q) > 0) from Exam q where q.title = ?1 and q.set = ?2")
     boolean existsByTitleAndSet(String title, Set set);
 
@@ -173,4 +177,6 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
     """,
     nativeQuery = true)
     Page<SocialExamProjection> findSocialExams(String q, Pageable pageable);
+
+    long countByCreatedBy(Long createdBy);
 }

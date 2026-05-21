@@ -15,6 +15,11 @@ public enum NotificationType {
 //    SET_SHARED("Someone shared a set with you"),
 //    NEW_FOLLOWER("New follower"),
 
+    // Account moderation
+    ACCOUNT_BLOCKED("Your account has been suspended"),
+    ACCOUNT_UNBLOCKED("Your account has been reinstated"),
+    ACCOUNT_UPGRADED("Your account has been upgraded to PRO"),
+
     // System
     SYSTEM_ANNOUNCEMENT("System announcement"),
     ACCOUNT_ACTIVITY("Account activity"),

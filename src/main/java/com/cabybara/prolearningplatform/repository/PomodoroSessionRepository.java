@@ -56,4 +56,6 @@ public interface PomodoroSessionRepository extends JpaRepository<PomodoroSession
         @Param("startOfDay") OffsetDateTime startOfDay,
         @Param("endOfDay") OffsetDateTime endOfDay
     );
+
+    long countByUser_Id(Long userId);
 }

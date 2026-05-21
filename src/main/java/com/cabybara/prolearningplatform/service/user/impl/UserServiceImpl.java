@@ -2,6 +2,8 @@ package com.cabybara.prolearningplatform.service.user.impl;
 
 import com.cabybara.prolearningplatform.dto.request.user.UserUpdatingRequestDto;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
+import com.cabybara.prolearningplatform.model.Asset;
+import com.cabybara.prolearningplatform.repository.AssetRepository;
 
 import com.cabybara.prolearningplatform.dto.request.user.ChangePasswordRequestDto;
 import com.cabybara.prolearningplatform.dto.helper.GoogleUserInfoDto;
@@ -41,6 +43,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final EmailService emailService;
     private final OtpService otpService;
+    private final AssetRepository assetRepository;
 
     @Override
     public User getUserById(Long userId) {
@@ -220,6 +223,19 @@ public class UserServiceImpl implements UserService {
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    @Override
+    public UserResponseDto setAvatar(Long userId, Long assetId) {
+        User user = getUserById(userId);
+        Asset asset = assetRepository.findById(assetId)
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found"));
+        if (!asset.getUser().getId().equals(userId)) {
+            throw new com.cabybara.prolearningplatform.exception.BadRequestException("Asset does not belong to this user");
+        }
+        user.setAvatarUrl(asset.getUrl());
+        userRepository.save(user);
+        return userMapper.toUserResponseDto(user);
     }
 
     @Override

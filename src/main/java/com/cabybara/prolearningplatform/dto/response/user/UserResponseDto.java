@@ -26,4 +26,7 @@ public class UserResponseDto {
     private UserEducation education;
     private UserHearAppFrom hearAppFrom;
     private AccountType accountType;
+    private String avatarUrl;
+    private boolean isBlocked;
+    private String blockReason;
 }

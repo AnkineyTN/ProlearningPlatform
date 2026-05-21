@@ -95,4 +95,7 @@ public interface PomodoroSpaceRepository extends JpaRepository<PomodoroSpace, Lo
     );
 
     Optional<PomodoroSpace> findByIdAndUserId(Long id, Long userId);
+
+    @Query("SELECT s FROM PomodoroSpace s LEFT JOIN FETCH s.asset WHERE s.source = 'SYSTEM' AND s.isActive = true ORDER BY s.createdAt DESC")
+    List<PomodoroSpace> findSystemSpaces();
 }

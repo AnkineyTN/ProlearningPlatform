@@ -24,11 +24,17 @@ public class DeviceTokenServiceImpl implements DeviceTokenService {
     @Transactional
     public void saveOrUpdateToken(DeviceTokenRegistrationDto request) {
         Long userId = authenticationContext.getCurrentUserId();
+
+        if (request.getDeviceId() != null) {
+            deviceTokenRepository.deleteByUserIdAndDeviceId(userId, request.getDeviceId());
+        }
+
         Optional<DeviceToken> existingToken = deviceTokenRepository.findByToken(request.getToken());
 
         if (existingToken.isPresent()) {
             DeviceToken token = existingToken.get();
             token.setLastActiveAt(OffsetDateTime.now());
+            token.setDeviceId(request.getDeviceId());
 
             if (!token.getUser().getId().equals(userId)) {
                 token.setUser(userRepository.getReferenceById(userId));
@@ -39,6 +45,7 @@ public class DeviceTokenServiceImpl implements DeviceTokenService {
             DeviceToken newToken = DeviceToken.builder()
                     .user(userRepository.getReferenceById(userId))
                     .token(request.getToken())
+                    .deviceId(request.getDeviceId())
                     .platform(request.getPlatform())
                     .lastActiveAt(OffsetDateTime.now())
                     .build();

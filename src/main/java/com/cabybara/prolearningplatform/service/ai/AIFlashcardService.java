@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.service.ai;
 
 import com.cabybara.prolearningplatform.dto.internal.CardContent;
+import com.cabybara.prolearningplatform.dto.request.flashcard.AIGenerateFlashcardByNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByWebRequestDto;
@@ -12,7 +13,7 @@ import java.util.List;
 public interface AIFlashcardService {
     GenerateFlashcardByAIResponseDto generateFlashcardByFiles(GenerateFlashcardByFileRequestDto request);
 
-    GenerateFlashcardByAIResponseDto generateFlashcardByNotes(List<String> contents, String freeText, Language language);
+    GenerateFlashcardByAIResponseDto generateFlashcardByNotes(AIGenerateFlashcardByNoteRequestDto request);
 
     GenerateFlashcardByAIResponseDto generateFlashcardByWeb(GenerateFlashcardByWebRequestDto request);
 }
