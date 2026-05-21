@@ -35,7 +35,7 @@ public class RoadmapController {
     private final RoadmapService roadmapService;
 
     @Operation(summary = "Generate a roadmap preview from AI (stateless)")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @accountPermissionService.isPro(@authenticationContext.getCurrentUserId())")
     @PostMapping("/preview")
     public ResponseEntity<ApiResponse<RoadmapPreviewResponseDto>> previewRoadmap(
             @Valid @RequestBody RoadmapPreviewRequestDto request
@@ -47,7 +47,7 @@ public class RoadmapController {
     }
 
     @Operation(summary = "Accept a roadmap (client may have edited the preview) and persist it")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @accountPermissionService.isPro(@authenticationContext.getCurrentUserId())")
     @PostMapping("")
     public ResponseEntity<ApiResponse<RoadmapDetailResponseDto>> acceptRoadmap(
             @Valid @RequestBody AcceptRoadmapRequestDto dto,
@@ -61,7 +61,7 @@ public class RoadmapController {
     }
 
     @Operation(summary = "List all roadmaps of the current user with progress")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @accountPermissionService.isPro(@authenticationContext.getCurrentUserId())")
     @GetMapping("")
     public ResponseEntity<ApiResponse<Object>> getRoadmaps(
             @AuthenticationPrincipal Jwt jwt,
@@ -83,7 +83,7 @@ public class RoadmapController {
     }
 
     @Operation(summary = "Get roadmap detail with chapter and topic progress")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @accountPermissionService.isPro(@authenticationContext.getCurrentUserId())")
     @GetMapping("/{roadmapId}")
     public ResponseEntity<ApiResponse<RoadmapDetailResponseDto>> getRoadmap(
             @PathVariable Long roadmapId,
@@ -97,7 +97,7 @@ public class RoadmapController {
     }
 
     @Operation(summary = "Start learning a topic: creates its Set and triggers async note generation")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @accountPermissionService.isPro(@authenticationContext.getCurrentUserId())")
     @PostMapping("/{roadmapId}/topics/{topicId}/start")
     public ResponseEntity<ApiResponse<TopicStartResponseDto>> startTopic(
             @PathVariable Long roadmapId,
@@ -112,7 +112,7 @@ public class RoadmapController {
     }
 
     @Operation(summary = "Mark a topic as done; auto-completes chapter and unlocks the next one")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @accountPermissionService.isPro(@authenticationContext.getCurrentUserId())")
     @PatchMapping("/{roadmapId}/topics/{topicId}/complete")
     public ResponseEntity<ApiResponse<TopicCompleteResponseDto>> markTopicComplete(
             @PathVariable Long roadmapId,
@@ -127,7 +127,7 @@ public class RoadmapController {
     }
 
     @Operation(summary = "Abandon a roadmap (sets status to ABANDONED; Sets and Notes are kept)")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @accountPermissionService.isPro(@authenticationContext.getCurrentUserId())")
     @DeleteMapping("/{roadmapId}")
     public ResponseEntity<ApiResponse<Object>> abandonRoadmap(
             @PathVariable Long roadmapId,
