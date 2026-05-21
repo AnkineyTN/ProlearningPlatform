@@ -145,6 +145,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
     @Query(value = """
         SELECT
             e.id          AS id,
+            e.set_id      AS setId,
             e.title       AS title,
             e.description AS description,
             e.duration    AS duration,

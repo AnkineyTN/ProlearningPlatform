@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 
 public interface SocialExamProjection {
     Long getId();
+    Long getSetId();
     String getTitle();
     String getDescription();
     Long getDuration();
