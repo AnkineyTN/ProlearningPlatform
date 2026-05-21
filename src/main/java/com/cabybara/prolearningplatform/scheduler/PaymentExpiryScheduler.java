@@ -1,4 +1,4 @@
-package com.cabybara.prolearningplatform.service.scheduler.impl;
+package com.cabybara.prolearningplatform.scheduler;
 
 import com.cabybara.prolearningplatform.enums.PaymentOrderStatus;
 import com.cabybara.prolearningplatform.repository.PaymentOrderRepository;
