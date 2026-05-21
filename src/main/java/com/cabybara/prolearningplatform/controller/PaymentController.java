@@ -1,10 +1,12 @@
 package com.cabybara.prolearningplatform.controller;
 
+import com.cabybara.prolearningplatform.dto.request.payment.CreatePaymentLinkRequestDto;
 import com.cabybara.prolearningplatform.dto.response.payment.CreatePaymentResponse;
 import com.cabybara.prolearningplatform.dto.response.payment.PaymentStatusResponse;
 import com.cabybara.prolearningplatform.service.payment.PayOSService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,10 +24,17 @@ public class PaymentController {
 
     private final PayOSService payOSService;
 
+    @Operation(
+            summary = "Create a PayOS payment link for PRO upgrade",
+            description = "Creates a payment link via PayOS. The `platform` field must be either `\"web\"` or `\"mobile\"` — " +
+                    "this determines the redirect URLs used after payment completion or cancellation."
+    )
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<CreatePaymentResponse>> createPayment(@AuthenticationPrincipal Jwt jwt) {
-        CreatePaymentResponse response = payOSService.createPaymentLink(userIdFromJwt(jwt));
+    public ResponseEntity<ApiResponse<CreatePaymentResponse>> createPayment(
+            @AuthenticationPrincipal Jwt jwt,
+            @RequestBody CreatePaymentLinkRequestDto createPaymentLinkRequestDto) {
+        CreatePaymentResponse response = payOSService.createPaymentLink(userIdFromJwt(jwt), createPaymentLinkRequestDto.platform());
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ResponseUtil.success("Payment link created", response, null));
     }
