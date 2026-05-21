@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.service.payment.impl;
 
 import com.cabybara.prolearningplatform.configuration.PayOSProperties;
 import com.cabybara.prolearningplatform.dto.internal.payos.PayOSApiResponse;
+import com.cabybara.prolearningplatform.dto.request.payment.CreatePaymentLinkRequestDto;
 import com.cabybara.prolearningplatform.dto.request.payment.PayOSWebhookPayload;
 import com.cabybara.prolearningplatform.dto.response.payment.CreatePaymentResponse;
 import com.cabybara.prolearningplatform.dto.response.payment.PaymentStatusResponse;
@@ -18,9 +19,7 @@ import com.cabybara.prolearningplatform.service.payment.PayOSService;
 import com.cabybara.prolearningplatform.service.payment.SubscriptionService;
 import com.cabybara.prolearningplatform.utils.HmacSHA256Util;
 import com.cabybara.prolearningplatform.utils.RestHttpClientUtil;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -48,7 +47,7 @@ public class PayOSServiceImpl implements PayOSService {
     private final SubscriptionService subscriptionService;
 
     @Override
-    public CreatePaymentResponse createPaymentLink(Long userId) {
+    public CreatePaymentResponse createPaymentLink(Long userId, String platform) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
 
@@ -56,14 +55,23 @@ public class PayOSServiceImpl implements PayOSService {
 
         long orderCode = System.currentTimeMillis();
         int expiredAt = (int) (Instant.now().getEpochSecond() + LINK_TTL_SECONDS);
-        String signature = HmacSHA256Util.sign(buildCreateLinkSignatureData(orderCode), payOSProperties.getChecksumKey());
+
+        String returnUrl = platform.equals("mobile")
+                ? payOSProperties.getReturnUrlMobile()
+                : payOSProperties.getReturnUrlWeb();
+
+        String cancelUrl = platform.equals("mobile")
+                ? payOSProperties.getCancelUrlMobile()
+                : payOSProperties.getCancelUrlWeb();
+
+        String signature = HmacSHA256Util.sign(buildCreateLinkSignatureData(orderCode, returnUrl, cancelUrl), payOSProperties.getChecksumKey());
 
         PayOSCreateRequest requestBody = new PayOSCreateRequest();
         requestBody.setOrderCode(orderCode);
         requestBody.setAmount(PRO_UPGRADE_AMOUNT);
         requestBody.setDescription(UPGRADE_DESCRIPTION);
-        requestBody.setReturnUrl(payOSProperties.getReturnUrl());
-        requestBody.setCancelUrl(payOSProperties.getCancelUrl());
+        requestBody.setReturnUrl(returnUrl);
+        requestBody.setCancelUrl(cancelUrl);
         requestBody.setSignature(signature);
         requestBody.setBuyerName(user.getFirstName() + " " + user.getLastName());
         requestBody.setBuyerEmail(user.getEmail());
@@ -184,12 +192,12 @@ public class PayOSServiceImpl implements PayOSService {
         paymentOrderRepository.saveAll(pending);
     }
 
-    private String buildCreateLinkSignatureData(long orderCode) {
+    private String buildCreateLinkSignatureData(long orderCode, String returnUrl, String cancelUrl) {
         return "amount=" + PRO_UPGRADE_AMOUNT
-                + "&cancelUrl=" + payOSProperties.getCancelUrl()
+                + "&cancelUrl=" + cancelUrl
                 + "&description=" + UPGRADE_DESCRIPTION
                 + "&orderCode=" + orderCode
-                + "&returnUrl=" + payOSProperties.getReturnUrl();
+                + "&returnUrl=" + returnUrl;
     }
 
     private HttpHeaders buildPayOSHeaders() {

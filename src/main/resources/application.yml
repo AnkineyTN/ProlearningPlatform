@@ -10,8 +10,10 @@ payos:
     checksum-key: ${PAYOS_CHECKSUM_KEY}
     base-url: https://api-merchant.payos.vn
     webhook-url: ${APP_BASE_URL}/api/webhook/payos
-    return-url: ${FRONTEND_URL}/payment/success
-    cancel-url: ${FRONTEND_URL}/payment/cancel
+    return-url-web: ${WEB_PAYMENT_RETURN_URL}
+    cancel-url-web: ${WEB_PAYMENT_CANCEL_URL}
+    return-url-mobile: ${MOBILE_PAYMENT_RETURN_URL}
+    cancel-url-mobile: ${MOBILE_PAYMENT_CANCEL_URL}
 
 schedule:
     due-card-reminder:

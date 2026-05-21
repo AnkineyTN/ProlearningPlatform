@@ -15,6 +15,8 @@ public class PayOSProperties {
     private String checksumKey;
     private String baseUrl;
     private String webhookUrl;
-    private String returnUrl;
-    private String cancelUrl;
+    private String returnUrlWeb;
+    private String cancelUrlWeb;
+    private String returnUrlMobile;
+    private String cancelUrlMobile;
 }
