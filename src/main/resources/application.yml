@@ -10,21 +10,19 @@ payos:
     checksum-key: ${PAYOS_CHECKSUM_KEY}
     base-url: https://api-merchant.payos.vn
     webhook-url: ${APP_BASE_URL}/api/webhook/payos
-    return-url: ${FRONTEND_URL}/payment/success
-    cancel-url: ${FRONTEND_URL}/payment/cancel
+    return-url-web: ${WEB_PAYMENT_RETURN_URL}
+    cancel-url-web: ${WEB_PAYMENT_CANCEL_URL}
+    return-url-mobile: ${MOBILE_PAYMENT_RETURN_URL}
+    cancel-url-mobile: ${MOBILE_PAYMENT_CANCEL_URL}
 
 schedule:
     due-card-reminder:
         cron: "0 0 8 * * *"
     weekly-summary:
         cron: "0 0 9 * * *"
-    asset-cleanup:
-        cron: "0 0 3 * * *"
-    notification-cleanup:
+    cleanup:
         cron: "0 0 2 * * SUN"
         days-old: 30
-    permission-cleanup:
-        cron: "0 0 2 * * *"
     payment-expired-cleanup:
         cron: "0 0 2 * * *"
 
