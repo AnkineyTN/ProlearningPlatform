@@ -18,9 +18,13 @@ schedule:
         cron: "0 0 8 * * *"
     weekly-summary:
         cron: "0 0 9 * * *"
-    cleanup:
+    asset-cleanup:
+        cron: "0 0 3 * * *"
+    notification-cleanup:
         cron: "0 0 2 * * SUN"
         days-old: 30
+    permission-cleanup:
+        cron: "0 0 2 * * *"
     payment-expired-cleanup:
         cron: "0 0 2 * * *"
 
