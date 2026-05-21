@@ -21,6 +21,11 @@ import java.util.Optional;
 
 @Repository
 public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
+
+    /** Đếm số Flashcard thuộc sở hữu của user (dùng để kiểm tra quota). */
+    @Query("SELECT COUNT(f) FROM Flashcard f WHERE f.user.id = :userId")
+    long countNumOfFlashcardByCreatedUser(@Param("userId") Long userId);
+
     Optional<Flashcard> findByTitle(String title);
 
     boolean existsBySetIdAndTitle(Long userId, @NotEmpty @NotBlank @NotNull String title);
@@ -170,6 +175,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
     @Query(value = """
         SELECT
             f.id          AS id,
+            f.id_set      AS setId,
             f.title       AS title,
             f.description AS description,
             f.created_at  AS createdAt,

@@ -15,6 +15,11 @@ import java.util.Optional;
 
 @Repository
 public interface NoteRepository extends JpaRepository<Note, Long> {
+
+    /** Đếm số Note thuộc sở hữu của user (dùng để kiểm tra quota). */
+    @Query("SELECT COUNT(n) FROM Note n WHERE n.user.id = :userId")
+    long countNumOfNoteByCreatedUser(@Param("userId") Long userId);
+
     @Query("""
                 SELECT n
                 FROM Note n
@@ -138,6 +143,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
     @Query(value = """
         SELECT
             n.id          AS id,
+            n.id_set      AS setId,
             n.title       AS title,
             n.description AS description,
             n.created_at  AS createdAt,

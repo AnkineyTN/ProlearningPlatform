@@ -1,29 +1,28 @@
-package com.cabybara.prolearningplatform.service.scheduler.impl;
+package com.cabybara.prolearningplatform.scheduler;
 
 import com.cabybara.prolearningplatform.dto.helper.AssetToDeleteDto;
 import com.cabybara.prolearningplatform.model.Asset;
 import com.cabybara.prolearningplatform.service.cloudinary.CloudinaryService;
-import com.cabybara.prolearningplatform.service.scheduler.AssetCleanupService;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 
-@Service
+@Component
 @RequiredArgsConstructor
 @Slf4j
-public class AssetCleanupServiceImpl implements AssetCleanupService {
+public class AssetCleanupScheduler {
     private static final String SCHEDULER_TIME_ZONE = "Asia/Ho_Chi_Minh";
 
     private final AssetService assetService;
     private final CloudinaryService cloudinaryService;
 
-    @Scheduled(cron = "${schedule.cleanup.cron:0 0 3 * * ?}", zone = SCHEDULER_TIME_ZONE)
+    @Scheduled(cron = "${schedule.asset-cleanup.cron:0 0 3 * * *}", zone = SCHEDULER_TIME_ZONE)
     @Async("heavyTaskExecutor")
     public void cleanupAssets() {
         OffsetDateTime cutoffTime = OffsetDateTime.now().minusHours(24);
