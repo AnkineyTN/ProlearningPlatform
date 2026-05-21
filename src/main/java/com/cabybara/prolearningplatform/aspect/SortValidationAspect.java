@@ -37,9 +37,7 @@ public class SortValidationAspect {
 
         for (Sort.Order order : pageable.getSort()) {
             if (!allowedFields.contains(order.getProperty())) {
-                throw new InvalidSortFieldException(
-                        "Invalid sort field: " + order.getProperty()
-                );
+                throw new InvalidSortFieldException(order.getProperty());
             }
         }
     }
