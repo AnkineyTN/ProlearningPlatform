@@ -175,6 +175,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
     @Query(value = """
         SELECT
             f.id          AS id,
+            f.id_set      AS setId,
             f.title       AS title,
             f.description AS description,
             f.created_at  AS createdAt,

@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 
 public interface SocialFlashcardProjection {
     Long getId();
+    Long getSetId();
     String getTitle();
     String getDescription();
     Timestamp getCreatedAt();

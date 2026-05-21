@@ -143,6 +143,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
     @Query(value = """
         SELECT
             n.id          AS id,
+            n.id_set      AS setId,
             n.title       AS title,
             n.description AS description,
             n.created_at  AS createdAt,
