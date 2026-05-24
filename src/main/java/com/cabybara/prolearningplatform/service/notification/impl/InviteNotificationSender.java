@@ -62,7 +62,7 @@ public class InviteNotificationSender {
         notificationDispatcher.dispatchToMany(notifications);
 
         userIds.forEach(userId ->
-            flashcardMemberRepository.findByFlashcardIdAndUserId(flashcardId, userId)
+            flashcardMemberRepository.findWithUserByFlashcardIdAndUserId(flashcardId, userId)
                 .ifPresent(member -> emailService.sendFlashcardInviteNotification(
                     member.getUser().getEmail(),
                     inviterName,
@@ -104,7 +104,7 @@ public class InviteNotificationSender {
         notificationDispatcher.dispatchToMany(notifications);
 
         userIds.forEach(userId ->
-            noteMemberRepository.findByNoteIdAndUserId(noteId, userId)
+            noteMemberRepository.findWithUserByNoteIdAndUserId(noteId, userId)
                 .ifPresent(member -> emailService.sendNoteInviteNotification(
                     member.getUser().getEmail(),
                     inviterName,
@@ -145,7 +145,7 @@ public class InviteNotificationSender {
         notificationDispatcher.dispatchToMany(notifications);
 
         userIds.forEach(userId ->
-            examMemberRepository.findByExamIdAndUserId(examId, userId)
+            examMemberRepository.findWithUserByExamIdAndUserId(examId, userId)
                 .ifPresent(member -> emailService.sendExamInviteNotification(
                     member.getUser().getEmail(),
                     inviterName,

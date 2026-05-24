@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -383,4 +384,19 @@ public class ExamPermissionService {
             "User " + userId + " has no access to exam " + examId);
     }
 
+    /**
+     * Scheduled cleanup task: Delete old PENDING and DECLINED records (older than 7 days)
+     * Runs daily at 2 AM
+     */
+    @Scheduled(cron = "0 0 2 * * *")
+    @Transactional
+    public void cleanupOldInviteRecords() {
+        try {
+            LocalDateTime cutoffDate = LocalDateTime.now().minusDays(7);
+            examMemberRepository.deleteOldPendingOrDeclinedRecords(cutoffDate);
+            log.info("[exam-invite-cleanup] Successfully cleaned up old PENDING/DECLINED records older than {}", cutoffDate);
+        } catch (Exception e) {
+            log.error("[exam-invite-cleanup] Error cleaning up old invite records: {}", e.getMessage(), e);
+        }
+    }
 }
