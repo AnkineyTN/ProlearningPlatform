@@ -315,18 +315,14 @@ public class FlashcardPermissionService {
                         throw new IllegalStateException("User is already a member");
                     }
                     
-                    // If DECLINED: delete old record and create new
                     if (existing.getStatus() == FlashcardMemberStatus.DECLINED) {
-                        log.info("[flashcard-invite] Re-inviting user {} with DECLINED status, creating new invite", targetUserId);
-                        flashcardMemberRepository.delete(existing);
-                        createNewInvite(flashcardId, targetUserId, role, token, expiresAt);
-                    } else {
-                        // PENDING: update existing record
-                        existing.setRole(role);
-                        existing.setStatus(FlashcardMemberStatus.PENDING);
-                        existing.setInviteToken(token);
-                        existing.setInviteTokenExpiresAt(expiresAt);
+                        log.info("[flashcard-invite] Re-inviting user {} with DECLINED status, updating existing invite", targetUserId);
                     }
+                    // PENDING or DECLINED: update existing record
+                    existing.setRole(role);
+                    existing.setStatus(FlashcardMemberStatus.PENDING);
+                    existing.setInviteToken(token);
+                    existing.setInviteTokenExpiresAt(expiresAt);
                 },
                 () -> createNewInvite(flashcardId, targetUserId, role, token, expiresAt)
             );

@@ -301,18 +301,14 @@ public class NotePermissionService implements ResourcePermissionService  {
                         throw new IllegalStateException("User is already a member");
                     }
                     
-                    // If DECLINED: delete old record and create new
                     if (existing.getStatus() == NoteMemberStatus.DECLINED) {
-                        log.info("[note-invite] Re-inviting user {} with DECLINED status, creating new invite", targetUserId);
-                        noteMemberRepository.delete(existing);
-                        createNewInvite(noteId, targetUserId, role, token, expiresAt);
-                    } else {
-                        // PENDING: update existing record
-                        existing.setRole(role);
-                        existing.setStatus(NoteMemberStatus.PENDING);
-                        existing.setInviteToken(token);
-                        existing.setInviteTokenExpiresAt(expiresAt);
+                        log.info("[note-invite] Re-inviting user {} with DECLINED status, updating existing invite", targetUserId);
                     }
+                    // PENDING or DECLINED: update existing record
+                    existing.setRole(role);
+                    existing.setStatus(NoteMemberStatus.PENDING);
+                    existing.setInviteToken(token);
+                    existing.setInviteTokenExpiresAt(expiresAt);
                 },
                 () -> createNewInvite(noteId, targetUserId, role, token, expiresAt)
             );
