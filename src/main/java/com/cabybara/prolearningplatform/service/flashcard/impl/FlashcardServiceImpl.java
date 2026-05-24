@@ -34,6 +34,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -90,6 +92,7 @@ public class FlashcardServiceImpl implements FlashcardService {
     }
 
     @Override
+    @Cacheable(value = "flashcard_detail", key = "@authenticationContext.getCurrentUserId() + ':' + #setId + ':' + #flashcardId")
     public DetailFlashcardResponseDto getDetailFlashcard(Long setId, Long flashcardId) {
         Long userId = authenticationContext.getCurrentUserId();
 
@@ -204,6 +207,7 @@ public class FlashcardServiceImpl implements FlashcardService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "flashcard_detail", allEntries = true)
     public void deleteFlashcard(Long setId, Long flashcardId) throws BadRequestException {
         Long userId = authenticationContext.getCurrentUserId();
         Flashcard deletedFlashcard = flashcardRepository.findById(flashcardId)
@@ -218,6 +222,7 @@ public class FlashcardServiceImpl implements FlashcardService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "flashcard_detail", allEntries = true)
     public FlashcardResponseDto updateFlashcard(Long setId, Long flashcardId, FlashcardUpdatingRequestDto flashcardUpdatingRequestDto) throws BadRequestException {
         Flashcard flashcard = flashcardRepository.getFlashcardByIdAndSetIdAndSetUserId(
                         flashcardId,
@@ -234,6 +239,7 @@ public class FlashcardServiceImpl implements FlashcardService {
     }
 
     @Override
+    @CacheEvict(value = "flashcard_detail", allEntries = true)
     public DetailFlashcardResponseDto updateFlashcard(Flashcard newFlashcard) {
         Flashcard savedFlashcard = flashcardRepository.save(newFlashcard);
 
@@ -303,16 +309,19 @@ public class FlashcardServiceImpl implements FlashcardService {
     }
 
     @Override
+    @CacheEvict(value = "flashcard_detail", allEntries = true)
     public void acceptInvite(Long flashcardId) {
         flashcardPermissionService.acceptInvite(flashcardId, authenticationContext.getCurrentUserId());
     }
 
     @Override
+    @CacheEvict(value = "flashcard_detail", allEntries = true)
     public void declineInvite(Long flashcardId) {
         flashcardPermissionService.declineInvite(flashcardId, authenticationContext.getCurrentUserId());
     }
 
     @Override
+    @CacheEvict(value = "flashcard_detail", allEntries = true)
     public void removeMember(Long flashcardId, Long targetUserId) {
         flashcardPermissionService.removeMember(flashcardId, targetUserId, authenticationContext.getCurrentUserId());
     }

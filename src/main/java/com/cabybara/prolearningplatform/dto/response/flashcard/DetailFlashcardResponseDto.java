@@ -9,6 +9,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @SuperBuilder
+@NoArgsConstructor
 public class DetailFlashcardResponseDto extends FlashcardResponseDto {
     private SetSummaryResponseDto set;
     private List<CardItemResponseDto> cards;

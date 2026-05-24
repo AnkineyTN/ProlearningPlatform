@@ -42,6 +42,8 @@ import com.cabybara.prolearningplatform.service.knowledge.TopicAssignmentAsyncSe
 import com.cabybara.prolearningplatform.service.permission.impl.ExamPermissionService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -74,7 +76,6 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-//    @CacheEvict(value = "set_exams", key = "'set' + #setId")
     public ExamResponseDto createExam(Long setId, CreateExamRequestDto createExamRequestDto) {
         Long userId = authenticationContext.getCurrentUserId();
 
@@ -151,7 +152,6 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
-//    @Cacheable(value = "set_exams", key = "'set' + #setId")
     public Page<ExamResponseDto> getExam(Long setId, String q, Privacy privacy, CreationMethod createMethod, Pageable pageable) {
         Long userId = authenticationContext.getCurrentUserId();
 
@@ -215,7 +215,7 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
-//    @Cacheable(value = "exam", key = "#examId")
+    @Cacheable(value = "exam_detail", key = "@authenticationContext.getCurrentUserId() + ':' + #setId + ':' + #examId")
     public ExamResponseDto getExam(Long setId, Long examId) {
         Long userId = authenticationContext.getCurrentUserId();
         
@@ -241,6 +241,7 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "exam_detail", allEntries = true)
     public ExamResponseDto updateExam(Long setId, Long examId, UpdateExamRequestDto updateExamRequestDto) {
         if (!examRepository.existsBySetIdAndId(setId, examId)) {
             throw new ResourceNotFoundException("Cannot find exam with id: " + examId + " in set with id: " + setId);
@@ -258,6 +259,7 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "exam_detail", allEntries = true)
     public void deleteExam(Long setId, Long examId) {
         Exam exam = examRepository.findBySetIdAndId(setId, examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cannot find exam with id: " + examId));
@@ -322,16 +324,19 @@ public class ExamServiceImpl implements ExamService {
     }
 
     @Override
+    @CacheEvict(value = "exam_detail", allEntries = true)
     public void acceptInvite(Long examId) {
         examPermissionService.acceptInvite(examId, authenticationContext.getCurrentUserId());
     }
 
     @Override
+    @CacheEvict(value = "exam_detail", allEntries = true)
     public void declineInvite(Long examId) {
         examPermissionService.declineInvite(examId, authenticationContext.getCurrentUserId());
     }
 
     @Override
+    @CacheEvict(value = "exam_detail", allEntries = true)
     public void removeMember(Long examId, Long targetUserId) {
         examPermissionService.removeMember(examId, targetUserId, authenticationContext.getCurrentUserId());
     }

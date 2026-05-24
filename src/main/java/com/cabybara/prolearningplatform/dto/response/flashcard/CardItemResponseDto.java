@@ -2,12 +2,14 @@ package com.cabybara.prolearningplatform.dto.response.flashcard;
 
 import com.cabybara.prolearningplatform.enums.CardStatus;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.time.OffsetDateTime;
 
 @Data
 @SuperBuilder
+@NoArgsConstructor
 public class CardItemResponseDto {
     private Long id;
     private String frontCard;

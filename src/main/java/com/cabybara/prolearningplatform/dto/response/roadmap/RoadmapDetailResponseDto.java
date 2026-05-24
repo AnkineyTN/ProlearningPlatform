@@ -3,14 +3,18 @@ package com.cabybara.prolearningplatform.dto.response.roadmap;
 import com.cabybara.prolearningplatform.enums.ChapterStatus;
 import com.cabybara.prolearningplatform.enums.RoadmapStatus;
 import com.cabybara.prolearningplatform.enums.TopicContentStatus;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RoadmapDetailResponseDto {
 
     private Long id;
@@ -26,6 +30,8 @@ public class RoadmapDetailResponseDto {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ChapterDetailDto {
         private Long id;
         private String chapterKey;
@@ -41,6 +47,8 @@ public class RoadmapDetailResponseDto {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class TopicDetailDto {
         private Long id;
         private String topicKey;
