@@ -28,6 +28,8 @@ import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionSe
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
@@ -92,6 +94,7 @@ public class NoteServiceImpl implements NoteService {
     // [PATCH]: /sets/{setId}/notes/save
     @Override
     @Transactional
+    @CacheEvict(value = "note_detail", allEntries = true)
     public void saveNote(Long setId, Long noteId, SaveNoteRequestDTO request) {
         Long userId = authenticationContext.getCurrentUserId();
 
@@ -107,6 +110,7 @@ public class NoteServiceImpl implements NoteService {
     // [POST]: /sets/{setId}/notes/save-doc
     @Override
     @Transactional
+    @CacheEvict(value = "note_detail", allEntries = true)
     public void saveDocInNote(Long setId, SaveDocInNoteRequestDto request) {
         Long userId = authenticationContext.getCurrentUserId();
         Note note = getNoteByIdAndUserIdAndSetId(request.getNoteId(), userId, setId);
@@ -122,6 +126,7 @@ public class NoteServiceImpl implements NoteService {
     // [DELETE]: /sets/{setId}/notes/delete-doc
     @Override
     @Transactional
+    @CacheEvict(value = "note_detail", allEntries = true)
     public void deleteDocInNote(DeleteNoteDocRequestDTO request) {
         noteFileRegionCommentService.deleteAllForNoteAndAsset(request.getNoteId(), request.getAssetId());
         // Mark status "DELETED" in asset table
@@ -142,6 +147,7 @@ public class NoteServiceImpl implements NoteService {
     // [POST]: /sets/{setId}/notes/save-img
     @Override
     @Transactional
+    @CacheEvict(value = "note_detail", allEntries = true)
     public void saveImgInNote(Long setId, SaveImgInNoteRequestDto request) {
         Long userId = authenticationContext.getCurrentUserId();
         Note note = getNoteByIdAndUserIdAndSetId(request.getNoteId(), userId, setId);
@@ -157,6 +163,7 @@ public class NoteServiceImpl implements NoteService {
     // [DELETE]: /sets/{setId}/notes/delete-img
     @Override
     @Transactional
+    @CacheEvict(value = "note_detail", allEntries = true)
     public void deleteImgInNote(DeleteNoteImgRequestDTO request) {
         Asset asset = assetRepository.findByUrl(request.getFileUrl());
         noteFileRegionCommentService.deleteAllForNoteAndAsset(request.getNoteId(), asset.getId());
@@ -215,6 +222,7 @@ public class NoteServiceImpl implements NoteService {
 
     // [GET]: /sets/{setId}/notes/{noteId}
     @Override
+    @Cacheable(value = "note_detail", key = "@authenticationContext.getCurrentUserId() + ':' + #setId + ':' + #noteId")
     public GetDetailNoteResponseDTO getDetailNote(Long setId, Long noteId) {
         Long userId = authenticationContext.getCurrentUserId();
         // Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
@@ -263,6 +271,7 @@ public class NoteServiceImpl implements NoteService {
 
     // [PATCH]: /sets/{setId}/notes/update/{noteId}
     @Override
+    @CacheEvict(value = "note_detail", allEntries = true)
     public void updateNote(Long setId, Long noteId, UpdateNoteRequestDTO request) {
         Long userId = authenticationContext.getCurrentUserId();
         Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
@@ -275,6 +284,7 @@ public class NoteServiceImpl implements NoteService {
 
     // [DELETE]: /api/note/delete/{noteId}
     @Override
+    @CacheEvict(value = "note_detail", allEntries = true)
     public void deleteNote(Long setId, Long noteId) {
         Long userId = authenticationContext.getCurrentUserId();
         Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
@@ -362,16 +372,19 @@ public class NoteServiceImpl implements NoteService {
     }
 
     @Override
+    @CacheEvict(value = "note_detail", allEntries = true)
     public void acceptInvite(Long noteId) {
         notePermissionService.acceptInvite(noteId, authenticationContext.getCurrentUserId());
     }
 
     @Override
+    @CacheEvict(value = "note_detail", allEntries = true)
     public void declineInvite(Long noteId) {
         notePermissionService.declineInvite(noteId, authenticationContext.getCurrentUserId());
     }
 
     @Override
+    @CacheEvict(value = "note_detail", allEntries = true)
     public void removeMember(Long noteId, Long targetUserId) {
         notePermissionService.removeMember(noteId, targetUserId, authenticationContext.getCurrentUserId());
     }

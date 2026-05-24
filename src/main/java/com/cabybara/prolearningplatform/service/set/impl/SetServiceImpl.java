@@ -22,6 +22,8 @@ import com.cabybara.prolearningplatform.service.set.SetService;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -65,6 +67,7 @@ public class SetServiceImpl implements SetService {
     }
 
     @Override
+    @Cacheable(value = "set_detail", key = "#setId")
     public SetResponseDto getSet(Long setId) {
         Set set = setRepository.findById(setId)
                 .orElseThrow(() -> new ResourceNotFoundException("Set with id " + setId + " not found"));
@@ -93,6 +96,7 @@ public class SetServiceImpl implements SetService {
     }
 
     @Override
+    @CacheEvict(value = "set_detail", key = "#setId")
     public SetResponseDto updateSet(Long setId, Long userId, SetUpdatingRequestDto setUpdatingRequestDto) {
         Set set = setRepository.findById(setId)
                 .orElseThrow(() -> new ResourceNotFoundException("Set with id: " + setId + " not found!"));
@@ -112,6 +116,7 @@ public class SetServiceImpl implements SetService {
     }
 
     @Override
+    @CacheEvict(value = "set_detail", key = "#setId")
     public void deleteSet(Long setId, Long userId) {
         Set set = setRepository.findById(setId)
                 .orElseThrow(() -> new ResourceNotFoundException("Set with id: " + setId + " not found!"));

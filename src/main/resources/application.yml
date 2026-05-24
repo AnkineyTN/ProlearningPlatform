@@ -84,6 +84,15 @@ spring:
             host: ${REDIS_HOST}
             port: ${REDIS_PORT}
             ttl-ms: ${REDIS_TTL_MS}
+            cache:
+                users-ttl-ms: ${REDIS_USERS_TTL_MS:1800000}
+                set-detail-ttl-ms: ${REDIS_SET_DETAIL_TTL_MS:900000}
+                flashcard-detail-ttl-ms: ${REDIS_FLASHCARD_DETAIL_TTL_MS:600000}
+                exam-detail-ttl-ms: ${REDIS_EXAM_DETAIL_TTL_MS:600000}
+                note-detail-ttl-ms: ${REDIS_NOTE_DETAIL_TTL_MS:300000}
+                exam-questions-ttl-ms: ${REDIS_EXAM_QUESTIONS_TTL_MS:600000}
+                question-ttl-ms: ${REDIS_QUESTION_TTL_MS:600000}
+                roadmap-detail-ttl-ms: ${REDIS_ROADMAP_DETAIL_TTL_MS:1200000}
 
     security:
         jwt:
