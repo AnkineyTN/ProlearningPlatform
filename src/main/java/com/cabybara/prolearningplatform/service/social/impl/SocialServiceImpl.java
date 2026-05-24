@@ -28,6 +28,7 @@ public class SocialServiceImpl implements SocialService {
         return noteRepository.findSocialNotes(q, pageable)
                 .map(sn -> new SocialItemResponseDto(
                         sn.getId(),
+                        sn.getSetId(),
                         "NOTE",
                         sn.getTitle(),
                         sn.getDescription(),
@@ -46,6 +47,7 @@ public class SocialServiceImpl implements SocialService {
         return flashcardRepository.findSocialFlashcards(q, pageable)
                 .map(sf -> new SocialItemResponseDto(
                         sf.getId(),
+                        sf.getSetId(),
                         "FLASHCARD",
                         sf.getTitle(),
                         sf.getDescription(),
@@ -64,6 +66,7 @@ public class SocialServiceImpl implements SocialService {
         return examRepository.findSocialExams(q, pageable)
                 .map(se -> new SocialItemResponseDto(
                         se.getId(),
+                        se.getSetId(),
                         "EXAM",
                         se.getTitle(),
                         se.getDescription(),

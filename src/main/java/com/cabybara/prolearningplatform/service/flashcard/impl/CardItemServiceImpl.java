@@ -18,6 +18,7 @@ import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +38,7 @@ public class CardItemServiceImpl implements CardItemService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "flashcard_detail", allEntries = true)
     public DetailFlashcardResponseDto addCardToFlashcard(Long setId, Long flashcardId, List<CardItemCreateRequestDto> dtos) {
         Long userId = authenticationContext.getCurrentUserId();
 
@@ -71,6 +73,7 @@ public class CardItemServiceImpl implements CardItemService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "flashcard_detail", allEntries = true)
     public CardItemResponseDto updateCardItem(Long setId, Long flashcardId, Long cardId, CardItemUpdatingRequestDto updateFlashcardRequestDto) {
         Long userId = authenticationContext.getCurrentUserId();
         CardItem cardItem = cardItemRepository.findById(cardId)
@@ -96,6 +99,7 @@ public class CardItemServiceImpl implements CardItemService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "flashcard_detail", allEntries = true)
     public List<CardItemResponseDto> updateCardItems(Long setId, Long flashcardId, List<CardItemUpdatingRequestDto> updatingRequestDtos) {
         Long userId = authenticationContext.getCurrentUserId();
         Map<Long, CardItemUpdatingRequestDto> updateDtoMap = prepareUpdateDtoMap(updatingRequestDtos);
@@ -118,6 +122,7 @@ public class CardItemServiceImpl implements CardItemService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "flashcard_detail", allEntries = true)
     public void deleteCard(Long setId, Long flashcardId, Long cardId) throws BadRequestException {
         Long userId = authenticationContext.getCurrentUserId();
         CardItem cardItem = cardItemRepository.findById(cardId)
@@ -172,6 +177,7 @@ public class CardItemServiceImpl implements CardItemService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "flashcard_detail", allEntries = true)
     public void deleteCards(Long setId, Long flashcardId, List<Long> cardIds) throws BadRequestException {
         if (cardIds.isEmpty()) {
             return;
@@ -262,6 +268,7 @@ public class CardItemServiceImpl implements CardItemService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "flashcard_detail", allEntries = true)
     public CardItemResponseDto deleteCardImage(Long setId, Long flashcardId, Long cardId) throws BadRequestException {
         Long userId = authenticationContext.getCurrentUserId();
         CardItem cardItem = cardItemRepository.findById(cardId)

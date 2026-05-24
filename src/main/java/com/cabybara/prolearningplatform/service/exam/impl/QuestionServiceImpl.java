@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "exam_questions", allEntries = true)
+    @CacheEvict(value = "exam_questions", key = "'exam:' + #examId")
     public QuestionListResponseDto createQuestion(Long examId, List<CreateQuestionRequestDto> createQuestionRequestDtos) {
         Long userId = authenticationContext.getCurrentUserId();
 
@@ -107,8 +108,10 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional
-    @CachePut(value = "question", key = "#questionId")
-    @CacheEvict(value = "exam_questions", allEntries = true)
+    @Caching(
+        put = @CachePut(value = "question", key = "#questionId"),
+        evict = @CacheEvict(value = "exam_questions", key = "'exam:' + #examId")
+    )
     public QuestionResponseDto updateQuestion(Long examId, Long questionId, UpdateQuestionRequestDto dto) {
         validateExamQuestionRelation(examId, questionId);
 
@@ -130,7 +133,10 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     @Transactional
-    @CacheEvict(value = {"question", "exam_questions"}, allEntries = true, beforeInvocation = true)
+    @Caching(evict = {
+        @CacheEvict(value = "exam_questions", key = "'exam:' + #examId", beforeInvocation = true),
+        @CacheEvict(value = "question", key = "#questionId", beforeInvocation = true)
+    })
     public void deleteQuestion(Long examId, Long questionId) {
         validateExamQuestionRelation(examId, questionId);
 

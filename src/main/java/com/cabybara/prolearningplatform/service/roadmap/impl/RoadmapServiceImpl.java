@@ -26,6 +26,8 @@ import com.cabybara.prolearningplatform.service.ai.AIRoadmapService;
 import com.cabybara.prolearningplatform.service.roadmap.RoadmapService;
 import com.cabybara.prolearningplatform.service.roadmap.RoadmapTopicSetupAsyncService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
@@ -98,6 +100,7 @@ public class RoadmapServiceImpl implements RoadmapService {
     }
 
     @Override
+    @Cacheable(value = "roadmap_detail", key = "#userId + ':' + #roadmapId")
     @Transactional(readOnly = true)
     public RoadmapDetailResponseDto getRoadmap(Long userId, Long roadmapId) {
         Roadmap roadmap = roadmapRepository.findByIdAndUserId(roadmapId, userId)
@@ -111,6 +114,7 @@ public class RoadmapServiceImpl implements RoadmapService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "roadmap_detail", key = "#userId + ':' + #roadmapId")
     public TopicStartResponseDto startTopic(Long userId, Long roadmapId, Long topicId) {
         Roadmap roadmap = roadmapRepository.findByIdAndUserId(roadmapId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Roadmap not found: " + roadmapId));
@@ -147,6 +151,7 @@ public class RoadmapServiceImpl implements RoadmapService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "roadmap_detail", key = "#userId + ':' + #roadmapId")
     public TopicCompleteResponseDto markTopicComplete(Long userId, Long roadmapId, Long topicId) {
         Roadmap roadmap = roadmapRepository.findByIdAndUserId(roadmapId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Roadmap not found: " + roadmapId));
@@ -182,6 +187,7 @@ public class RoadmapServiceImpl implements RoadmapService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "roadmap_detail", key = "#userId + ':' + #roadmapId")
     public void abandonRoadmap(Long userId, Long roadmapId) {
         Roadmap roadmap = roadmapRepository.findByIdAndUserId(roadmapId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Roadmap not found: " + roadmapId));

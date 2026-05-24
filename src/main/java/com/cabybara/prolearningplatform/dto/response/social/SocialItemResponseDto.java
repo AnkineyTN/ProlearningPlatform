@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 
 public record SocialItemResponseDto(
         Long id,
+        Long setId,
         String type,
         String title,
         String description,

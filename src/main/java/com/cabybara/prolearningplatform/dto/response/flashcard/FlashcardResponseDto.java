@@ -5,12 +5,14 @@ import com.cabybara.prolearningplatform.enums.FlashcardStatus;
 import com.cabybara.prolearningplatform.enums.NoteRole;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.time.OffsetDateTime;
 
 @Data
 @SuperBuilder
+@NoArgsConstructor
 public class FlashcardResponseDto {
     private String id;
     private String title;
