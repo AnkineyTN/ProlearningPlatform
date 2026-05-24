@@ -19,6 +19,16 @@ public interface ExamMemberRepository extends JpaRepository<ExamMember, Long> {
 
     Optional<ExamMember> findByExamIdAndUserId(Long examId, Long userId);
 
+    @Query("""
+        SELECT m FROM ExamMember m
+        JOIN FETCH m.user
+        WHERE m.exam.id = :examId AND m.user.id = :userId
+        """)
+    Optional<ExamMember> findWithUserByExamIdAndUserId(
+        @Param("examId") Long examId,
+        @Param("userId") Long userId
+    );
+
     Optional<ExamMember> findByExamIdAndUserIdAndStatus(
         Long examId, Long userId, ExamMemberStatus status);
 
