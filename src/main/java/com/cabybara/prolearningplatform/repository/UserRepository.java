@@ -128,4 +128,51 @@ public interface UserRepository extends JpaRepository<User, Long> {
     ORDER BY u.lastName ASC, u.firstName ASC
     """)
     Page<User> findAllExcludingExamMembers(@Param("examId") Long examId, Pageable pageable);
+
+    @Query(value = """
+        WITH public_counts AS (
+            SELECT id_user AS user_id, 
+                   COUNT(*) AS total,
+                   COUNT(CASE WHEN created_at >= :since THEN 1 END) AS new_count
+            FROM note
+            WHERE privacy = 'PUBLIC'
+            GROUP BY id_user
+            
+            UNION ALL
+            
+            SELECT id_user AS user_id, 
+                   COUNT(*) AS total,
+                   COUNT(CASE WHEN created_at >= :since THEN 1 END) AS new_count
+            FROM flashcard
+            WHERE privacy = 'PUBLIC'
+            GROUP BY id_user
+            
+            UNION ALL
+            
+            SELECT created_by AS user_id, 
+                   COUNT(*) AS total,
+                   COUNT(CASE WHEN created_at >= :since THEN 1 END) AS new_count
+            FROM exams
+            WHERE privacy = 'PUBLIC'
+            GROUP BY created_by
+        ),
+        aggregated_counts AS (
+            SELECT user_id, 
+                   SUM(total) AS total_resources,
+                   SUM(new_count) AS new_resources
+            FROM public_counts
+            GROUP BY user_id
+        )
+        SELECT u.id, 
+               u.first_name, 
+               u.last_name, 
+               u.email, 
+               u.avatar_url, 
+               COALESCE(ac.total_resources, 0) AS total_resources,
+               COALESCE(ac.new_resources, 0) AS new_resources
+        FROM users u
+        INNER JOIN aggregated_counts ac ON u.id = ac.user_id
+        ORDER BY total_resources DESC, new_resources DESC
+    """, nativeQuery = true)
+    List<Object[]> findTopCreators(@Param("since") java.time.OffsetDateTime since, Pageable pageable);
 }

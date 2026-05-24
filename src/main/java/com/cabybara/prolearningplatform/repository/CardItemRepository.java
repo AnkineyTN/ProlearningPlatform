@@ -60,4 +60,34 @@ public interface CardItemRepository extends JpaRepository<CardItem, Long> {
 
     @Query("SELECT c FROM CardItem c WHERE c.flashcard.id = :flashcardId AND c.topic IS NULL")
     List<CardItem> findByFlashcardIdAndTopicIsNull(@Param("flashcardId") Long flashcardId);
+
+    @Query(value = """
+        WITH combined_topics AS (
+            SELECT ci.topic,
+                   'FLASHCARD' AS type,
+                   f.id AS resource_id,
+                   f.created_at
+            FROM card_item ci
+            INNER JOIN flashcard f ON ci.flashcard_id = f.id
+            WHERE f.privacy = 'PUBLIC' AND ci.topic IS NOT NULL AND ci.topic <> ''
+            
+            UNION ALL
+            
+            SELECT q.topic,
+                   'EXAM' AS type,
+                   e.id AS resource_id,
+                   e.created_at
+            FROM questions q
+            INNER JOIN exam_questions eq ON eq.question_id = q.id
+            INNER JOIN exams e ON eq.exam_id = e.id
+            WHERE e.privacy = 'PUBLIC' AND q.topic IS NOT NULL AND q.topic <> ''
+        )
+        SELECT topic,
+               COUNT(DISTINCT CONCAT(type, '_', resource_id)) AS total_resources,
+               COUNT(DISTINCT CASE WHEN created_at >= :since THEN CONCAT(type, '_', resource_id) END) AS new_resources
+        FROM combined_topics
+        GROUP BY topic
+        ORDER BY total_resources DESC, new_resources DESC
+    """, nativeQuery = true)
+    List<Object[]> findTopTopics(@Param("since") OffsetDateTime since, org.springframework.data.domain.Pageable pageable);
 }

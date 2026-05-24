@@ -66,4 +66,18 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> 
     List<Object[]> findOverallSummary(
             @Param("userId") Long userId,
             @Param("startDate") LocalDate startDate);
+
+    @Query("""
+        SELECT a.setId, a.contentType, COUNT(a) as sessionCount
+        FROM ActivityLog a
+        WHERE a.setId IS NOT NULL 
+          AND a.contentType IN :allowedTypes
+          AND a.date >= :startDate
+        GROUP BY a.setId, a.contentType
+        ORDER BY sessionCount DESC
+        """)
+    List<Object[]> findTopResourcesBySessions(
+            @Param("startDate") LocalDate startDate,
+            @Param("allowedTypes") List<ContentType> allowedTypes,
+            org.springframework.data.domain.Pageable pageable);
 }
