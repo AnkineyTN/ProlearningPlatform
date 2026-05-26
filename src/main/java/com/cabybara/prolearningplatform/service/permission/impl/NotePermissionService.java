@@ -326,11 +326,24 @@ public class NotePermissionService implements ResourcePermissionService  {
     }
 
     public NoteRole getUserRoleInNote(Long noteId, Long userId) {
-        return noteMemberRepository
-            .findByNoteIdAndUserIdAndStatus(noteId, userId, NoteMemberStatus.ACTIVE)
-            .map(NoteMember::getRole)
-            .orElseThrow(() -> new AccessDeniedException(
-                "User " + userId + " has no access to note " + noteId));
+        // 1. Try to find user as a member
+        var optionalMember = noteMemberRepository
+            .findByNoteIdAndUserIdAndStatus(noteId, userId, NoteMemberStatus.ACTIVE);
+        
+        if (optionalMember.isPresent()) {
+            // User is a member: return their actual role
+            return optionalMember.get().getRole();
+        }
+        
+        // 2. User is not a member
+        if (isNotePublic(noteId)) {
+            // PUBLIC note: non-member = VIEWER role
+            return NoteRole.VIEWER;
+        }
+        
+        // PRIVATE note: non-member = AccessDenied
+        throw new AccessDeniedException(
+            "User " + userId + " has no access to note " + noteId);
     }
 
     @Transactional
