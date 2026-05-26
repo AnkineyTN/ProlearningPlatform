@@ -24,6 +24,12 @@ public enum NotificationType {
     SYSTEM_ANNOUNCEMENT("System announcement"),
     ACCOUNT_ACTIVITY("Account activity"),
 
+    // Todo & Goal reminders
+    DAILY_TODO_REMINDER("Incomplete daily tasks"),
+    WEEKLY_TODO_REMINDER("Incomplete weekly tasks"),
+    GOAL_DEADLINE_REMINDER("Goal deadline approaching"),
+    GOAL_INACTIVE_REMINDER("No activity on goal"),
+
     // General
     GENERAL("General notification");
 

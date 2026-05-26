@@ -25,6 +25,8 @@ schedule:
         days-old: 30
     payment-expired-cleanup:
         cron: "0 0 2 * * *"
+    todo-goal-reminder:
+        cron: "0 0 * * * *"
 
 server:
     forward-headers-strategy: framework
