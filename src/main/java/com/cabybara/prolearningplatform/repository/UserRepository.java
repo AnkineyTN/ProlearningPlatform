@@ -21,11 +21,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("""
         SELECT u FROM User u
-        WHERE (:keyword IS NULL
+        WHERE (:#{#keyword == null} = true
             OR LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%'))
             OR LOWER(u.lastName)  LIKE LOWER(CONCAT('%', :keyword, '%'))
             OR LOWER(u.email)     LIKE LOWER(CONCAT('%', :keyword, '%')))
-        AND (:accountType IS NULL OR u.accountType = :accountType)
+        AND (:#{#accountType == null} = true OR u.accountType = :accountType)
     """)
     Page<User> searchForAdmin(
         @Param("keyword")     String keyword,
