@@ -72,6 +72,9 @@ public class Todo extends AbstractEntity {
     @Builder.Default
     private List<ResourceRef> examRefs = new ArrayList<>();
 
+    @Column(name = "calendar_event_id")
+    private String calendarEventId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;

@@ -116,6 +116,12 @@ spring:
                         redirect-uri: ${GOOGLE_REDIRECT_URI}
                         scope: "email,profile,openid,calendar.events"
 
+google:
+    calendar:
+        redirect-uri: ${GOOGLE_CALENDAR_REDIRECT_URI:http://localhost:8080/api/calendar/auth/callback}
+        frontend-success-url: ${FRONTEND_CALENDAR_SUCCESS_URL:http://localhost:3000/settings/calendar?connected=true}
+        frontend-failure-url: ${FRONTEND_CALENDAR_FAILURE_URL:http://localhost:3000/settings/calendar?connected=false}
+
     springdoc:
         swagger-ui:
             path: api-docs
