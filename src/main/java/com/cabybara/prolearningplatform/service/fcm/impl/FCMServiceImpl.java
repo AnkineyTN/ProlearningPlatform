@@ -54,7 +54,7 @@ public class FCMServiceImpl implements FCMService {
         MulticastMessage multicastMessage = multicastBuilder.build();
 
         try {
-            BatchResponse batchResponse = firebaseMessaging.sendMulticast(multicastMessage);
+            BatchResponse batchResponse = firebaseMessaging.sendEachForMulticast(multicastMessage);
             log.info("FCM multicast sent: {} success, {} failure",
                     batchResponse.getSuccessCount(), batchResponse.getFailureCount());
 
