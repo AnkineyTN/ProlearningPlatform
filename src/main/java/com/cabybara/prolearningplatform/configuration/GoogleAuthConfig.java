@@ -58,6 +58,7 @@ public class GoogleAuthConfig {
                 scopes)
                 .setDataStoreFactory(dataStoreFactory)
                 .setAccessType("offline")
+                .setApprovalPrompt("force")
                 .build();
     }
 }
