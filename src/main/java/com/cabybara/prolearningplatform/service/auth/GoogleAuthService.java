@@ -14,4 +14,6 @@ public interface GoogleAuthService {
     GoogleAuthUrlResponseDto loginWithGoogle() throws IOException;
 
     LoginResponseDto loginWithGoogleMobile(String token) throws GeneralSecurityException, IOException;
+
+    void refreshGoogleToken(Long userId) throws IOException;
 }

@@ -12,6 +12,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -71,8 +73,23 @@ public class TokenDatabaseRepositoryImpl implements TokenDatabaseRepository<Stor
     @Override
     @Transactional
     public TokenDatabaseRepository<StoredCredential> set(String key, StoredCredential value) {
-        GoogleCredential googleAuthItem = googleAuthItemMapper.fromStoreCredential(value);
-        googleAuthItem.setUserId(key);
+        GoogleCredential googleAuthItem = googleCredentialRepository.findByUserId(key)
+                .map(existing -> {
+                    existing.setAccessToken(value.getAccessToken());
+                    existing.setRefreshToken(value.getRefreshToken());
+                    if (value.getExpirationTimeMilliseconds() != null) {
+                        existing.setExpiresAt(Instant.ofEpochMilli(value.getExpirationTimeMilliseconds())
+                                .atOffset(ZoneOffset.UTC));
+                    } else {
+                        existing.setExpiresAt(null);
+                    }
+                    return existing;
+                })
+                .orElseGet(() -> {
+                    GoogleCredential newItem = googleAuthItemMapper.fromStoreCredential(value);
+                    newItem.setUserId(key);
+                    return newItem;
+                });
         googleCredentialRepository.save(googleAuthItem);
         return this;
     }
