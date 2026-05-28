@@ -20,6 +20,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -79,6 +80,45 @@ public class GoalReminderServiceImpl implements GoalReminderService {
         log.debug("Sent goal inactive reminders to {} goals", notifications.size());
     }
 
+    @Override
+    public void debugSendGoalDeadlineReminders() {
+        List<Long> userIds = preferenceRepository.findAllUserIdsWithGoalDeadlineReminderEnabled();
+        if (userIds.isEmpty()) return;
+
+        LocalDate today = LocalDate.now(ZONE);
+        List<CreateNotificationDto> notifications = new ArrayList<>();
+
+        for (int days : DEADLINE_DAYS) {
+            List<Goal> goals = goalRepository.findGoalsWithTargetDate(userIds, today.plusDays(days));
+            for (Goal goal : goals) {
+                UserLanguage lang = resolveLanguage(goal);
+                notifications.add(buildDeadlineNotification(goal, lang, days));
+            }
+        }
+
+        if (!notifications.isEmpty()) {
+            notificationDispatcher.dispatchToMany(notifications);
+            log.debug("Debug: sent goal deadline reminders: {} notifications", notifications.size());
+        }
+    }
+
+    @Override
+    public void debugSendGoalInactiveReminders() {
+        List<Long> userIds = preferenceRepository.findAllUserIdsWithGoalInactiveReminderEnabled();
+        if (userIds.isEmpty()) return;
+
+        OffsetDateTime cutoff = OffsetDateTime.now(ZONE).minusDays(INACTIVE_THRESHOLD_DAYS);
+        List<Goal> inactiveGoals = goalRepository.findInactiveGoals(userIds, cutoff);
+        if (inactiveGoals.isEmpty()) return;
+
+        List<CreateNotificationDto> notifications = inactiveGoals.stream()
+                .map(g -> buildInactiveNotification(g, resolveLanguage(g)))
+                .toList();
+
+        notificationDispatcher.dispatchToMany(notifications);
+        log.debug("Debug: sent goal inactive reminders to {} goals", notifications.size());
+    }
+
     private CreateNotificationDto buildDeadlineNotification(Goal goal, UserLanguage lang, int days) {
         String timeKey = switch (days) {
             case 1 -> "notification.goal_deadline.time.1day";
@@ -94,6 +134,7 @@ public class GoalReminderServiceImpl implements GoalReminderService {
                 .message(messageResolver.resolve("notification.goal_deadline.message", lang, goal.getTitle(), timeLabel))
                 .actionUrl("/goals/" + goal.getId())
                 .sendPush(true)
+                .data(Map.of("goalTitle", goal.getTitle(), "days", days))
                 .build();
     }
 
@@ -105,6 +146,7 @@ public class GoalReminderServiceImpl implements GoalReminderService {
                 .message(messageResolver.resolve("notification.goal_inactive.message", lang, goal.getTitle()))
                 .actionUrl("/goals/" + goal.getId())
                 .sendPush(true)
+                .data(Map.of("goalTitle", goal.getTitle()))
                 .build();
     }
 

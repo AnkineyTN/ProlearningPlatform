@@ -28,4 +28,16 @@ public interface UserNotificationPreferenceRepository extends JpaRepository<User
 
     @Query("SELECT p.user.id FROM UserNotificationPreference p WHERE p.goalInactiveReminderEnabled = true AND p.goalReminderHour = :hour")
     List<Long> findUserIdsForGoalInactiveReminder(@Param("hour") int hour);
+
+    @Query("SELECT p.user.id FROM UserNotificationPreference p WHERE p.dailyTodoReminderEnabled = true")
+    List<Long> findAllUserIdsWithDailyTodoReminderEnabled();
+
+    @Query("SELECT p.user.id FROM UserNotificationPreference p WHERE p.weeklyTodoReminderEnabled = true")
+    List<Long> findAllUserIdsWithWeeklyTodoReminderEnabled();
+
+    @Query("SELECT p.user.id FROM UserNotificationPreference p WHERE p.goalDeadlineReminderEnabled = true")
+    List<Long> findAllUserIdsWithGoalDeadlineReminderEnabled();
+
+    @Query("SELECT p.user.id FROM UserNotificationPreference p WHERE p.goalInactiveReminderEnabled = true")
+    List<Long> findAllUserIdsWithGoalInactiveReminderEnabled();
 }
