@@ -159,7 +159,10 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
         Long expiresIn = credential.getExpiresInSeconds();
         if (expiresIn == null || expiresIn <= 60) {
             try {
-                credential.refreshToken();
+                boolean refreshed = credential.refreshToken();
+                if (!refreshed) {
+                    throw new GoogleAuthException("Failed to refresh Google token: refresh did not occur");
+                }
             } catch (TokenResponseException e) {
                 throw new GoogleAuthException("Failed to refresh Google token: " + e.getMessage());
             }
