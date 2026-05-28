@@ -147,4 +147,22 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                 .refreshToken(refreshToken)
                 .build();
     }
+
+    @Override
+    public void refreshGoogleToken(Long userId) throws IOException {
+        Credential credential = googleFlow.loadCredential(userId.toString());
+
+        if (credential == null) {
+            throw new GoogleAuthException("No Google credential found for user: " + userId);
+        }
+
+        Long expiresIn = credential.getExpiresInSeconds();
+        if (expiresIn == null || expiresIn <= 60) {
+            try {
+                credential.refreshToken();
+            } catch (TokenResponseException e) {
+                throw new GoogleAuthException("Failed to refresh Google token: " + e.getMessage());
+            }
+        }
+    }
 }

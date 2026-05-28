@@ -114,7 +114,7 @@ spring:
                         client-id: ${OAUTH2_GOOGLE_CLIENT_ID}
                         client-secret: ${OAUTH2_GOOGLE_CLIENT_SECRET}
                         redirect-uri: ${GOOGLE_REDIRECT_URI}
-                        scope: "email,profile,openid, calendar.events"
+                        scope: "email,profile,openid,calendar.events"
 
     springdoc:
         swagger-ui:
