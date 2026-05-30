@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface RoadmapService {
 
-    RoadmapPreviewResponseDto previewRoadmap(RoadmapPreviewRequestDto request);
+    RoadmapPreviewResponseDto previewRoadmap(Long userId, RoadmapPreviewRequestDto request);
 
     RoadmapDetailResponseDto acceptRoadmap(Long userId, AcceptRoadmapRequestDto dto);
 

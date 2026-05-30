@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.service.ai.impl;
 
 import com.cabybara.prolearningplatform.dto.internal.roadmap.TopicContentAiRequestDto;
 import com.cabybara.prolearningplatform.dto.internal.roadmap.TopicContentAiResponseDto;
+import com.cabybara.prolearningplatform.dto.internal.roadmap.UserKnowledgeProfileDto;
 import com.cabybara.prolearningplatform.dto.request.roadmap.RoadmapPreviewRequestDto;
 import com.cabybara.prolearningplatform.dto.response.roadmap.RoadmapPreviewResponseDto;
 import com.cabybara.prolearningplatform.service.ai.AIRoadmapService;
@@ -39,7 +40,7 @@ public class AIRoadmapServiceImpl implements AIRoadmapService {
     // ##################################################
 
     @Override
-    public RoadmapPreviewResponseDto generateRoadmap(RoadmapPreviewRequestDto request) {
+    public RoadmapPreviewResponseDto generateRoadmap(RoadmapPreviewRequestDto request, List<UserKnowledgeProfileDto> knowledgeProfiles) {
         log.info("Generating roadmap for goal='{}', level='{}'", request.getGoal(), request.getLevel());
 
         try {
@@ -47,6 +48,9 @@ public class AIRoadmapServiceImpl implements AIRoadmapService {
             body.put("goal", request.getGoal());
             body.put("level", request.getLevel().getDescription());
             body.put("language", request.getLanguage() != null ? request.getLanguage() : "English");
+            body.put("reference_links",
+                    request.getReferenceLinks() != null ? request.getReferenceLinks() : List.of());
+            body.put("knowledge_profiles", knowledgeProfiles);
 
             String raw = restHttpClientUtil.post(
                     aiServiceBaseApi + GENERATE_ROADMAP_PATH,
