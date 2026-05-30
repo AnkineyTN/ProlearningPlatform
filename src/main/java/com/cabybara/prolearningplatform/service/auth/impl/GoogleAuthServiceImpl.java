@@ -105,7 +105,9 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
             googleFlow.getCredentialDataStore().set(String.valueOf(user.getId()), tempCredential);
         }
 
-        userService.verifyEmail(user.getId());
+        if (!user.isEmailVerified()) {
+            userService.verifyEmail(user.getId());
+        }
 
         googleFlow.getCredentialDataStore().delete(state);
 
@@ -132,7 +134,9 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
 
         User user = userService.findOrCreateFromGoogle(googleUserInfoDto);
 
-        userService.verifyEmail(user.getId());
+        if (!user.isEmailVerified()) {
+            userService.verifyEmail(user.getId());
+        }
 
         UserResponseDto userResponseDto = userMapper.toUserResponseDto(user);
         String accessToken = jwtService.generateToken(user.getEmail());
@@ -142,5 +146,26 @@ public class GoogleAuthServiceImpl implements GoogleAuthService {
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
+    }
+
+    @Override
+    public void refreshGoogleToken(Long userId) throws IOException {
+        Credential credential = googleFlow.loadCredential(userId.toString());
+
+        if (credential == null) {
+            throw new GoogleAuthException("No Google credential found for user: " + userId);
+        }
+
+        Long expiresIn = credential.getExpiresInSeconds();
+        if (expiresIn == null || expiresIn <= 60) {
+            try {
+                boolean refreshed = credential.refreshToken();
+                if (!refreshed) {
+                    throw new GoogleAuthException("Failed to refresh Google token: refresh did not occur");
+                }
+            } catch (TokenResponseException e) {
+                throw new GoogleAuthException("Failed to refresh Google token: " + e.getMessage());
+            }
+        }
     }
 }
