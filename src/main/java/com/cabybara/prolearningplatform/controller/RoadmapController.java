@@ -96,7 +96,7 @@ public class RoadmapController {
                 .body(ResponseUtil.success("Successfully", response, null));
     }
 
-    @Operation(summary = "Start learning a topic: creates its Set and triggers async note generation")
+    @Operation(summary = "Start learning a topic: adds a Note to the roadmap's Set and triggers async note generation")
     @PreAuthorize("isAuthenticated() and @accountPermissionService.isPro(@authenticationContext.getCurrentUserId())")
     @PostMapping("/{roadmapId}/topics/{topicId}/start")
     public ResponseEntity<ApiResponse<TopicStartResponseDto>> startTopic(

@@ -1,9 +1,12 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.dto.helper.RoadmapSetRef;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.Set;
 
 import java.time.OffsetDateTime;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -23,6 +26,11 @@ public interface SetRepository extends JpaRepository<Set, Long> {
     Page<Set> findAllByUserId(Long userId, Pageable pageable);
 
     Optional<Set> findByIdAndUserId(Long setId, Long userId);
+
+    Optional<Set> findByRoadmapId(Long roadmapId);
+
+    @Query("SELECT s.roadmap.id AS roadmapId, s.id AS setId FROM Set s WHERE s.roadmap.id IN :roadmapIds")
+    List<RoadmapSetRef> findSetRefsByRoadmapIdIn(@Param("roadmapIds") Collection<Long> roadmapIds);
 
     boolean existsByTitleAndIdNot(String title, Long id);
 

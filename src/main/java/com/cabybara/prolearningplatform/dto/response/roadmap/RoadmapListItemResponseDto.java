@@ -11,6 +11,7 @@ import java.time.OffsetDateTime;
 public class RoadmapListItemResponseDto {
 
     private Long id;
+    private Long setId;
     private String title;
     private String overview;
     private RoadmapStatus status;
