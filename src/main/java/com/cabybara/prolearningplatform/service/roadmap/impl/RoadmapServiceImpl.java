@@ -7,6 +7,8 @@ import com.cabybara.prolearningplatform.dto.response.roadmap.RoadmapListItemResp
 import com.cabybara.prolearningplatform.dto.response.roadmap.RoadmapPreviewResponseDto;
 import com.cabybara.prolearningplatform.dto.response.roadmap.TopicCompleteResponseDto;
 import com.cabybara.prolearningplatform.dto.response.roadmap.TopicStartResponseDto;
+import com.cabybara.prolearningplatform.dto.helper.RoadmapSetRef;
+import com.cabybara.prolearningplatform.dto.helper.RoadmapTopicNoteRef;
 import com.cabybara.prolearningplatform.enums.ChapterStatus;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.enums.RoadmapStatus;
@@ -19,6 +21,7 @@ import com.cabybara.prolearningplatform.model.roadmap.RoadmapChapter;
 import com.cabybara.prolearningplatform.model.roadmap.RoadmapTopic;
 import com.cabybara.prolearningplatform.repository.RoadmapChapterRepository;
 import com.cabybara.prolearningplatform.repository.RoadmapRepository;
+import com.cabybara.prolearningplatform.repository.NoteRepository;
 import com.cabybara.prolearningplatform.repository.RoadmapTopicRepository;
 import com.cabybara.prolearningplatform.repository.SetRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
@@ -49,6 +52,7 @@ public class RoadmapServiceImpl implements RoadmapService {
     private final RoadmapChapterRepository roadmapChapterRepository;
     private final RoadmapTopicRepository roadmapTopicRepository;
     private final SetRepository setRepository;
+    private final NoteRepository noteRepository;
     private final UserRepository userRepository;
     private final AIRoadmapService aiRoadmapService;
     private final RoadmapTopicSetupAsyncService topicSetupAsyncService;
@@ -61,7 +65,11 @@ public class RoadmapServiceImpl implements RoadmapService {
     @Override
     @Transactional
     public RoadmapDetailResponseDto acceptRoadmap(Long userId, AcceptRoadmapRequestDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
         Roadmap savedRoadmap = createAndSaveRoadmap(userId, dto);
+        createRoadmapSet(savedRoadmap, user);
 
         List<AcceptRoadmapRequestDto.ChapterDto> chapterDtos = dto.getChapters();
         for (int ci = 0; ci < chapterDtos.size(); ci++) {
@@ -76,8 +84,15 @@ public class RoadmapServiceImpl implements RoadmapService {
     @Override
     @Transactional(readOnly = true)
     public Page<RoadmapListItemResponseDto> getRoadmaps(Long userId, Pageable pageable) {
-        return roadmapRepository.findByUserId(userId, pageable)
-                .map(roadmap -> {
+        Page<Roadmap> page = roadmapRepository.findByUserId(userId, pageable);
+
+        List<Long> roadmapIds = page.getContent().stream().map(Roadmap::getId).toList();
+        Map<Long, Long> setIdByRoadmap = roadmapIds.isEmpty()
+                ? Map.of()
+                : setRepository.findSetRefsByRoadmapIdIn(roadmapIds).stream()
+                        .collect(Collectors.toMap(RoadmapSetRef::getRoadmapId, RoadmapSetRef::getSetId));
+
+        return page.map(roadmap -> {
                     long total = roadmapTopicRepository.countByRoadmapId(roadmap.getId());
                     long completed = roadmapTopicRepository.countCompletedByRoadmapId(roadmap.getId());
                     long totalChapters = roadmapChapterRepository.countByRoadmapId(roadmap.getId());
@@ -85,6 +100,7 @@ public class RoadmapServiceImpl implements RoadmapService {
 
                     return RoadmapListItemResponseDto.builder()
                             .id(roadmap.getId())
+                            .setId(setIdByRoadmap.get(roadmap.getId()))
                             .title(roadmap.getTitle())
                             .overview(roadmap.getOverview())
                             .status(roadmap.getStatus())
@@ -124,27 +140,25 @@ public class RoadmapServiceImpl implements RoadmapService {
 
         validateTopicAccess(topic, roadmapId);
 
-        if (topic.getSetId() != null) {
+        Set roadmapSet = setRepository.findByRoadmapId(roadmapId)
+                .orElseThrow(() -> new ResourceNotFoundException("Set not found for roadmap: " + roadmapId));
+
+        if (topic.getContentStatus() != TopicContentStatus.IDLE) {
             return TopicStartResponseDto.builder()
                     .topicId(topicId)
-                    .setId(topic.getSetId())
+                    .setId(roadmapSet.getId())
                     .contentStatus(topic.getContentStatus())
                     .build();
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
-
-        Set savedSet = createSetForTopic(topic, user);
-        topic.setSetId(savedSet.getId());
         topic.setContentStatus(TopicContentStatus.GENERATING);
         roadmapTopicRepository.save(topic);
 
-        scheduleContentGeneration(userId, topicId, savedSet.getId(), topic, topic.getChapter(), roadmap);
+        scheduleContentGeneration(userId, topicId, roadmapSet.getId(), topic, topic.getChapter(), roadmap);
 
         return TopicStartResponseDto.builder()
                 .topicId(topicId)
-                .setId(savedSet.getId())
+                .setId(roadmapSet.getId())
                 .contentStatus(TopicContentStatus.GENERATING)
                 .build();
     }
@@ -206,12 +220,13 @@ public class RoadmapServiceImpl implements RoadmapService {
         }
     }
 
-    private Set createSetForTopic(RoadmapTopic topic, User user) {
+    private Set createRoadmapSet(Roadmap roadmap, User user) {
         return setRepository.save(Set.builder()
-                .title(topic.getTitle())
-                .description(topic.getDescription())
+                .title(roadmap.getTitle())
+                .description(roadmap.getOverview())
                 .privacy(Privacy.PRIVATE)
                 .user(user)
+                .roadmap(roadmap)
                 .notes(new ArrayList<>())
                 .flashcards(new ArrayList<>())
                 .build());
@@ -307,6 +322,12 @@ public class RoadmapServiceImpl implements RoadmapService {
     private RoadmapDetailResponseDto buildDetailResponse(Roadmap roadmap,
                                                           List<RoadmapChapter> chapters,
                                                           List<RoadmapTopic> allTopics) {
+        Long setId = setRepository.findByRoadmapId(roadmap.getId())
+                .map(Set::getId)
+                .orElse(null);
+        Map<Long, Long> noteIdByTopic = noteRepository.findTopicNoteRefsByRoadmapId(roadmap.getId()).stream()
+                .collect(Collectors.toMap(RoadmapTopicNoteRef::getTopicId, RoadmapTopicNoteRef::getNoteId));
+
         Map<Long, List<RoadmapTopic>> topicsByChapter = allTopics.stream()
                 .collect(Collectors.groupingBy(t -> t.getChapter().getId()));
 
@@ -325,7 +346,7 @@ public class RoadmapServiceImpl implements RoadmapService {
                                     .orderIndex(t.getOrderIndex())
                                     .completed(t.getCompleted())
                                     .contentStatus(t.getContentStatus())
-                                    .setId(t.getSetId())
+                                    .noteId(noteIdByTopic.get(t.getId()))
                                     .build())
                             .toList();
 
@@ -349,6 +370,7 @@ public class RoadmapServiceImpl implements RoadmapService {
 
         return RoadmapDetailResponseDto.builder()
                 .id(roadmap.getId())
+                .setId(setId)
                 .title(roadmap.getTitle())
                 .overview(roadmap.getOverview())
                 .status(roadmap.getStatus())

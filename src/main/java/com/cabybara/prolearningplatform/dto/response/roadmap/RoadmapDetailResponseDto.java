@@ -18,6 +18,7 @@ import java.util.List;
 public class RoadmapDetailResponseDto {
 
     private Long id;
+    private Long setId;
     private String title;
     private String overview;
     private RoadmapStatus status;
@@ -57,6 +58,6 @@ public class RoadmapDetailResponseDto {
         private Integer orderIndex;
         private Boolean completed;
         private TopicContentStatus contentStatus;
-        private Long setId;
+        private Long noteId;
     }
 }

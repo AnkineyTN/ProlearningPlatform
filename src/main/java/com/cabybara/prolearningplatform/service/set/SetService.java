@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface SetService {
 
-    Page<SetResponseDto> getAllSet(String q, Privacy privacy, Pageable pageable);
+    Page<SetResponseDto> getAllSet(String q, Privacy privacy, Boolean roadmap, Pageable pageable);
 
     SetResponseDto createSet(Long userId, SetCreationRequestDto setCreationRequestDto);
 

@@ -44,22 +44,22 @@ public class SetServiceImpl implements SetService {
     }
 
     @Override
-    public Page<SetResponseDto> getAllSet(String q, Privacy privacy, Pageable pageable) {
+    public Page<SetResponseDto> getAllSet(String q, Privacy privacy, Boolean roadmap, Pageable pageable) {
         Long userId = authenticationContext.getCurrentUserId();
 
         Page<Set> pagedSet;
 
         if (q == null || q.isBlank()) {
             if (privacy == null) {
-                pagedSet = setRepository.findByUserId(userId, pageable);
+                pagedSet = setRepository.findByUserId(userId, roadmap, pageable);
             } else {
-                pagedSet = setRepository.findByUserIdAndPrivacy(userId, privacy.name(), pageable);
+                pagedSet = setRepository.findByUserIdAndPrivacy(userId, privacy.name(), roadmap, pageable);
             }
         } else {
             if (privacy == null) {
-                pagedSet = setRepository.searchByUserId(userId, q, pageable);
+                pagedSet = setRepository.searchByUserId(userId, q, roadmap, pageable);
             } else {
-                pagedSet = setRepository.searchByUserIdAndPrivacy(userId, q, privacy.name(), pageable);
+                pagedSet = setRepository.searchByUserIdAndPrivacy(userId, q, privacy.name(), roadmap, pageable);
             }
         }
 
