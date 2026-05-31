@@ -43,24 +43,27 @@ public interface SetRepository extends JpaRepository<Set, Long> {
                 SELECT *
                 FROM set
                 WHERE id_user = :userId
+                  AND (CAST(:roadmap AS BOOLEAN) IS NULL OR (roadmap_id IS NOT NULL) = CAST(:roadmap AS BOOLEAN))
             """,
             nativeQuery = true)
-    Page<Set> findByUserId(Long userId, Pageable pageable);
+    Page<Set> findByUserId(Long userId, Boolean roadmap, Pageable pageable);
 
     @Query(
             value = """
                 SELECT *
                 FROM set
                 WHERE id_user = :userId AND privacy = :privacy
+                  AND (CAST(:roadmap AS BOOLEAN) IS NULL OR (roadmap_id IS NOT NULL) = CAST(:roadmap AS BOOLEAN))
             """,
             nativeQuery = true)
-    Page<Set> findByUserIdAndPrivacy(Long userId, String privacy, Pageable pageable);
+    Page<Set> findByUserIdAndPrivacy(Long userId, String privacy, Boolean roadmap, Pageable pageable);
 
     @Query(
             value = """
                 SELECT *
                 FROM set
                 WHERE id_user = :userId
+                  AND (CAST(:roadmap AS BOOLEAN) IS NULL OR (roadmap_id IS NOT NULL) = CAST(:roadmap AS BOOLEAN))
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
@@ -68,12 +71,13 @@ public interface SetRepository extends JpaRepository<Set, Long> {
                 SELECT count(*)
                 FROM set
                 WHERE id_user = :userId
+                  AND (CAST(:roadmap AS BOOLEAN) IS NULL OR (roadmap_id IS NOT NULL) = CAST(:roadmap AS BOOLEAN))
                   AND (
                         search_vector @@ plainto_tsquery('simple', :q)
                         OR (title || ' ' || description) % unaccent(:q))
                 """,
             nativeQuery = true)
-    Page<Set> searchByUserId(Long userId, String q, Pageable pageable);
+    Page<Set> searchByUserId(Long userId, String q, Boolean roadmap, Pageable pageable);
 
     @Query(
             value = """
@@ -81,6 +85,7 @@ public interface SetRepository extends JpaRepository<Set, Long> {
                 FROM set
                 WHERE id_user = :userId
                   AND privacy = :privacy
+                  AND (CAST(:roadmap AS BOOLEAN) IS NULL OR (roadmap_id IS NOT NULL) = CAST(:roadmap AS BOOLEAN))
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
@@ -89,9 +94,10 @@ public interface SetRepository extends JpaRepository<Set, Long> {
                 FROM set
                 WHERE id_user = :userId
                   AND privacy = :privacy
+                  AND (CAST(:roadmap AS BOOLEAN) IS NULL OR (roadmap_id IS NOT NULL) = CAST(:roadmap AS BOOLEAN))
                   AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             nativeQuery = true)
-    Page<Set> searchByUserIdAndPrivacy(Long userId, String q, String privacy, Pageable pageable);
+    Page<Set> searchByUserIdAndPrivacy(Long userId, String q, String privacy, Boolean roadmap, Pageable pageable);
 }

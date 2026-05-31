@@ -15,6 +15,7 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 public class SetResponseDto {
     private Long id;
+    private Long roadmapId;
     private String title;
     private String description;
     private Privacy privacy;

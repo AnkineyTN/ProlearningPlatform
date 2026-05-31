@@ -24,6 +24,7 @@ public interface SetMapper {
     @Mapping(source = "notes", target = "numNotes", qualifiedByName = "listToCount")
     @Mapping(source = "flashcards", target = "numFlashcards", qualifiedByName = "listToCount")
     @Mapping(source = "exams", target = "numExams", qualifiedByName = "listToCount")
+    @Mapping(source = "roadmap.id", target = "roadmapId")
     SetResponseDto toSetResponseDto(Set set);
 
     SetSummaryResponseDto toSetSummaryResponseDto(Set set);

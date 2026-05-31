@@ -44,10 +44,12 @@ public class SetController {
     public ResponseEntity<ApiResponse<Object>> getSet(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) Privacy privacy,
+            @Parameter(description = "Lọc theo roadmap: true = chỉ set thuộc roadmap, false = chỉ set thường, bỏ trống = tất cả")
+            @RequestParam(required = false) Boolean roadmap,
             @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
     ) {
 
-        Page<SetResponseDto> allSetResponseDtos = setService.getAllSet(q, privacy, pageable);
+        Page<SetResponseDto> allSetResponseDtos = setService.getAllSet(q, privacy, roadmap, pageable);
         PaginationResponseDto paginationResponseDto = PaginationResponseDto.builder()
                 .currentPage(allSetResponseDtos.getNumber())
                 .totalPages(allSetResponseDtos.getTotalPages())
