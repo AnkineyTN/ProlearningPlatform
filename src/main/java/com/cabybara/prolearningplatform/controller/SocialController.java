@@ -2,8 +2,13 @@ package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.social.SocialItemResponseDto;
+import com.cabybara.prolearningplatform.enums.ContentType;
+import com.cabybara.prolearningplatform.enums.ResourceType;
+import com.cabybara.prolearningplatform.enums.TrendingPeriod;
+import com.cabybara.prolearningplatform.service.social.ResourceViewLogService;
 import com.cabybara.prolearningplatform.service.social.SocialService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
+import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import com.cabybara.prolearningplatform.utils.ValidateSort;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,10 +21,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/social")
@@ -29,6 +31,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class SocialController {
 
     private final SocialService socialService;
+    private final ResourceViewLogService resourceViewLogService;
+    private final AuthenticationContext authenticationContext;
 
     @GetMapping("/notes")
     @Operation(summary = "Browse public notes")
@@ -64,6 +68,79 @@ public class SocialController {
         Page<SocialItemResponseDto> page = socialService.getSocialExams(q, pageable);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully", page.getContent(), buildPagination(page)));
+    }
+
+    @GetMapping("/trending/resources")
+    @Operation(summary = "Get trending public resources")
+    public ResponseEntity<ApiResponse<?>> getTrendingResources(
+            @RequestParam(defaultValue = "D7") TrendingPeriod period,
+            @RequestParam(defaultValue = "10") int top,
+            @RequestParam(defaultValue = "ALL") ResourceType type
+    ) {
+        int limit = Math.min(Math.max(top, 1), 50);
+        var data = socialService.getTrendingResources(period, limit, type);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ResponseUtil.success("Successfully", data, null));
+    }
+
+    @GetMapping("/trending/creators")
+    @Operation(summary = "Get top creators")
+    public ResponseEntity<ApiResponse<?>> getTopCreators(
+            @RequestParam(defaultValue = "D7") TrendingPeriod period,
+            @RequestParam(defaultValue = "10") int top
+    ) {
+        int limit = Math.min(Math.max(top, 1), 50);
+        var data = socialService.getTopCreators(period, limit);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ResponseUtil.success("Successfully", data, null));
+    }
+
+    @GetMapping("/trending/topics")
+    @Operation(summary = "Get top trending topics")
+    public ResponseEntity<ApiResponse<?>> getTopTopics(
+            @RequestParam(defaultValue = "D7") TrendingPeriod period,
+            @RequestParam(defaultValue = "10") int top
+    ) {
+        int limit = Math.min(Math.max(top, 1), 50);
+        var data = socialService.getTopTopics(period, limit);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ResponseUtil.success("Successfully", data, null));
+    }
+
+    @PostMapping("/resources/{type}/{id}/view")
+    @Operation(summary = "Record a view event for a resource")
+    public ResponseEntity<ApiResponse<?>> recordResourceView(
+            @PathVariable ContentType type,
+            @PathVariable Long id,
+            jakarta.servlet.http.HttpServletRequest request
+    ) {
+        String ip = getClientIp(request);
+        Long userId = null;
+        try {
+            userId = authenticationContext.getCurrentUserId();
+        } catch (Exception e) {
+            // Ignore guest user exceptions
+        }
+        resourceViewLogService.recordView(id, type, ip, userId);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ResponseUtil.success("View recorded", null, null));
+    }
+
+    private String getClientIp(jakarta.servlet.http.HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+        return ip;
     }
 
     private PaginationResponseDto buildPagination(Page<?> page) {
