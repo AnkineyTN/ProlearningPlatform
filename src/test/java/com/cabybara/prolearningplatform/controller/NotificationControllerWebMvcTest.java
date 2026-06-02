@@ -9,8 +9,10 @@ import com.cabybara.prolearningplatform.enums.NotificationType;
 import com.cabybara.prolearningplatform.mapper.NotificationMapper;
 import com.cabybara.prolearningplatform.service.fcm.DeviceTokenService;
 import com.cabybara.prolearningplatform.service.fcm.FCMService;
+import com.cabybara.prolearningplatform.service.notification.GoalReminderService;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
 import com.cabybara.prolearningplatform.service.notification.NotificationService;
+import com.cabybara.prolearningplatform.service.notification.TodoReminderService;
 import com.cabybara.prolearningplatform.service.notification.WeeklySummaryService;
 import com.cabybara.prolearningplatform.support.WebMvcTestSecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -55,6 +57,10 @@ class NotificationControllerWebMvcTest {
     private FCMService fcmService;
     @MockBean
     private WeeklySummaryService weeklySummaryService;
+    @MockBean
+    private TodoReminderService todoReminderService;
+    @MockBean
+    private GoalReminderService goalReminderService;
     @MockBean
     private NotificationDispatcher notificationDispatcher;
     @MockBean
