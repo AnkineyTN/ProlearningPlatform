@@ -5,6 +5,8 @@ import com.cabybara.prolearningplatform.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "notification_preference")
 @Builder
@@ -57,4 +59,16 @@ public class UserNotificationPreference extends AbstractEntity {
     @Builder.Default
     @Column(name = "goal_reminder_hour", nullable = false)
     private int goalReminderHour = 9;
+
+    @Column(name = "last_daily_todo_reminder_at")
+    private LocalDate lastDailyTodoReminderAt;
+
+    @Column(name = "last_weekly_todo_reminder_at")
+    private LocalDate lastWeeklyTodoReminderAt;
+
+    @Column(name = "last_goal_deadline_reminder_at")
+    private LocalDate lastGoalDeadlineReminderAt;
+
+    @Column(name = "last_goal_inactive_reminder_at")
+    private LocalDate lastGoalInactiveReminderAt;
 }

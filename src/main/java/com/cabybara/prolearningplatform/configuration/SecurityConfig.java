@@ -74,6 +74,7 @@ public class SecurityConfig {
                 .requestMatchers("/social/**").permitAll()
                 .requestMatchers("/public/**").permitAll()
                 .requestMatchers("/webhook/payos").permitAll()
+                .requestMatchers("/calendar/auth/callback").permitAll()
                 .anyRequest().authenticated()
         );
 

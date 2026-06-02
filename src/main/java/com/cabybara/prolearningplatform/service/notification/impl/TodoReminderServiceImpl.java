@@ -12,6 +12,7 @@ import com.cabybara.prolearningplatform.utils.NotificationMessageResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -33,48 +34,55 @@ public class TodoReminderServiceImpl implements TodoReminderService {
     private final NotificationMessageResolver messageResolver;
 
     @Override
+    @Transactional
     public void sendDailyTodoReminders() {
+        LocalDate today = LocalDate.now(ZONE);
         int currentHour = LocalTime.now(ZONE).getHour();
-        List<Long> userIds = preferenceRepository.findUserIdsForDailyTodoReminder(currentHour);
+
+        List<Long> userIds = preferenceRepository.findUserIdsForDailyTodoReminderDue(currentHour, today);
         if (userIds.isEmpty()) return;
 
-        LocalDate today = LocalDate.now(ZONE);
         List<UserTodoCountProjection> counts = todoRepository.countIncompleteDailyTodosForUsers(userIds, today);
-        if (counts.isEmpty()) return;
 
-        List<CreateNotificationDto> notifications = counts.stream()
-                .map(c -> buildNotification(
-                        c.getUserId(), c.getCount(),
-                        c.getUserLanguage() != null ? c.getUserLanguage() : UserLanguage.EN,
-                        NotificationType.DAILY_TODO_REMINDER))
-                .toList();
+        if (!counts.isEmpty()) {
+            List<CreateNotificationDto> notifications = counts.stream()
+                    .map(c -> buildNotification(
+                            c.getUserId(), c.getCount(),
+                            c.getUserLanguage() != null ? c.getUserLanguage() : UserLanguage.EN,
+                            NotificationType.DAILY_TODO_REMINDER))
+                    .toList();
+            notificationDispatcher.dispatchToMany(notifications);
+            log.debug("Sent daily todo reminders to {} users", notifications.size());
+        }
 
-        notificationDispatcher.dispatchToMany(notifications);
-        log.debug("Sent daily todo reminders to {} users", notifications.size());
+        preferenceRepository.markDailyTodoReminderSent(userIds, today);
     }
 
     @Override
+    @Transactional
     public void sendWeeklyTodoReminders() {
         LocalDate today = LocalDate.now(ZONE);
         if (today.getDayOfWeek() != DayOfWeek.SUNDAY) return;
 
         int currentHour = LocalTime.now(ZONE).getHour();
-        List<Long> userIds = preferenceRepository.findUserIdsForWeeklyTodoReminder(currentHour);
+        List<Long> userIds = preferenceRepository.findUserIdsForWeeklyTodoReminderDue(currentHour, today);
         if (userIds.isEmpty()) return;
 
         LocalDate weekStart = today.with(DayOfWeek.MONDAY);
         List<UserTodoCountProjection> counts = todoRepository.countIncompleteWeeklyTodosForUsers(userIds, weekStart, today);
-        if (counts.isEmpty()) return;
 
-        List<CreateNotificationDto> notifications = counts.stream()
-                .map(c -> buildNotification(
-                        c.getUserId(), c.getCount(),
-                        c.getUserLanguage() != null ? c.getUserLanguage() : UserLanguage.EN,
-                        NotificationType.WEEKLY_TODO_REMINDER))
-                .toList();
+        if (!counts.isEmpty()) {
+            List<CreateNotificationDto> notifications = counts.stream()
+                    .map(c -> buildNotification(
+                            c.getUserId(), c.getCount(),
+                            c.getUserLanguage() != null ? c.getUserLanguage() : UserLanguage.EN,
+                            NotificationType.WEEKLY_TODO_REMINDER))
+                    .toList();
+            notificationDispatcher.dispatchToMany(notifications);
+            log.debug("Sent weekly todo reminders to {} users", notifications.size());
+        }
 
-        notificationDispatcher.dispatchToMany(notifications);
-        log.debug("Sent weekly todo reminders to {} users", notifications.size());
+        preferenceRepository.markWeeklyTodoReminderSent(userIds, today);
     }
 
     @Override

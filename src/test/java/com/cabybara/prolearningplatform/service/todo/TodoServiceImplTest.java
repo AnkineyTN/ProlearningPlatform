@@ -12,6 +12,7 @@ import com.cabybara.prolearningplatform.model.Todo;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.repository.GoalRepository;
 import com.cabybara.prolearningplatform.repository.TodoRepository;
+import com.cabybara.prolearningplatform.service.calendar.CalendarService;
 import com.cabybara.prolearningplatform.service.todo.impl.TodoServiceImpl;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import com.cabybara.prolearningplatform.support.TestFixtures;
@@ -50,9 +51,12 @@ class TodoServiceImplTest {
     @Mock
     private AuthenticationContext authenticationContext;
 
+    @Mock
+    private CalendarService calendarService;
+
     @Test
     void createTodoAppliesDefaultStatusPriorityTypeAndEmptyRefs() {
-        TodoServiceImpl service = new TodoServiceImpl(todoRepository, goalRepository, userService, authenticationContext);
+        TodoServiceImpl service = new TodoServiceImpl(todoRepository, goalRepository, userService, authenticationContext, calendarService);
         User user = TestFixtures.user(1L);
         CreateTodoRequest request = new CreateTodoRequest();
         request.setTitle("Read docs");
@@ -90,7 +94,7 @@ class TodoServiceImplTest {
 
     @Test
     void createTodoMarksCompletedWhenStatusIsDone() {
-        TodoServiceImpl service = new TodoServiceImpl(todoRepository, goalRepository, userService, authenticationContext);
+        TodoServiceImpl service = new TodoServiceImpl(todoRepository, goalRepository, userService, authenticationContext, calendarService);
         User user = TestFixtures.user(1L);
         Goal goal = TestFixtures.goal(3L, user);
         CreateTodoRequest request = new CreateTodoRequest();
@@ -118,7 +122,7 @@ class TodoServiceImplTest {
 
     @Test
     void updateTodoSyncsCompletedStateFromStatusAndClearsGoal() {
-        TodoServiceImpl service = new TodoServiceImpl(todoRepository, goalRepository, userService, authenticationContext);
+        TodoServiceImpl service = new TodoServiceImpl(todoRepository, goalRepository, userService, authenticationContext, calendarService);
         User user = TestFixtures.user(1L);
         Goal goal = TestFixtures.goal(5L, user);
         Todo todo = TestFixtures.todo(10L, user, goal);
@@ -141,7 +145,7 @@ class TodoServiceImplTest {
 
     @Test
     void updateTodoSyncsStatusWhenCompletedFlagProvided() {
-        TodoServiceImpl service = new TodoServiceImpl(todoRepository, goalRepository, userService, authenticationContext);
+        TodoServiceImpl service = new TodoServiceImpl(todoRepository, goalRepository, userService, authenticationContext, calendarService);
         User user = TestFixtures.user(1L);
         Todo todo = TestFixtures.todo(11L, user, null);
         todo.setCompleted(true);
@@ -164,7 +168,7 @@ class TodoServiceImplTest {
 
     @Test
     void updateTodoAssignsGoalWhenGoalIdProvided() {
-        TodoServiceImpl service = new TodoServiceImpl(todoRepository, goalRepository, userService, authenticationContext);
+        TodoServiceImpl service = new TodoServiceImpl(todoRepository, goalRepository, userService, authenticationContext, calendarService);
         User user = TestFixtures.user(1L);
         Todo todo = TestFixtures.todo(12L, user, null);
         Goal goal = TestFixtures.goal(8L, user);
@@ -183,7 +187,7 @@ class TodoServiceImplTest {
 
     @Test
     void toggleTodoFlipsCompletedAndStatus() {
-        TodoServiceImpl service = new TodoServiceImpl(todoRepository, goalRepository, userService, authenticationContext);
+        TodoServiceImpl service = new TodoServiceImpl(todoRepository, goalRepository, userService, authenticationContext, calendarService);
         User user = TestFixtures.user(1L);
         Todo todo = TestFixtures.todo(13L, user, null);
 

@@ -8,6 +8,8 @@ import com.cabybara.prolearningplatform.service.notification.WeeklySummaryServic
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -72,6 +74,12 @@ public class NotificationScheduler {
             log.error("Error in goal inactive reminders: {}", e.getMessage(), e);
         }
         log.info("Done todo and goal reminder scheduler");
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void runTodoAndGoalReminderCatchupOnStartup() {
+        log.info("Running todo/goal reminder catch-up at startup");
+        sendTodoAndGoalReminders();
     }
 
     @Scheduled(cron = "${schedule.notification-cleanup.cron:0 0 2 * * SUN}", zone = SCHEDULER_TIME_ZONE)

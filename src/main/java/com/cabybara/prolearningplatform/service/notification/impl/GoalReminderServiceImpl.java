@@ -12,6 +12,7 @@ import com.cabybara.prolearningplatform.utils.NotificationMessageResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -37,14 +38,15 @@ public class GoalReminderServiceImpl implements GoalReminderService {
     private final NotificationMessageResolver messageResolver;
 
     @Override
+    @Transactional
     public void sendGoalDeadlineReminders() {
+        LocalDate today = LocalDate.now(ZONE);
         int currentHour = LocalTime.now(ZONE).getHour();
-        List<Long> userIds = preferenceRepository.findUserIdsForGoalDeadlineReminder(currentHour);
+
+        List<Long> userIds = preferenceRepository.findUserIdsForGoalDeadlineReminderDue(currentHour, today);
         if (userIds.isEmpty()) return;
 
-        LocalDate today = LocalDate.now(ZONE);
         List<CreateNotificationDto> notifications = new ArrayList<>();
-
         for (int days : DEADLINE_DAYS) {
             List<Goal> goals = goalRepository.findGoalsWithTargetDate(userIds, today.plusDays(days));
             for (Goal goal : goals) {
@@ -57,27 +59,32 @@ public class GoalReminderServiceImpl implements GoalReminderService {
             notificationDispatcher.dispatchToMany(notifications);
             log.debug("Sent goal deadline reminders: {} notifications", notifications.size());
         }
+
+        preferenceRepository.markGoalDeadlineReminderSent(userIds, today);
     }
 
     @Override
+    @Transactional
     public void sendGoalInactiveReminders() {
         LocalDate today = LocalDate.now(ZONE);
         if (today.getDayOfWeek() != DayOfWeek.MONDAY) return;
 
         int currentHour = LocalTime.now(ZONE).getHour();
-        List<Long> userIds = preferenceRepository.findUserIdsForGoalInactiveReminder(currentHour);
+        List<Long> userIds = preferenceRepository.findUserIdsForGoalInactiveReminderDue(currentHour, today);
         if (userIds.isEmpty()) return;
 
         OffsetDateTime cutoff = OffsetDateTime.now(ZONE).minusDays(INACTIVE_THRESHOLD_DAYS);
         List<Goal> inactiveGoals = goalRepository.findInactiveGoals(userIds, cutoff);
-        if (inactiveGoals.isEmpty()) return;
 
-        List<CreateNotificationDto> notifications = inactiveGoals.stream()
-                .map(g -> buildInactiveNotification(g, resolveLanguage(g)))
-                .toList();
+        if (!inactiveGoals.isEmpty()) {
+            List<CreateNotificationDto> notifications = inactiveGoals.stream()
+                    .map(g -> buildInactiveNotification(g, resolveLanguage(g)))
+                    .toList();
+            notificationDispatcher.dispatchToMany(notifications);
+            log.debug("Sent goal inactive reminders to {} goals", notifications.size());
+        }
 
-        notificationDispatcher.dispatchToMany(notifications);
-        log.debug("Sent goal inactive reminders to {} goals", notifications.size());
+        preferenceRepository.markGoalInactiveReminderSent(userIds, today);
     }
 
     @Override
