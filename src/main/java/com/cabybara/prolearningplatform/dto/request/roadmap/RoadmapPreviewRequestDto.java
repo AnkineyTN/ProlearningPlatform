@@ -5,6 +5,8 @@ import com.cabybara.prolearningplatform.enums.Language;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class RoadmapPreviewRequestDto {
 
@@ -14,4 +16,6 @@ public class RoadmapPreviewRequestDto {
     private RoadmapLevel level;
 
     private Language language;
+
+    private List<String> referenceLinks;
 }

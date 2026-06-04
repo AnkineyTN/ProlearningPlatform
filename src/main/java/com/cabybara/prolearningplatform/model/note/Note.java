@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.model.AbstractEntity;
 import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.User;
+import com.cabybara.prolearningplatform.model.roadmap.RoadmapTopic;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -49,6 +50,10 @@ public class Note extends AbstractEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_user", referencedColumnName = "id")
     private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "roadmap_topic_id")
+    private RoadmapTopic roadmapTopic;
 
     @OneToMany(mappedBy = "note", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<NoteDocs> noteDocs;

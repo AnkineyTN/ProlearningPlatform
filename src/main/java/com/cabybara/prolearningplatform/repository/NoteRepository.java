@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.dto.helper.RoadmapTopicNoteRef;
 import com.cabybara.prolearningplatform.dto.helper.Social.SocialNoteProjection;
 import com.cabybara.prolearningplatform.model.note.Note;
 import org.springframework.data.domain.Pageable;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -172,4 +174,11 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
     Page<SocialNoteProjection> findSocialNotes(String q, Pageable pageable);
 
     long countByUserId(Long userId);
+
+    @Query("""
+                SELECT n.roadmapTopic.id AS topicId, n.id AS noteId
+                FROM Note n
+                WHERE n.roadmapTopic.chapter.roadmap.id = :roadmapId
+            """)
+    List<RoadmapTopicNoteRef> findTopicNoteRefsByRoadmapId(@Param("roadmapId") Long roadmapId);
 }

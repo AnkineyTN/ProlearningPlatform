@@ -35,12 +35,10 @@ CREATE TABLE roadmap_topics (
     is_completed   BOOLEAN     NOT NULL DEFAULT FALSE,
     content_status VARCHAR(20) NOT NULL DEFAULT 'IDLE',
     summary        TEXT,
-    set_id         BIGINT REFERENCES set (id) ON DELETE SET NULL,
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX idx_roadmap_topics_chapter_id ON roadmap_topics (chapter_id);
-CREATE INDEX idx_roadmap_topics_set_id ON roadmap_topics (set_id);
 
 

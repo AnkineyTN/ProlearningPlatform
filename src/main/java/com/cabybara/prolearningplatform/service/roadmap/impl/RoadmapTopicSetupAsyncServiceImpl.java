@@ -64,6 +64,7 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
                     .privacy(Privacy.PRIVATE)
                     .set(set)
                     .user(set.getUser())
+                    .roadmapTopic(topic)
                     .build());
 
             notePermissionService.addOwner(savedNote.getId(), userId);

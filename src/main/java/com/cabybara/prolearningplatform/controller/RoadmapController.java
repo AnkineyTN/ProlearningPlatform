@@ -38,9 +38,11 @@ public class RoadmapController {
     @PreAuthorize("isAuthenticated() and @accountPermissionService.isPro(@authenticationContext.getCurrentUserId())")
     @PostMapping("/preview")
     public ResponseEntity<ApiResponse<RoadmapPreviewResponseDto>> previewRoadmap(
-            @Valid @RequestBody RoadmapPreviewRequestDto request
+            @Valid @RequestBody RoadmapPreviewRequestDto request,
+            @AuthenticationPrincipal Jwt jwt
     ) {
-        RoadmapPreviewResponseDto preview = roadmapService.previewRoadmap(request);
+        Long userId = (Long) jwt.getClaims().get("id");
+        RoadmapPreviewResponseDto preview = roadmapService.previewRoadmap(userId, request);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Roadmap preview generated", preview, null));
@@ -96,7 +98,7 @@ public class RoadmapController {
                 .body(ResponseUtil.success("Successfully", response, null));
     }
 
-    @Operation(summary = "Start learning a topic: creates its Set and triggers async note generation")
+    @Operation(summary = "Start learning a topic: adds a Note to the roadmap's Set and triggers async note generation")
     @PreAuthorize("isAuthenticated() and @accountPermissionService.isPro(@authenticationContext.getCurrentUserId())")
     @PostMapping("/{roadmapId}/topics/{topicId}/start")
     public ResponseEntity<ApiResponse<TopicStartResponseDto>> startTopic(

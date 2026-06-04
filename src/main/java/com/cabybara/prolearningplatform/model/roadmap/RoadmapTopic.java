@@ -41,7 +41,4 @@ public class RoadmapTopic extends AbstractEntity {
 
     @Column(columnDefinition = "TEXT")
     private String summary;
-
-    @Column(name = "set_id")
-    private Long setId;
 }

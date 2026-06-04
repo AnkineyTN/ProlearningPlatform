@@ -19,6 +19,8 @@ import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.email.EmailService;
 import com.cabybara.prolearningplatform.service.otp.OtpService;
+import com.cabybara.prolearningplatform.model.noti.UserNotificationPreference;
+import com.cabybara.prolearningplatform.repository.UserNotificationPreferenceRepository;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import com.google.api.services.oauth2.model.Userinfo;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +46,7 @@ public class UserServiceImpl implements UserService {
     private final EmailService emailService;
     private final OtpService otpService;
     private final AssetRepository assetRepository;
+    private final UserNotificationPreferenceRepository notificationPreferenceRepository;
 
     @Override
     public User getUserById(Long userId) {
@@ -91,6 +94,7 @@ public class UserServiceImpl implements UserService {
         newUser.getRoles().add(defaultAuthority);
 
         userRepository.save(newUser);
+        notificationPreferenceRepository.save(UserNotificationPreference.builder().user(newUser).build());
         return userMapper.toUserResponseDto(newUser);
     }
 
@@ -173,7 +177,9 @@ public class UserServiceImpl implements UserService {
 
                     newUser.getRoles().add(defaultAuthority);
 
-                    return userRepository.save(newUser);
+                    User saved = userRepository.save(newUser);
+                    notificationPreferenceRepository.save(UserNotificationPreference.builder().user(saved).build());
+                    return saved;
                 });
     }
 
@@ -196,7 +202,9 @@ public class UserServiceImpl implements UserService {
 
                     newUser.getRoles().add(defaultAuthority);
 
-                    return userRepository.save(newUser);
+                    User saved = userRepository.save(newUser);
+                    notificationPreferenceRepository.save(UserNotificationPreference.builder().user(saved).build());
+                    return saved;
                 });
     }
 

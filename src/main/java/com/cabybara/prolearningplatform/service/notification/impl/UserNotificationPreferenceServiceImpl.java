@@ -43,6 +43,27 @@ public class UserNotificationPreferenceServiceImpl implements UserNotificationPr
         if (request.getAccountActivityEnabled() != null) {
             pref.setAccountActivityEnabled(request.getAccountActivityEnabled());
         }
+        if (request.getDailyTodoReminderEnabled() != null) {
+            pref.setDailyTodoReminderEnabled(request.getDailyTodoReminderEnabled());
+        }
+        if (request.getDailyTodoReminderHour() != null) {
+            pref.setDailyTodoReminderHour(request.getDailyTodoReminderHour());
+        }
+        if (request.getWeeklyTodoReminderEnabled() != null) {
+            pref.setWeeklyTodoReminderEnabled(request.getWeeklyTodoReminderEnabled());
+        }
+        if (request.getWeeklyTodoReminderHour() != null) {
+            pref.setWeeklyTodoReminderHour(request.getWeeklyTodoReminderHour());
+        }
+        if (request.getGoalDeadlineReminderEnabled() != null) {
+            pref.setGoalDeadlineReminderEnabled(request.getGoalDeadlineReminderEnabled());
+        }
+        if (request.getGoalInactiveReminderEnabled() != null) {
+            pref.setGoalInactiveReminderEnabled(request.getGoalInactiveReminderEnabled());
+        }
+        if (request.getGoalReminderHour() != null) {
+            pref.setGoalReminderHour(request.getGoalReminderHour());
+        }
 
         preferenceRepository.save(pref);
         return toResponseDto(pref);
@@ -63,6 +84,13 @@ public class UserNotificationPreferenceServiceImpl implements UserNotificationPr
                 .dueCardReminderEnabled(pref.isDueCardReminderEnabled())
                 .systemAnnouncementEnabled(pref.isSystemAnnouncementEnabled())
                 .accountActivityEnabled(pref.isAccountActivityEnabled())
+                .dailyTodoReminderEnabled(pref.isDailyTodoReminderEnabled())
+                .dailyTodoReminderHour(pref.getDailyTodoReminderHour())
+                .weeklyTodoReminderEnabled(pref.isWeeklyTodoReminderEnabled())
+                .weeklyTodoReminderHour(pref.getWeeklyTodoReminderHour())
+                .goalDeadlineReminderEnabled(pref.isGoalDeadlineReminderEnabled())
+                .goalInactiveReminderEnabled(pref.isGoalInactiveReminderEnabled())
+                .goalReminderHour(pref.getGoalReminderHour())
                 .build();
     }
 }
