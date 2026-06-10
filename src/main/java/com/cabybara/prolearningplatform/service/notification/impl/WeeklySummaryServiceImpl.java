@@ -1,10 +1,12 @@
 package com.cabybara.prolearningplatform.service.notification.impl;
 
+import com.cabybara.prolearningplatform.model.Set;
 import com.cabybara.prolearningplatform.model.noti.SetNotificationPreference;
 import com.cabybara.prolearningplatform.repository.SetNotificationPreferenceRepository;
 import com.cabybara.prolearningplatform.service.notification.WeeklySummaryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.proxy.HibernateProxy;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -39,11 +41,12 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
 
         int successCount = 0;
         for (SetNotificationPreference pref : preferences) {
+            Long setId = resolveSetId(pref);
             try {
                 boolean sent = processor.processSingleSet(pref);
                 if (sent) successCount++;
             } catch (Exception e) {
-                log.error("Failed to process weekly summary for set {}", pref.getSet().getId(), e);
+                log.error("Failed to process weekly summary for set {}", setId, e);
             }
         }
 
@@ -61,7 +64,23 @@ public class WeeklySummaryServiceImpl implements WeeklySummaryService {
         }
 
         for (SetNotificationPreference pref : preferences) {
-            processor.processSingleSet(pref);
+            Long setId = resolveSetId(pref);
+            try {
+                processor.processSingleSet(pref);
+            } catch (Exception e) {
+                log.error("Failed to send weekly summary for set {} and user {}", setId, userId, e);
+            }
         }
+    }
+
+    private Long resolveSetId(SetNotificationPreference pref) {
+        Set set = pref.getSet();
+        if (set == null) {
+            return null;
+        }
+        if (set instanceof HibernateProxy proxy) {
+            return (Long) proxy.getHibernateLazyInitializer().getIdentifier();
+        }
+        return set.getId();
     }
 }

@@ -15,6 +15,8 @@ import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionSe
 import com.cabybara.prolearningplatform.service.roadmap.RoadmapTopicSetupAsyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,7 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
     private final NoteRepository noteRepository;
     private final NotePermissionService notePermissionService;
     private final AIRoadmapService aiRoadmapService;
+    private final CacheManager cacheManager;
 
     @Override
     @Async("heavyTaskExecutor")
@@ -73,12 +76,16 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
             topic.setSummary(aiResponse.getSummary());
             topic.setContentStatus(TopicContentStatus.READY);
             roadmapTopicRepository.save(topic);
+            evictRoadmapDetailCache(userId, roadmapId);
 
             log.info("Topic {} content generated and set to READY", topicId);
 
         } catch (Exception e) {
             log.error("Async content generation failed for topic {}: {}", topicId, e.getMessage());
-            roadmapTopicRepository.findById(topicId).ifPresent(this::markFailed);
+            roadmapTopicRepository.findById(topicId).ifPresent(topic -> {
+                markFailed(topic);
+                evictRoadmapDetailCache(userId, roadmapId);
+            });
         }
     }
 
@@ -108,5 +115,12 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
     private void markFailed(RoadmapTopic topic) {
         topic.setContentStatus(TopicContentStatus.FAILED);
         roadmapTopicRepository.save(topic);
+    }
+
+    private void evictRoadmapDetailCache(Long userId, Long roadmapId) {
+        Cache cache = cacheManager.getCache("roadmap_detail");
+        if (cache != null) {
+            cache.evict(userId + ":" + roadmapId);
+        }
     }
 }
