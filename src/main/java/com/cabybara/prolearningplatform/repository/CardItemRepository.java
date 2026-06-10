@@ -1,6 +1,7 @@
 package com.cabybara.prolearningplatform.repository;
 
 import com.cabybara.prolearningplatform.dto.helper.UserDueCardProjection;
+import com.cabybara.prolearningplatform.dto.helper.UserDueFlashcardProjection;
 import com.cabybara.prolearningplatform.dto.helper.UserDueStatDto;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +49,18 @@ public interface CardItemRepository extends JpaRepository<CardItem, Long> {
             "FROM CardItem c " +
             "WHERE c.nextReviewAt <= :now AND c.flashcard.set IS NOT NULL")
     List<UserDueCardProjection> findDueCardsByUser(@Param("now") OffsetDateTime now);
+
+    @Query("SELECT c.flashcard.user.id AS userId, " +
+            "c.flashcard.set.id AS setId, " +
+            "c.flashcard.id AS flashcardId, " +
+            "c.flashcard.title AS flashcardTitle, " +
+            "COUNT(c) AS dueCount, " +
+            "c.flashcard.user.language AS userLanguage " +
+            "FROM CardItem c " +
+            "WHERE c.nextReviewAt <= :now AND c.flashcard.set IS NOT NULL " +
+            "GROUP BY c.flashcard.user.id, c.flashcard.set.id, c.flashcard.id, c.flashcard.title, c.flashcard.user.language " +
+            "ORDER BY c.flashcard.user.id ASC, COUNT(c) DESC")
+    List<UserDueFlashcardProjection> findDueFlashcardsByUser(@Param("now") OffsetDateTime now);
 
     @Query("SELECT c FROM CardItem c WHERE c.flashcard.id = :flashcardId ORDER BY c.id ASC")
     List<CardItem> findAllByFlashcardId(@Param("flashcardId") Long flashcardId);
