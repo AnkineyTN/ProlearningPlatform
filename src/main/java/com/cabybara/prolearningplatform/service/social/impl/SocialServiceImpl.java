@@ -43,6 +43,7 @@ public class SocialServiceImpl implements SocialService {
                         toOffsetDateTime(sn.getUpdatedAt()),
                         sn.getOwnerId(),
                         buildOwnerName(sn.getOwnerFirstName(), sn.getOwnerLastName()),
+                        sn.getOwnerAvatarUrl(),
                         null,
                         null,
                         null
@@ -62,6 +63,7 @@ public class SocialServiceImpl implements SocialService {
                         toOffsetDateTime(sf.getUpdatedAt()),
                         sf.getOwnerId(),
                         buildOwnerName(sf.getOwnerFirstName(), sf.getOwnerLastName()),
+                        sf.getOwnerAvatarUrl(),
                         sf.getNumCards(),
                         null,
                         null
@@ -81,6 +83,7 @@ public class SocialServiceImpl implements SocialService {
                         toOffsetDateTime(se.getUpdatedAt()),
                         se.getOwnerId(),
                         buildOwnerName(se.getOwnerFirstName(), se.getOwnerLastName()),
+                        se.getOwnerAvatarUrl(),
                         null,
                         se.getNumQuestions(),
                         se.getDuration()

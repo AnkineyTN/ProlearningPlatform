@@ -152,7 +152,8 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
             n.updated_at  AS updatedAt,
             u.id          AS ownerId,
             u.first_name  AS ownerFirstName,
-            u.last_name   AS ownerLastName
+            u.last_name   AS ownerLastName,
+            u.avatar_url  AS ownerAvatarUrl
         FROM note n
         INNER JOIN users u ON n.id_user = u.id
         WHERE n.privacy = 'PUBLIC'

@@ -154,6 +154,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
             u.id          AS ownerId,
             u.first_name  AS ownerFirstName,
             u.last_name   AS ownerLastName,
+            u.avatar_url  AS ownerAvatarUrl,
             COUNT(eq.id)  AS numQuestions
         FROM exams e
         INNER JOIN users u ON e.created_by = u.id
