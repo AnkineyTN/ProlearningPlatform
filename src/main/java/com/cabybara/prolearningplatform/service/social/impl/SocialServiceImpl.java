@@ -110,7 +110,7 @@ public class SocialServiceImpl implements SocialService {
         }
         for (Object[] row : viewsList) {
             Long rId = ((Number) row[0]).longValue();
-            ContentType rType = (ContentType) row[1];
+            ContentType rType = ContentType.valueOf(String.valueOf(row[1]));
             Long count = ((Number) row[2]).longValue();
             String key = rType.name() + "_" + rId;
             viewCounts.put(key, count);
@@ -119,12 +119,12 @@ public class SocialServiceImpl implements SocialService {
         }
 
         // Process sessions
-        List<ContentType> allowedTypes = List.of(ContentType.NOTE, ContentType.FLASHCARD, ContentType.EXAM);
+        List<String> allowedTypesStr = List.of(ContentType.NOTE.name(), ContentType.FLASHCARD.name(), ContentType.EXAM.name());
         List<Object[]> sessionsList = activityLogRepository.findTopResourcesBySessions(
-                startLocalDate, allowedTypes, PageRequest.of(0, topN * 10));
+                startLocalDate, allowedTypesStr, PageRequest.of(0, topN * 10));
         for (Object[] row : sessionsList) {
             Long rId = ((Number) row[0]).longValue();
-            ContentType rType = (ContentType) row[1];
+            ContentType rType = ContentType.valueOf(String.valueOf(row[1]));
             Long count = ((Number) row[2]).longValue();
 
             // Filter by type if not ALL
@@ -168,11 +168,12 @@ public class SocialServiceImpl implements SocialService {
         // Sort by score desc
         scoredList.sort((a, b) -> Long.compare(b.score, a.score));
 
-        // Limit to topN and construct details
-        List<ScoredResource> topList = scoredList.stream().limit(topN).toList();
         List<TrendingResourceResponseDto> result = new ArrayList<>();
         int rank = 1;
-        for (ScoredResource sr : topList) {
+        for (ScoredResource sr : scoredList) {
+            if (result.size() >= topN) {
+                break;
+            }
             Long rId = sr.id;
             String title = "";
             String description = "";

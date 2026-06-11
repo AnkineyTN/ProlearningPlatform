@@ -17,24 +17,32 @@ public interface ResourceViewLogRepository extends JpaRepository<ResourceViewLog
     boolean existsByResourceIdAndResourceTypeAndViewerIpAndViewedAtAfter(
             Long resourceId, ContentType resourceType, String viewerIp, OffsetDateTime since);
 
-    @Query("""
-        SELECT r.resourceId, r.resourceType, COUNT(r) as viewCount
-        FROM ResourceViewLog r
-        WHERE r.viewedAt >= :since
-        GROUP BY r.resourceId, r.resourceType
+    @Query(value = """
+        SELECT r.resource_id, r.resource_type, COUNT(r.id) as viewCount
+        FROM resource_view_log r
+        LEFT JOIN note n ON r.resource_id = n.id AND CAST(r.resource_type AS varchar) = 'NOTE'
+        LEFT JOIN flashcard f ON r.resource_id = f.id AND CAST(r.resource_type AS varchar) = 'FLASHCARD'
+        LEFT JOIN exams e ON r.resource_id = e.id AND CAST(r.resource_type AS varchar) = 'EXAM'
+        WHERE r.viewed_at >= :since
+          AND (CAST(n.privacy AS varchar) = 'PUBLIC' OR CAST(f.privacy AS varchar) = 'PUBLIC' OR CAST(e.privacy AS varchar) = 'PUBLIC')
+        GROUP BY r.resource_id, r.resource_type
         ORDER BY viewCount DESC
-        """)
+        """, nativeQuery = true)
     List<Object[]> findTopResourcesByViews(
             @Param("since") OffsetDateTime since,
             Pageable pageable);
 
-    @Query("""
-        SELECT r.resourceId, r.resourceType, COUNT(r) as viewCount
-        FROM ResourceViewLog r
-        WHERE r.resourceType = :resourceType AND r.viewedAt >= :since
-        GROUP BY r.resourceId, r.resourceType
+    @Query(value = """
+        SELECT r.resource_id, r.resource_type, COUNT(r.id) as viewCount
+        FROM resource_view_log r
+        LEFT JOIN note n ON r.resource_id = n.id AND CAST(r.resource_type AS varchar) = 'NOTE'
+        LEFT JOIN flashcard f ON r.resource_id = f.id AND CAST(r.resource_type AS varchar) = 'FLASHCARD'
+        LEFT JOIN exams e ON r.resource_id = e.id AND CAST(r.resource_type AS varchar) = 'EXAM'
+        WHERE CAST(r.resource_type AS varchar) = :#{#resourceType.name()} AND r.viewed_at >= :since
+          AND (CAST(n.privacy AS varchar) = 'PUBLIC' OR CAST(f.privacy AS varchar) = 'PUBLIC' OR CAST(e.privacy AS varchar) = 'PUBLIC')
+        GROUP BY r.resource_id, r.resource_type
         ORDER BY viewCount DESC
-        """)
+        """, nativeQuery = true)
     List<Object[]> findTopResourcesByViewsAndType(
             @Param("resourceType") ContentType resourceType,
             @Param("since") OffsetDateTime since,
