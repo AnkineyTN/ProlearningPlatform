@@ -183,6 +183,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
             u.id          AS ownerId,
             u.first_name  AS ownerFirstName,
             u.last_name   AS ownerLastName,
+            u.avatar_url  AS ownerAvatarUrl,
             COUNT(ci.id)  AS numCards
         FROM flashcard f
         INNER JOIN users u ON f.id_user = u.id

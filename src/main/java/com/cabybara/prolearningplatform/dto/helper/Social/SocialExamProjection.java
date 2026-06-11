@@ -13,5 +13,6 @@ public interface SocialExamProjection {
     Long getOwnerId();
     String getOwnerFirstName();
     String getOwnerLastName();
+    String getOwnerAvatarUrl();
     Long getNumQuestions();
 }
