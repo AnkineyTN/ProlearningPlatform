@@ -13,5 +13,6 @@ public record TrendingResourceResponseDto(
         String ownerName,
         long trendingScore,
         long viewCount,
-        long sessionCount
+        long sessionCount,
+        Boolean isFavorited
 ) {}

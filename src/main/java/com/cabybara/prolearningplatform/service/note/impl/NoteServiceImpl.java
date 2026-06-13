@@ -60,6 +60,7 @@ public class NoteServiceImpl implements NoteService {
     private final AuthenticationContext authenticationContext;
     private final NoteFileRegionCommentService noteFileRegionCommentService;
     private final NotePermissionService notePermissionService;
+    private final UserFavoriteResourceRepository userFavoriteResourceRepository;
 
     // ##################################################
     // #################  MAIN METHOD  ##################
@@ -217,6 +218,7 @@ public class NoteServiceImpl implements NoteService {
                                 .publicId(doc.getAsset().getPublicId())
                                 .build())
                         .toList() : null)
+                .isFavorited(userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, note.getId(), com.cabybara.prolearningplatform.enums.ContentType.NOTE))
                 .build());
     }
 
@@ -229,7 +231,7 @@ public class NoteServiceImpl implements NoteService {
         Note note = getNoteByIdAndSetId(noteId, setId);
 
         NoteRole noteRole = notePermissionService.getUserRoleInNote(noteId, userId);
-
+        boolean isFavorited = userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, noteId, com.cabybara.prolearningplatform.enums.ContentType.NOTE);
 
         return GetDetailNoteResponseDTO.builder()
                 .id(note.getId())
@@ -239,6 +241,7 @@ public class NoteServiceImpl implements NoteService {
                 .privacy(note.getPrivacy())
                 .content(note.getContent())
                 .userRole(noteRole)
+                .isFavorited(isFavorited)
                 .noteDocs(
                         note.getNoteDocs().stream()
                                 .map(doc -> {
@@ -266,6 +269,9 @@ public class NoteServiceImpl implements NoteService {
                                 })
                                 .toList()
                 )
+                .ownerId(note.getUser().getId())
+                .ownerName(note.getUser().getFirstName() != null ? note.getUser().getFirstName() + " " + note.getUser().getLastName() : note.getUser().getLastName())
+                .ownerAvatar(note.getUser().getAvatarUrl())
                 .build();
     }
 
@@ -413,6 +419,7 @@ public class NoteServiceImpl implements NoteService {
                             .updated_at(note.getUpdatedAt() != null ? note.getUpdatedAt().toString() : null)
                             .setId(note.getSet() != null ? note.getSet().getId() : null)
                             .userRole(role)
+                            .isFavorited(userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, note.getId(), com.cabybara.prolearningplatform.enums.ContentType.NOTE))
                             .build();
                 });
     }

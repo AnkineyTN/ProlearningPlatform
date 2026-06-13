@@ -15,5 +15,6 @@ public record SocialItemResponseDto(
         String ownerAvatar,
         Long numCards,
         Long numQuestions,
-        Long duration
+        Long duration,
+        Boolean isFavorited
 ) {}

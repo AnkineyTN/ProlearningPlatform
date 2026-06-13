@@ -32,4 +32,8 @@ public class FlashcardResponseDto {
     private OffsetDateTime updatedAt;
 
     private NoteRole userRole;
+    private Boolean isFavorited;
+    private Long ownerId;
+    private String ownerName;
+    private String ownerAvatar;
 }

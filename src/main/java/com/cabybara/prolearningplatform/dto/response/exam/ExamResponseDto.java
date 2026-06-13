@@ -18,4 +18,8 @@ public record ExamResponseDto(
         CreationMethod creationMethod,
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
-        NoteRole userRole) {}
+        NoteRole userRole,
+        Boolean isFavorited,
+        Long ownerId,
+        String ownerName,
+        String ownerAvatar) {}

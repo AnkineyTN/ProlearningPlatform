@@ -19,4 +19,5 @@ public record SharedExamResponseDto(
         OffsetDateTime createdAt,
         OffsetDateTime updatedAt,
         NoteRole userRole,
-        Long setId) {}
+        Long setId,
+        Boolean isFavorited) {}
