@@ -291,7 +291,24 @@ public class NoteController {
         }
     }
 
-    @Operation(summary = "Delete note", description = "Delete note permanently")
+    @Operation(method = "POST", summary = "Create note with AI-generated content", description = "Generate note content from topic description and reference links using AI")
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping(value = "/ai-generate")
+    public ResponseData<GenerateNoteWithAIResponseDTO> createNoteWithAI(
+            @Parameter(description = "The ID of the Set", required = true)
+            @PathVariable Long setId,
+            @Valid @RequestBody GenerateNoteWithAIRequestDTO request
+    ) {
+        log.info("Create note with AI, setId={}", setId);
+        try {
+            return new ResponseData<>(HttpStatus.CREATED.value(), "Create note with AI successfully", noteService.createNoteWithAI(setId, request));
+        } catch (Exception e) {
+            log.error(ERROR_MESSAGE, e.getMessage(), e.getCause());
+            return new ResponseError(HttpStatus.BAD_REQUEST.value(), "Create note with AI fail");
+        }
+    }
+
+    @Operation(method = "DELETE", summary = "Delete note", description = "Delete note permanently")
     @PreAuthorize("isAuthenticated() and @notePermissionService.isOwner(@authenticationContext.getCurrentUserId(), #noteId)")
     @DeleteMapping("/{noteId}")
     public ResponseData<Void> deleteNote(
