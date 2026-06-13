@@ -398,6 +398,10 @@ public class ExamServiceImpl implements ExamService {
                 .map(exam -> {
                     NoteRole role = examPermissionService.getUserRoleInExam(exam.getId(), userId);
                     ExamResponseDto dto = examMapper.toExamResponseDto(exam);
+                    com.cabybara.prolearningplatform.model.User owner = exam.getCreatedBy() != null ? userRepository.findById(exam.getCreatedBy()).orElse(null) : null;
+                    String ownerName = owner != null ? (owner.getFirstName() != null ? owner.getFirstName() + " " + owner.getLastName() : owner.getLastName()) : null;
+                    String ownerAvatar = owner != null ? owner.getAvatarUrl() : null;
+
                     return new SharedExamResponseDto(
                             dto.id(),
                             dto.title(),
@@ -410,7 +414,10 @@ public class ExamServiceImpl implements ExamService {
                             dto.updatedAt(),
                             role,
                             exam.getSet() != null ? exam.getSet().getId() : null,
-                            userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, exam.getId(), com.cabybara.prolearningplatform.enums.ContentType.EXAM)
+                            userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, exam.getId(), com.cabybara.prolearningplatform.enums.ContentType.EXAM),
+                            exam.getCreatedBy(),
+                            ownerName,
+                            ownerAvatar
                     );
                 });
     }

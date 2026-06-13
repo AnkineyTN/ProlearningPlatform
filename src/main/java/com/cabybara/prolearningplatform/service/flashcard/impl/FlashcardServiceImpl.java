@@ -391,6 +391,9 @@ public class FlashcardServiceImpl implements FlashcardService {
                             .userRole(role)
                             .setId(flashcard.getSet() != null ? flashcard.getSet().getId() : null)
                             .isFavorited(userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, flashcard.getId(), com.cabybara.prolearningplatform.enums.ContentType.FLASHCARD))
+                            .ownerId(flashcard.getUser().getId())
+                            .ownerName(flashcard.getUser().getFirstName() != null ? flashcard.getUser().getFirstName() + " " + flashcard.getUser().getLastName() : flashcard.getUser().getLastName())
+                            .ownerAvatar(flashcard.getUser().getAvatarUrl())
                             .build();
                 });
     }

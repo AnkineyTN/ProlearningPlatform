@@ -420,6 +420,9 @@ public class NoteServiceImpl implements NoteService {
                             .setId(note.getSet() != null ? note.getSet().getId() : null)
                             .userRole(role)
                             .isFavorited(userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, note.getId(), com.cabybara.prolearningplatform.enums.ContentType.NOTE))
+                            .ownerId(note.getUser().getId())
+                            .ownerName(note.getUser().getFirstName() != null ? note.getUser().getFirstName() + " " + note.getUser().getLastName() : note.getUser().getLastName())
+                            .ownerAvatar(note.getUser().getAvatarUrl())
                             .build();
                 });
     }

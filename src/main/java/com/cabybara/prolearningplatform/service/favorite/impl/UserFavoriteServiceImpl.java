@@ -66,14 +66,8 @@ public class UserFavoriteServiceImpl implements UserFavoriteService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<SocialItemResponseDto> getFavoriteResources(Long userId, ContentType resourceType, Pageable pageable) {
-        Page<UserFavoriteResource> favoritePage;
-        
-        if (resourceType != null) {
-            favoritePage = userFavoriteResourceRepository.findByUserIdAndResourceType(userId, resourceType, pageable);
-        } else {
-            favoritePage = userFavoriteResourceRepository.findByUserId(userId, pageable);
-        }
+    public Page<SocialItemResponseDto> getFavoriteResources(Long userId, String q, ContentType resourceType, Pageable pageable) {
+        Page<UserFavoriteResource> favoritePage = userFavoriteResourceRepository.searchFavoriteResources(userId, resourceType, q, pageable);
 
         List<SocialItemResponseDto> resultList = new ArrayList<>();
 

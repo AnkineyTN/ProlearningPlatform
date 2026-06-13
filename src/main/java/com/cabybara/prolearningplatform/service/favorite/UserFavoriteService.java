@@ -25,5 +25,5 @@ public interface UserFavoriteService {
      * @param pageable     Pagination information.
      * @return Paginated list of favorited resources.
      */
-    Page<SocialItemResponseDto> getFavoriteResources(Long userId, ContentType resourceType, Pageable pageable);
+    Page<SocialItemResponseDto> getFavoriteResources(Long userId, String q, ContentType resourceType, Pageable pageable);
 }
