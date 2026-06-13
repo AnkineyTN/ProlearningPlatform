@@ -6,6 +6,7 @@ public record SearchResponseDto(
         String title,
         String description,
         String type,
-        Long userId
+        Long userId,
+        Boolean isFavorited
 ) {
 }
