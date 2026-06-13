@@ -20,4 +20,7 @@ public record SharedExamResponseDto(
         OffsetDateTime updatedAt,
         NoteRole userRole,
         Long setId,
-        Boolean isFavorited) {}
+        Boolean isFavorited,
+        Long ownerId,
+        String ownerName,
+        String ownerAvatar) {}

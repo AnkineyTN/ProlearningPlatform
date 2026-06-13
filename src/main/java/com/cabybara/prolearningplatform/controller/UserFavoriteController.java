@@ -48,11 +48,12 @@ public class UserFavoriteController {
     @GetMapping
     @Operation(summary = "Get list of favorite resources")
     public ResponseEntity<ApiResponse<?>> getFavorites(
+            @RequestParam(required = false) String q,
             @RequestParam(required = false) ContentType type,
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable
     ) {
         Long userId = authenticationContext.getCurrentUserId();
-        Page<SocialItemResponseDto> page = userFavoriteService.getFavoriteResources(userId, type, pageable);
+        Page<SocialItemResponseDto> page = userFavoriteService.getFavoriteResources(userId, q, type, pageable);
         
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully retrieved favorites", page.getContent(), buildPagination(page)));
@@ -62,10 +63,11 @@ public class UserFavoriteController {
     @Operation(summary = "Get list of favorite resources by specific type")
     public ResponseEntity<ApiResponse<?>> getFavoritesByType(
             @PathVariable ContentType type,
+            @RequestParam(required = false) String q,
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable
     ) {
         Long userId = authenticationContext.getCurrentUserId();
-        Page<SocialItemResponseDto> page = userFavoriteService.getFavoriteResources(userId, type, pageable);
+        Page<SocialItemResponseDto> page = userFavoriteService.getFavoriteResources(userId, q, type, pageable);
         
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully retrieved favorites", page.getContent(), buildPagination(page)));
