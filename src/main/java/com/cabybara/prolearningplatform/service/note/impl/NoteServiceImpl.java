@@ -5,6 +5,7 @@ import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.note.CreateNoteResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.note.GenerateNoteWithAIResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetAllNotesResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.SharedNoteResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.GetDetailNoteResponseDTO;
@@ -22,6 +23,7 @@ import com.cabybara.prolearningplatform.model.note.NoteDocs;
 import com.cabybara.prolearningplatform.model.note.NoteImgs;
 import com.cabybara.prolearningplatform.repository.*;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
+import com.cabybara.prolearningplatform.service.ai.AINoteService;
 import com.cabybara.prolearningplatform.service.note.NoteFileRegionCommentService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
 import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
@@ -60,6 +62,7 @@ public class NoteServiceImpl implements NoteService {
     private final AuthenticationContext authenticationContext;
     private final NoteFileRegionCommentService noteFileRegionCommentService;
     private final NotePermissionService notePermissionService;
+    private final AINoteService aiNoteService;
     private final UserFavoriteResourceRepository userFavoriteResourceRepository;
 
     // ##################################################
@@ -89,6 +92,36 @@ public class NoteServiceImpl implements NoteService {
 
         return CreateNoteResponseDTO.builder()
                 .noteId(saved.getId())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public GenerateNoteWithAIResponseDTO createNoteWithAI(Long setId, GenerateNoteWithAIRequestDTO request) {
+        Long userId = authenticationContext.getCurrentUserId();
+        User user = getUserById(userId);
+        Set set = getSetByIdAndUserId(setId, userId);
+
+        GenerateNoteWithAIResponseDTO aiResponse = aiNoteService.generateNoteContent(request);
+
+        Note note = Note.builder()
+                .title(aiResponse.getTitle())
+                .content(aiResponse.getContent())
+                .description(request.getDescription())
+                .privacy(request.getPrivacy())
+                .set(set)
+                .user(user)
+                .build();
+        Note saved = noteRepository.save(note);
+        log.info("✅ Created note with AI '{}' in set id {} by user {}", saved.getTitle(), set.getId(), userId);
+
+        notePermissionService.addOwner(saved.getId(), userId);
+        setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
+
+        return GenerateNoteWithAIResponseDTO.builder()
+                .noteId(saved.getId())
+                .title(aiResponse.getTitle())
+                .content(aiResponse.getContent())
                 .build();
     }
 

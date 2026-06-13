@@ -2,8 +2,10 @@ package com.cabybara.prolearningplatform.service.ai.impl;
 
 import com.cabybara.prolearningplatform.dto.request.note.ConvertFileToVectorRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.note.ExplainNoteRequestDTO;
+import com.cabybara.prolearningplatform.dto.request.note.GenerateNoteWithAIRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.note.SummarizeFileRequestDTO;
 import com.cabybara.prolearningplatform.dto.response.note.ExplainNoteResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.note.GenerateNoteWithAIResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.SummarizeFileResponseDTO;
 import com.cabybara.prolearningplatform.service.ai.AINoteService;
 import com.cabybara.prolearningplatform.utils.RestHttpClientUtil;
@@ -12,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -26,6 +30,7 @@ public class AINoteServiceImpl implements AINoteService {
     private static final String CONVERT_FILE_TO_VECTOR_PATH = "/files/process";
     private static final String EXPLAIN_NOTE_PATH           = "/notes/explain";
     private static final String SUMMARY_FILE_PATH           = "/notes/summarize";
+    private static final String GENERATE_NOTE_PATH          = "/notes/generate";
 
     private final RestHttpClientUtil restHttpClientUtil;
     private final ObjectMapper objectMapper;
@@ -78,6 +83,18 @@ public class AINoteServiceImpl implements AINoteService {
         } catch (Exception e) {
             log.error("❌ Error explaining note with AI: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to summarize file with AI", e);
+        }
+    }
+
+    @Override
+    public GenerateNoteWithAIResponseDTO generateNoteContent(GenerateNoteWithAIRequestDTO request) {
+        try {
+            String raw = restHttpClientUtil.post(aiServiceBaseApi + GENERATE_NOTE_PATH, request, String.class);
+            Map<String, Object> responseData = objectMapper.readValue(raw, Map.class);
+            return objectMapper.convertValue(responseData, GenerateNoteWithAIResponseDTO.class);
+        } catch (Exception e) {
+            log.error("❌ Error generating note with AI: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to generate note content with AI", e);
         }
     }
 }
