@@ -19,7 +19,6 @@ public interface UserFavoriteResourceRepository extends JpaRepository<UserFavori
     Page<UserFavoriteResource> findByUserIdAndResourceType(Long userId, ContentType resourceType, Pageable pageable);
 
     Page<UserFavoriteResource> findByUserId(Long userId, Pageable pageable);
-
     @org.springframework.data.jpa.repository.Query(value = """
         SELECT f FROM UserFavoriteResource f
         LEFT JOIN Note n ON f.resourceId = n.id AND f.resourceType = com.cabybara.prolearningplatform.enums.ContentType.NOTE
