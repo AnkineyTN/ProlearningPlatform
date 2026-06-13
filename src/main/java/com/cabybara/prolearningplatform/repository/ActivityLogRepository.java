@@ -67,17 +67,21 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> 
             @Param("userId") Long userId,
             @Param("startDate") LocalDate startDate);
 
-    @Query("""
-        SELECT a.setId, a.contentType, COUNT(a) as sessionCount
-        FROM ActivityLog a
-        WHERE a.setId IS NOT NULL 
-          AND a.contentType IN :allowedTypes
+    @Query(value = """
+        SELECT a.set_id as setId, a.content_type as contentType, COUNT(a.id) as sessionCount
+        FROM activity_log a
+        LEFT JOIN note n ON a.set_id = n.id AND CAST(a.content_type AS varchar) = 'NOTE'
+        LEFT JOIN flashcard f ON a.set_id = f.id AND CAST(a.content_type AS varchar) = 'FLASHCARD'
+        LEFT JOIN exams e ON a.set_id = e.id AND CAST(a.content_type AS varchar) = 'EXAM'
+        WHERE a.set_id IS NOT NULL 
+          AND CAST(a.content_type AS varchar) IN (:allowedTypesStr)
           AND a.date >= :startDate
-        GROUP BY a.setId, a.contentType
+          AND (CAST(n.privacy AS varchar) = 'PUBLIC' OR CAST(f.privacy AS varchar) = 'PUBLIC' OR CAST(e.privacy AS varchar) = 'PUBLIC')
+        GROUP BY a.set_id, a.content_type
         ORDER BY sessionCount DESC
-        """)
+        """, nativeQuery = true)
     List<Object[]> findTopResourcesBySessions(
             @Param("startDate") LocalDate startDate,
-            @Param("allowedTypes") List<ContentType> allowedTypes,
+            @Param("allowedTypesStr") List<String> allowedTypesStr,
             org.springframework.data.domain.Pageable pageable);
 }
