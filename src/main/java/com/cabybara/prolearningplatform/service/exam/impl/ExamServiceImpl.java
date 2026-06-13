@@ -73,6 +73,8 @@ public class ExamServiceImpl implements ExamService {
     private final ExamMapper examMapper;
     private final ExamPermissionService examPermissionService;
     private final TopicAssignmentAsyncService topicAssignmentAsyncService;
+    private final com.cabybara.prolearningplatform.repository.UserFavoriteResourceRepository userFavoriteResourceRepository;
+    private final com.cabybara.prolearningplatform.repository.UserRepository userRepository;
 
     @Override
     @Transactional
@@ -173,7 +175,19 @@ public class ExamServiceImpl implements ExamService {
             }
         }
 
-        return pagedExam.map(examMapper::toExamResponseDto);
+        return pagedExam.map(exam -> {
+            ExamResponseDto dto = examMapper.toExamResponseDto(exam);
+            boolean isFavorited = userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, exam.getId(), com.cabybara.prolearningplatform.enums.ContentType.EXAM);
+            
+            com.cabybara.prolearningplatform.model.User owner = exam.getCreatedBy() != null ? userRepository.findById(exam.getCreatedBy()).orElse(null) : null;
+            String ownerName = owner != null ? (owner.getFirstName() != null ? owner.getFirstName() + " " + owner.getLastName() : owner.getLastName()) : null;
+            String ownerAvatar = owner != null ? owner.getAvatarUrl() : null;
+
+            return new ExamResponseDto(
+                dto.id(), dto.title(), dto.privacy(), dto.description(), dto.duration(), dto.numQuestions(), dto.creationMethod(), dto.createdAt(), dto.updatedAt(), dto.userRole(), isFavorited,
+                exam.getCreatedBy(), ownerName, ownerAvatar
+            );
+        });
     }
 
     @Override
@@ -223,6 +237,11 @@ public class ExamServiceImpl implements ExamService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cannot find exam with id: " + examId));
 
         NoteRole userRole = examPermissionService.getUserRoleInExam(examId, userId);
+        boolean isFavorited = userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, examId, com.cabybara.prolearningplatform.enums.ContentType.EXAM);
+
+        com.cabybara.prolearningplatform.model.User owner = exam.getCreatedBy() != null ? userRepository.findById(exam.getCreatedBy()).orElse(null) : null;
+        String ownerName = owner != null ? (owner.getFirstName() != null ? owner.getFirstName() + " " + owner.getLastName() : owner.getLastName()) : null;
+        String ownerAvatar = owner != null ? owner.getAvatarUrl() : null;
 
         ExamResponseDto dto = examMapper.toExamResponseDto(exam);
         return new ExamResponseDto(
@@ -235,7 +254,11 @@ public class ExamServiceImpl implements ExamService {
             dto.creationMethod(),
             dto.createdAt(),
             dto.updatedAt(),
-            userRole
+            userRole,
+            isFavorited,
+            exam.getCreatedBy(),
+            ownerName,
+            ownerAvatar
         );
     }
 
@@ -386,7 +409,8 @@ public class ExamServiceImpl implements ExamService {
                             dto.createdAt(),
                             dto.updatedAt(),
                             role,
-                            exam.getSet() != null ? exam.getSet().getId() : null
+                            exam.getSet() != null ? exam.getSet().getId() : null,
+                            userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, exam.getId(), com.cabybara.prolearningplatform.enums.ContentType.EXAM)
                     );
                 });
     }

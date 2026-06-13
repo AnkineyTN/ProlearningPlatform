@@ -40,9 +40,9 @@ class ResponseUtilTest {
     @Test
     void toPaginationedResponseSlicesDataAndBuildsMetadata() {
         List<SearchResponseDto> items = List.of(
-                new SearchResponseDto(1L, 10L, "one", "desc-1", "todo", 100L),
-                new SearchResponseDto(2L, 20L, "two", "desc-2", "todo", 100L),
-                new SearchResponseDto(3L, 30L, "three", "desc-3", "todo", 100L)
+                new SearchResponseDto(1L, 10L, "one", "desc-1", "todo", 100L, false),
+                new SearchResponseDto(2L, 20L, "two", "desc-2", "todo", 100L, false),
+                new SearchResponseDto(3L, 30L, "three", "desc-3", "todo", 100L, false)
         );
 
         ResponseEntity<ApiResponse<?>> response = ResponseUtil.toPaginationedResponse(
@@ -70,7 +70,7 @@ class ResponseUtilTest {
         ResponseEntity<ApiResponse<?>> response = ResponseUtil.toPaginationedResponse(
                 "paged",
                 PageRequest.of(3, 2),
-                List.of(new SearchResponseDto(1L, 10L, "one", "desc-1", "todo", 100L))
+                List.of(new SearchResponseDto(1L, 10L, "one", "desc-1", "todo", 100L, false))
         );
 
         ApiResponse<?> body = response.getBody();

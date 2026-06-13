@@ -26,4 +26,8 @@ public class GetDetailNoteResponseDTO {
     private NoteRole userRole;
     private List<GetDocsInNoteResponseDTO> noteDocs;
     private List<GetDocsInNoteResponseDTO> noteImgs;
+    private Boolean isFavorited;
+    private Long ownerId;
+    private String ownerName;
+    private String ownerAvatar;
 }

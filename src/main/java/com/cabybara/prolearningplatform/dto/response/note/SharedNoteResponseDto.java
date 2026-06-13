@@ -22,4 +22,5 @@ public class SharedNoteResponseDto {
     private String updated_at;
     private Long setId;
     private NoteRole userRole;
+    private Boolean isFavorited;
 }

@@ -65,6 +65,7 @@ public class FlashcardServiceImpl implements FlashcardService {
     private final AIFlashcardService aiFlashcardService;
     private final FlashcardPermissionService flashcardPermissionService;
     private final com.cabybara.prolearningplatform.service.knowledge.TopicAssignmentAsyncService topicAssignmentAsyncService;
+    private final com.cabybara.prolearningplatform.repository.UserFavoriteResourceRepository userFavoriteResourceRepository;
 
     @Override
     public Page<FlashcardResponseDto> getAllFlashcard(Long setId, String q, Privacy privacy, CreationMethod createMethod, Pageable pageable) {
@@ -88,7 +89,14 @@ public class FlashcardServiceImpl implements FlashcardService {
             }
         }
 
-        return pagedFlashcard.map(flashcardMapper::toFlashcardResponseDto);
+        return pagedFlashcard.map(flashcard -> {
+            FlashcardResponseDto dto = flashcardMapper.toFlashcardResponseDto(flashcard);
+            dto.setIsFavorited(userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, flashcard.getId(), com.cabybara.prolearningplatform.enums.ContentType.FLASHCARD));
+            dto.setOwnerId(flashcard.getUser().getId());
+            dto.setOwnerName(flashcard.getUser().getFirstName() != null ? flashcard.getUser().getFirstName() + " " + flashcard.getUser().getLastName() : flashcard.getUser().getLastName());
+            dto.setOwnerAvatar(flashcard.getUser().getAvatarUrl());
+            return dto;
+        });
     }
 
     @Override
@@ -100,9 +108,14 @@ public class FlashcardServiceImpl implements FlashcardService {
                 .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id: " + flashcardId + " not found!"));
 
         NoteRole userRole = flashcardPermissionService.getUserRoleInFlashcard(flashcardId, userId);
+        boolean isFavorited = userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, flashcardId, com.cabybara.prolearningplatform.enums.ContentType.FLASHCARD);
 
         DetailFlashcardResponseDto dto = flashcardMapper.toDetailFlashcardResponseDto(flashcard);
         dto.setUserRole(userRole);
+        dto.setIsFavorited(isFavorited);
+        dto.setOwnerId(flashcard.getUser().getId());
+        dto.setOwnerName(flashcard.getUser().getFirstName() != null ? flashcard.getUser().getFirstName() + " " + flashcard.getUser().getLastName() : flashcard.getUser().getLastName());
+        dto.setOwnerAvatar(flashcard.getUser().getAvatarUrl());
         
         return dto;
     }
@@ -377,6 +390,7 @@ public class FlashcardServiceImpl implements FlashcardService {
                             .updatedAt(dto.getUpdatedAt())
                             .userRole(role)
                             .setId(flashcard.getSet() != null ? flashcard.getSet().getId() : null)
+                            .isFavorited(userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, flashcard.getId(), com.cabybara.prolearningplatform.enums.ContentType.FLASHCARD))
                             .build();
                 });
     }

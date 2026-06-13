@@ -29,6 +29,16 @@ public class SocialServiceImpl implements SocialService {
     private final ActivityLogRepository activityLogRepository;
     private final ResourceViewLogRepository resourceViewLogRepository;
     private final CardItemRepository cardItemRepository;
+    private final com.cabybara.prolearningplatform.repository.UserFavoriteResourceRepository userFavoriteResourceRepository;
+    private final com.cabybara.prolearningplatform.utils.AuthenticationContext authenticationContext;
+
+    private Long getCurrentUserIdSafe() {
+        try {
+            return authenticationContext.getCurrentUserId();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
     @Override
     public Page<SocialItemResponseDto> getSocialNotes(String q, Pageable pageable) {
@@ -46,7 +56,8 @@ public class SocialServiceImpl implements SocialService {
                         sn.getOwnerAvatarUrl(),
                         null,
                         null,
-                        null
+                        null,
+                        getCurrentUserIdSafe() != null && userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(getCurrentUserIdSafe(), sn.getId(), ContentType.NOTE)
                 ));
     }
 
@@ -66,7 +77,8 @@ public class SocialServiceImpl implements SocialService {
                         sf.getOwnerAvatarUrl(),
                         sf.getNumCards(),
                         null,
-                        null
+                        null,
+                        getCurrentUserIdSafe() != null && userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(getCurrentUserIdSafe(), sf.getId(), ContentType.FLASHCARD)
                 ));
     }
 
@@ -86,7 +98,8 @@ public class SocialServiceImpl implements SocialService {
                         se.getOwnerAvatarUrl(),
                         null,
                         se.getNumQuestions(),
-                        se.getDuration()
+                        se.getDuration(),
+                        getCurrentUserIdSafe() != null && userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(getCurrentUserIdSafe(), se.getId(), ContentType.EXAM)
                 ));
     }
 
@@ -239,7 +252,8 @@ public class SocialServiceImpl implements SocialService {
                     ownerName,
                     sr.score,
                     sr.views,
-                    sr.sessions
+                    sr.sessions,
+                    getCurrentUserIdSafe() != null && userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(getCurrentUserIdSafe(), rId, sr.type)
             ));
         }
 

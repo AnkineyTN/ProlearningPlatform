@@ -18,6 +18,15 @@ public class SearchServiceImpl implements SearchService {
     private final AuthenticationContext authenticationContext;
     private final SearchIndexRepository searchIndexRepository;
     private final SearchMapper searchMapper;
+    private final com.cabybara.prolearningplatform.repository.UserFavoriteResourceRepository userFavoriteResourceRepository;
+
+    private Long getCurrentUserIdSafe() {
+        try {
+            return authenticationContext.getCurrentUserId();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
 
     @Override
@@ -29,8 +38,22 @@ public class SearchServiceImpl implements SearchService {
 
         List<SearchResultDto> searchResultDtos = searchIndexRepository.search(keyword, null, type, limit);
 
+        Long userId = getCurrentUserIdSafe();
+
         return searchResultDtos.stream()
-                .map(searchMapper::toSearchResponseDto)
+                .map(dto -> {
+                    SearchResponseDto result = searchMapper.toSearchResponseDto(dto);
+                    boolean isFavorited = false;
+                    if (userId != null && result.type() != null) {
+                        try {
+                            com.cabybara.prolearningplatform.enums.ContentType contentType = com.cabybara.prolearningplatform.enums.ContentType.valueOf(result.type());
+                            isFavorited = userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, result.id(), contentType);
+                        } catch (IllegalArgumentException e) {
+                            // Ignore if not a valid content type (e.g. SET)
+                        }
+                    }
+                    return new SearchResponseDto(result.id(), result.setId(), result.title(), result.description(), result.type(), result.userId(), isFavorited);
+                })
                 .toList();
     }
 
@@ -46,7 +69,19 @@ public class SearchServiceImpl implements SearchService {
         List<SearchResultDto> searchResultDtos = searchIndexRepository.search(keyword, userId, type, limit);
 
         return searchResultDtos.stream()
-                .map(searchMapper::toSearchResponseDto)
+                .map(dto -> {
+                    SearchResponseDto result = searchMapper.toSearchResponseDto(dto);
+                    boolean isFavorited = false;
+                    if (userId != null && result.type() != null) {
+                        try {
+                            com.cabybara.prolearningplatform.enums.ContentType contentType = com.cabybara.prolearningplatform.enums.ContentType.valueOf(result.type());
+                            isFavorited = userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, result.id(), contentType);
+                        } catch (IllegalArgumentException e) {
+                            // Ignore if not a valid content type (e.g. SET)
+                        }
+                    }
+                    return new SearchResponseDto(result.id(), result.setId(), result.title(), result.description(), result.type(), result.userId(), isFavorited);
+                })
                 .toList();
     }
 }

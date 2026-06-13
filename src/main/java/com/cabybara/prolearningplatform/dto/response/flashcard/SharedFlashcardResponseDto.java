@@ -35,4 +35,5 @@ public class SharedFlashcardResponseDto {
 
     private NoteRole userRole;
     private Long setId;
+    private Boolean isFavorited;
 }
