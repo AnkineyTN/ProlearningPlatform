@@ -9,13 +9,12 @@ import com.cabybara.prolearningplatform.dto.response.note.GenerateNoteWithAIResp
 import com.cabybara.prolearningplatform.dto.response.note.SummarizeFileResponseDTO;
 import com.cabybara.prolearningplatform.service.ai.AINoteService;
 import com.cabybara.prolearningplatform.utils.RestHttpClientUtil;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
 
 @Service
 @Slf4j
@@ -38,12 +37,16 @@ public class AINoteServiceImpl implements AINoteService {
     // =============================================
     // ==== UTILS
     // =============================================
-    private String parseData(String json) {
+    private JsonNode parseDataNode(String json) {
         try {
-            return objectMapper.readTree(json).path("data").asText("");
+            return objectMapper.readTree(json).path("data");
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse AI service response", e);
         }
+    }
+
+    private String parseData(String json) {
+        return parseDataNode(json).asText("");
     }
 
     // =============================================
@@ -90,8 +93,7 @@ public class AINoteServiceImpl implements AINoteService {
     public GenerateNoteWithAIResponseDTO generateNoteContent(GenerateNoteWithAIRequestDTO request) {
         try {
             String raw = restHttpClientUtil.post(aiServiceBaseApi + GENERATE_NOTE_PATH, request, String.class);
-            Map<String, Object> responseData = objectMapper.readValue(raw, Map.class);
-            return objectMapper.convertValue(responseData, GenerateNoteWithAIResponseDTO.class);
+            return objectMapper.treeToValue(parseDataNode(raw), GenerateNoteWithAIResponseDTO.class);
         } catch (Exception e) {
             log.error("❌ Error generating note with AI: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to generate note content with AI", e);
