@@ -2,11 +2,14 @@ package com.cabybara.prolearningplatform.service.ai.impl;
 
 import com.cabybara.prolearningplatform.dto.request.note.ConvertFileToVectorRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.note.ExplainNoteRequestDTO;
+import com.cabybara.prolearningplatform.dto.request.note.GenerateNoteWithAIRequestDTO;
 import com.cabybara.prolearningplatform.dto.request.note.SummarizeFileRequestDTO;
 import com.cabybara.prolearningplatform.dto.response.note.ExplainNoteResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.note.GenerateNoteWithAIResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.SummarizeFileResponseDTO;
 import com.cabybara.prolearningplatform.service.ai.AINoteService;
 import com.cabybara.prolearningplatform.utils.RestHttpClientUtil;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +29,7 @@ public class AINoteServiceImpl implements AINoteService {
     private static final String CONVERT_FILE_TO_VECTOR_PATH = "/files/process";
     private static final String EXPLAIN_NOTE_PATH           = "/notes/explain";
     private static final String SUMMARY_FILE_PATH           = "/notes/summarize";
+    private static final String GENERATE_NOTE_PATH          = "/notes/generate";
 
     private final RestHttpClientUtil restHttpClientUtil;
     private final ObjectMapper objectMapper;
@@ -33,12 +37,16 @@ public class AINoteServiceImpl implements AINoteService {
     // =============================================
     // ==== UTILS
     // =============================================
-    private String parseData(String json) {
+    private JsonNode parseDataNode(String json) {
         try {
-            return objectMapper.readTree(json).path("data").asText("");
+            return objectMapper.readTree(json).path("data");
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse AI service response", e);
         }
+    }
+
+    private String parseData(String json) {
+        return parseDataNode(json).asText("");
     }
 
     // =============================================
@@ -78,6 +86,17 @@ public class AINoteServiceImpl implements AINoteService {
         } catch (Exception e) {
             log.error("❌ Error explaining note with AI: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to summarize file with AI", e);
+        }
+    }
+
+    @Override
+    public GenerateNoteWithAIResponseDTO generateNoteContent(GenerateNoteWithAIRequestDTO request) {
+        try {
+            String raw = restHttpClientUtil.post(aiServiceBaseApi + GENERATE_NOTE_PATH, request, String.class);
+            return objectMapper.treeToValue(parseDataNode(raw), GenerateNoteWithAIResponseDTO.class);
+        } catch (Exception e) {
+            log.error("❌ Error generating note with AI: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to generate note content with AI", e);
         }
     }
 }
