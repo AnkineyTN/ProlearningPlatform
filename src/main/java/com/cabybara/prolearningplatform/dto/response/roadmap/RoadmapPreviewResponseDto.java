@@ -1,13 +1,17 @@
 package com.cabybara.prolearningplatform.dto.response.roadmap;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RoadmapPreviewResponseDto {
 
     @JsonProperty("roadmap_title")
@@ -22,6 +26,8 @@ public class RoadmapPreviewResponseDto {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ChapterPreviewDto {
 
         @JsonProperty("chapter_id")
@@ -37,6 +43,8 @@ public class RoadmapPreviewResponseDto {
 
     @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class TopicPreviewDto {
 
         @JsonProperty("topic_id")
