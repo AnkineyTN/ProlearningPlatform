@@ -5,6 +5,7 @@ import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.*;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.note.CreateNoteResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.note.GenerateNoteWithAIResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetAllNotesResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.SharedNoteResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.GetDetailNoteResponseDTO;
@@ -22,6 +23,7 @@ import com.cabybara.prolearningplatform.model.note.NoteDocs;
 import com.cabybara.prolearningplatform.model.note.NoteImgs;
 import com.cabybara.prolearningplatform.repository.*;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
+import com.cabybara.prolearningplatform.service.ai.AINoteService;
 import com.cabybara.prolearningplatform.service.note.NoteFileRegionCommentService;
 import com.cabybara.prolearningplatform.service.note.NoteService;
 import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
@@ -60,6 +62,8 @@ public class NoteServiceImpl implements NoteService {
     private final AuthenticationContext authenticationContext;
     private final NoteFileRegionCommentService noteFileRegionCommentService;
     private final NotePermissionService notePermissionService;
+    private final AINoteService aiNoteService;
+    private final UserFavoriteResourceRepository userFavoriteResourceRepository;
 
     // ##################################################
     // #################  MAIN METHOD  ##################
@@ -88,6 +92,36 @@ public class NoteServiceImpl implements NoteService {
 
         return CreateNoteResponseDTO.builder()
                 .noteId(saved.getId())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public GenerateNoteWithAIResponseDTO createNoteWithAI(Long setId, GenerateNoteWithAIRequestDTO request) {
+        Long userId = authenticationContext.getCurrentUserId();
+        User user = getUserById(userId);
+        Set set = getSetByIdAndUserId(setId, userId);
+
+        GenerateNoteWithAIResponseDTO aiResponse = aiNoteService.generateNoteContent(request);
+
+        Note note = Note.builder()
+                .title(aiResponse.getTitle())
+                .content(aiResponse.getContent())
+                .description(request.getDescription())
+                .privacy(request.getPrivacy())
+                .set(set)
+                .user(user)
+                .build();
+        Note saved = noteRepository.save(note);
+        log.info("✅ Created note with AI '{}' in set id {} by user {}", saved.getTitle(), set.getId(), userId);
+
+        notePermissionService.addOwner(saved.getId(), userId);
+        setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
+
+        return GenerateNoteWithAIResponseDTO.builder()
+                .noteId(saved.getId())
+                .title(aiResponse.getTitle())
+                .content(aiResponse.getContent())
                 .build();
     }
 
@@ -217,6 +251,7 @@ public class NoteServiceImpl implements NoteService {
                                 .publicId(doc.getAsset().getPublicId())
                                 .build())
                         .toList() : null)
+                .isFavorited(userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, note.getId(), com.cabybara.prolearningplatform.enums.ContentType.NOTE))
                 .build());
     }
 
@@ -229,7 +264,7 @@ public class NoteServiceImpl implements NoteService {
         Note note = getNoteByIdAndSetId(noteId, setId);
 
         NoteRole noteRole = notePermissionService.getUserRoleInNote(noteId, userId);
-
+        boolean isFavorited = userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, noteId, com.cabybara.prolearningplatform.enums.ContentType.NOTE);
 
         return GetDetailNoteResponseDTO.builder()
                 .id(note.getId())
@@ -239,6 +274,7 @@ public class NoteServiceImpl implements NoteService {
                 .privacy(note.getPrivacy())
                 .content(note.getContent())
                 .userRole(noteRole)
+                .isFavorited(isFavorited)
                 .noteDocs(
                         note.getNoteDocs().stream()
                                 .map(doc -> {
@@ -266,6 +302,9 @@ public class NoteServiceImpl implements NoteService {
                                 })
                                 .toList()
                 )
+                .ownerId(note.getUser().getId())
+                .ownerName(note.getUser().getFirstName() != null ? note.getUser().getFirstName() + " " + note.getUser().getLastName() : note.getUser().getLastName())
+                .ownerAvatar(note.getUser().getAvatarUrl())
                 .build();
     }
 
@@ -413,6 +452,10 @@ public class NoteServiceImpl implements NoteService {
                             .updated_at(note.getUpdatedAt() != null ? note.getUpdatedAt().toString() : null)
                             .setId(note.getSet() != null ? note.getSet().getId() : null)
                             .userRole(role)
+                            .isFavorited(userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, note.getId(), com.cabybara.prolearningplatform.enums.ContentType.NOTE))
+                            .ownerId(note.getUser().getId())
+                            .ownerName(note.getUser().getFirstName() != null ? note.getUser().getFirstName() + " " + note.getUser().getLastName() : note.getUser().getLastName())
+                            .ownerAvatar(note.getUser().getAvatarUrl())
                             .build();
                 });
     }

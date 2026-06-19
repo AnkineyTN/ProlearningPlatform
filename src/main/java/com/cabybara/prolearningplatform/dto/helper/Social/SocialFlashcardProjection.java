@@ -12,5 +12,6 @@ public interface SocialFlashcardProjection {
     Long getOwnerId();
     String getOwnerFirstName();
     String getOwnerLastName();
+    String getOwnerAvatarUrl();
     Long getNumCards();
 }

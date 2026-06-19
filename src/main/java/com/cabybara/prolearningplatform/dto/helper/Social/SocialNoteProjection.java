@@ -12,4 +12,5 @@ public interface SocialNoteProjection {
     Long getOwnerId();
     String getOwnerFirstName();
     String getOwnerLastName();
+    String getOwnerAvatarUrl();
 }

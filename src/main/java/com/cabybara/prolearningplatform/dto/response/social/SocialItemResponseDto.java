@@ -12,7 +12,9 @@ public record SocialItemResponseDto(
         OffsetDateTime updatedAt,
         Long ownerId,
         String ownerName,
+        String ownerAvatar,
         Long numCards,
         Long numQuestions,
-        Long duration
+        Long duration,
+        Boolean isFavorited
 ) {}

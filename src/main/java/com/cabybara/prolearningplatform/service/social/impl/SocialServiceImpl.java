@@ -29,6 +29,16 @@ public class SocialServiceImpl implements SocialService {
     private final ActivityLogRepository activityLogRepository;
     private final ResourceViewLogRepository resourceViewLogRepository;
     private final CardItemRepository cardItemRepository;
+    private final com.cabybara.prolearningplatform.repository.UserFavoriteResourceRepository userFavoriteResourceRepository;
+    private final com.cabybara.prolearningplatform.utils.AuthenticationContext authenticationContext;
+
+    private Long getCurrentUserIdSafe() {
+        try {
+            return authenticationContext.getCurrentUserId();
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
     @Override
     public Page<SocialItemResponseDto> getSocialNotes(String q, Pageable pageable) {
@@ -43,9 +53,11 @@ public class SocialServiceImpl implements SocialService {
                         toOffsetDateTime(sn.getUpdatedAt()),
                         sn.getOwnerId(),
                         buildOwnerName(sn.getOwnerFirstName(), sn.getOwnerLastName()),
+                        sn.getOwnerAvatarUrl(),
                         null,
                         null,
-                        null
+                        null,
+                        getCurrentUserIdSafe() != null && userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(getCurrentUserIdSafe(), sn.getId(), ContentType.NOTE)
                 ));
     }
 
@@ -62,9 +74,11 @@ public class SocialServiceImpl implements SocialService {
                         toOffsetDateTime(sf.getUpdatedAt()),
                         sf.getOwnerId(),
                         buildOwnerName(sf.getOwnerFirstName(), sf.getOwnerLastName()),
+                        sf.getOwnerAvatarUrl(),
                         sf.getNumCards(),
                         null,
-                        null
+                        null,
+                        getCurrentUserIdSafe() != null && userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(getCurrentUserIdSafe(), sf.getId(), ContentType.FLASHCARD)
                 ));
     }
 
@@ -81,9 +95,11 @@ public class SocialServiceImpl implements SocialService {
                         toOffsetDateTime(se.getUpdatedAt()),
                         se.getOwnerId(),
                         buildOwnerName(se.getOwnerFirstName(), se.getOwnerLastName()),
+                        se.getOwnerAvatarUrl(),
                         null,
                         se.getNumQuestions(),
-                        se.getDuration()
+                        se.getDuration(),
+                        getCurrentUserIdSafe() != null && userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(getCurrentUserIdSafe(), se.getId(), ContentType.EXAM)
                 ));
     }
 
@@ -107,7 +123,7 @@ public class SocialServiceImpl implements SocialService {
         }
         for (Object[] row : viewsList) {
             Long rId = ((Number) row[0]).longValue();
-            ContentType rType = (ContentType) row[1];
+            ContentType rType = ContentType.valueOf(String.valueOf(row[1]));
             Long count = ((Number) row[2]).longValue();
             String key = rType.name() + "_" + rId;
             viewCounts.put(key, count);
@@ -116,12 +132,12 @@ public class SocialServiceImpl implements SocialService {
         }
 
         // Process sessions
-        List<ContentType> allowedTypes = List.of(ContentType.NOTE, ContentType.FLASHCARD, ContentType.EXAM);
+        List<String> allowedTypesStr = List.of(ContentType.NOTE.name(), ContentType.FLASHCARD.name(), ContentType.EXAM.name());
         List<Object[]> sessionsList = activityLogRepository.findTopResourcesBySessions(
-                startLocalDate, allowedTypes, PageRequest.of(0, topN * 10));
+                startLocalDate, allowedTypesStr, PageRequest.of(0, topN * 10));
         for (Object[] row : sessionsList) {
             Long rId = ((Number) row[0]).longValue();
-            ContentType rType = (ContentType) row[1];
+            ContentType rType = ContentType.valueOf(String.valueOf(row[1]));
             Long count = ((Number) row[2]).longValue();
 
             // Filter by type if not ALL
@@ -165,11 +181,12 @@ public class SocialServiceImpl implements SocialService {
         // Sort by score desc
         scoredList.sort((a, b) -> Long.compare(b.score, a.score));
 
-        // Limit to topN and construct details
-        List<ScoredResource> topList = scoredList.stream().limit(topN).toList();
         List<TrendingResourceResponseDto> result = new ArrayList<>();
         int rank = 1;
-        for (ScoredResource sr : topList) {
+        for (ScoredResource sr : scoredList) {
+            if (result.size() >= topN) {
+                break;
+            }
             Long rId = sr.id;
             String title = "";
             String description = "";
@@ -235,7 +252,8 @@ public class SocialServiceImpl implements SocialService {
                     ownerName,
                     sr.score,
                     sr.views,
-                    sr.sessions
+                    sr.sessions,
+                    getCurrentUserIdSafe() != null && userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(getCurrentUserIdSafe(), rId, sr.type)
             ));
         }
 
