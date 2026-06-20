@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.service.social;
 
+import com.cabybara.prolearningplatform.dto.helper.ResourceViewCountProjection;
 import com.cabybara.prolearningplatform.dto.helper.Social.SocialNoteProjection;
 import com.cabybara.prolearningplatform.dto.response.social.TopCreatorResponseDto;
 import com.cabybara.prolearningplatform.dto.response.social.TrendingResourceResponseDto;
@@ -135,9 +136,14 @@ class SocialServiceImplTest {
                 .build();
         note.setId(1L);
 
+        ResourceViewCountProjection viewRow = mock(ResourceViewCountProjection.class);
+        when(viewRow.getResourceId()).thenReturn(1L);
+        when(viewRow.getResourceType()).thenReturn("NOTE");
+        when(viewRow.getViewCount()).thenReturn(10L);
+
         when(resourceViewLogRepository.findTopResourcesByViewsAndType(
                 eq(ContentType.NOTE), any(OffsetDateTime.class), any(Pageable.class)))
-                .thenReturn(List.<Object[]>of(new Object[]{1L, "NOTE", 10L}));
+                .thenReturn(List.of(viewRow));
         when(activityLogRepository.findTopResourcesBySessions(
                 any(LocalDate.class), anyList(), any(Pageable.class)))
                 .thenReturn(List.of());
