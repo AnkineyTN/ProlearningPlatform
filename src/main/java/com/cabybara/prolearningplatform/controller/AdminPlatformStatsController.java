@@ -40,14 +40,15 @@ public class AdminPlatformStatsController {
     public ResponseEntity<ApiResponse<AdminPlatformStatsResponseDto>> getStats() {
         long totalUsers = userRepository.count();
         long blockedUsers = userRepository.findByIsBlocked(true, org.springframework.data.domain.Pageable.unpaged()).getTotalElements();
-        long proUsers = userRepository.aggregateAccountType().stream()
-                .filter(r -> "PRO".equals(String.valueOf(r[0])))
-                .mapToLong(r -> ((Number) r[1]).longValue())
-                .sum();
-        long freeUsers = userRepository.aggregateAccountType().stream()
-                .filter(r -> "FREE".equals(String.valueOf(r[0])))
-                .mapToLong(r -> ((Number) r[1]).longValue())
-                .sum();
+        long proUsers = 0;
+        long freeUsers = 0;
+        for (var r : userRepository.aggregateAccountType()) {
+            if ("PRO".equals(r.getLabel())) {
+                proUsers = r.getCount();
+            } else {
+                freeUsers += r.getCount();
+            }
+        }
 
         AdminPlatformStatsResponseDto stats = AdminPlatformStatsResponseDto.builder()
                 .totalUsers(totalUsers)

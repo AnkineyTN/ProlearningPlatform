@@ -1,5 +1,9 @@
 package com.cabybara.prolearningplatform.service.activity.impl;
 
+import com.cabybara.prolearningplatform.dto.helper.ActiveDayProjection;
+import com.cabybara.prolearningplatform.dto.helper.ContentTypeSummaryProjection;
+import com.cabybara.prolearningplatform.dto.helper.HeatmapProjection;
+import com.cabybara.prolearningplatform.dto.helper.OverallSummaryProjection;
 import com.cabybara.prolearningplatform.dto.request.activity.ActivityLogRequestDto;
 import com.cabybara.prolearningplatform.dto.response.activity.ActivitySummaryResponseDto;
 import com.cabybara.prolearningplatform.dto.response.activity.ContentTypeSummaryDto;
@@ -99,15 +103,15 @@ public class ActivityLogServiceImpl implements ActivityLogService {
         LocalDate endDate = LocalDate.now(ICT);
         LocalDate startDate = endDate.minusMonths(Math.min(Math.max(months, 1), 12));
 
-        List<Object[]> rows = activityLogRepository.findHeatmapData(userId, startDate, endDate);
+        List<HeatmapProjection> rows = activityLogRepository.findHeatmapData(userId, startDate, endDate);
         List<HeatmapDayDto> result = new ArrayList<>();
 
-        for (Object[] row : rows) {
-            LocalDate date = toLocalDate(row[0]);
-            long totalSeconds = toLong(row[1]);
-            long sessions = toLong(row[2]);
-            Integer bestScore = row[3] != null ? toInt(row[3]) : null;
-            long totalItems = toLong(row[4]);
+        for (HeatmapProjection row : rows) {
+            LocalDate date = toLocalDate(row.getDate());
+            long totalSeconds = row.getTotalActiveSeconds();
+            long sessions = row.getSessions();
+            Integer bestScore = row.getBestScore() != null ? row.getBestScore().intValue() : null;
+            long totalItems = row.getTotalItems();
 
             result.add(HeatmapDayDto.builder()
                     .date(date.format(DATE_FMT))
@@ -128,7 +132,7 @@ public class ActivityLogServiceImpl implements ActivityLogService {
                 .orElseThrow(() -> new IllegalStateException("User not found"));
 
         List<LocalDate> activeDays = activityLogRepository.findActiveDays(userId)
-                .stream().map(this::toLocalDate).toList();
+                .stream().map(d -> toLocalDate(d.getDate())).toList();
 
         if (activeDays.isEmpty()) {
             return StreakResponseDto.builder()
@@ -140,7 +144,7 @@ public class ActivityLogServiceImpl implements ActivityLogService {
         }
 
         LocalDate today = LocalDate.now(ICT);
-        LocalDate lastActive = activeDays.get(0);
+            LocalDate lastActive = activeDays.get(0);
         long daysDiff = today.toEpochDay() - lastActive.toEpochDay();
 
         if (daysDiff > 1) {
@@ -176,20 +180,20 @@ public class ActivityLogServiceImpl implements ActivityLogService {
         int clampedDays = Math.min(Math.max(days, 1), 365);
         LocalDate startDate = LocalDate.now(ICT).minusDays(clampedDays);
 
-        List<Object[]> overallList = activityLogRepository.findOverallSummary(userId, startDate);
-        Object[] overall = overallList.isEmpty() ? new Object[4] : overallList.get(0);
-        long totalSeconds = overall[0] != null ? toLong(overall[0]) : 0L;
-        long totalSessions = overall[1] != null ? toLong(overall[1]) : 0L;
-        long totalItems = overall[2] != null ? toLong(overall[2]) : 0L;
-        Double avgScore = overall[3] != null ? toDouble(overall[3]) : null;
+        List<OverallSummaryProjection> overallList = activityLogRepository.findOverallSummary(userId, startDate);
+        OverallSummaryProjection overall = overallList.isEmpty() ? null : overallList.get(0);
+        long totalSeconds = overall != null && overall.getTotalActiveSeconds() != null ? overall.getTotalActiveSeconds() : 0L;
+        long totalSessions = overall != null && overall.getTotalSessions() != null ? overall.getTotalSessions() : 0L;
+        long totalItems = overall != null && overall.getTotalItems() != null ? overall.getTotalItems() : 0L;
+        Double avgScore = overall != null ? overall.getAvgScore() : null;
 
-        List<Object[]> breakdownRows = activityLogRepository.findSummaryByContentType(userId, startDate);
+        List<ContentTypeSummaryProjection> breakdownRows = activityLogRepository.findSummaryByContentType(userId, startDate);
         List<ContentTypeSummaryDto> breakdown = new ArrayList<>();
-        for (Object[] row : breakdownRows) {
+        for (ContentTypeSummaryProjection row : breakdownRows) {
             breakdown.add(ContentTypeSummaryDto.builder()
-                    .contentType(String.valueOf(row[0]))
-                    .totalMinutes(toLong(row[1]) / 60)
-                    .sessions(toLong(row[2]))
+                    .contentType(row.getContentType())
+                    .totalMinutes(row.getTotalActiveSeconds() / 60)
+                    .sessions(row.getSessions())
                     .build());
         }
 

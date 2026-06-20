@@ -27,6 +27,10 @@ public interface KnowledgeAnalysisRepository extends JpaRepository<KnowledgeAnal
             @Param("sourceType") KnowledgeSourceType knowledgeSourceType,
             @Param("sourceId") Long sourceId);
 
+    List<KnowledgeAnalysis> findAllBySourceTypeAndSourceIdInOrderByCreatedAtDesc(
+            KnowledgeSourceType sourceType,
+            List<Long> sourceIds);
+
     List<KnowledgeAnalysis> findAllByUserIdOrderByCreatedAtDesc(Long userId);
 
     List<KnowledgeAnalysis> findAllByUserIdAndSourceTypeOrderByCreatedAtDesc(Long userId, KnowledgeSourceType sourceType);

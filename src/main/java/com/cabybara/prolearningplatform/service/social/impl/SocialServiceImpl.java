@@ -1,5 +1,8 @@
 package com.cabybara.prolearningplatform.service.social.impl;
 
+import com.cabybara.prolearningplatform.dto.helper.ResourceSessionCountProjection;
+import com.cabybara.prolearningplatform.dto.helper.ResourceViewCountProjection;
+import com.cabybara.prolearningplatform.dto.helper.TopicCountProjection;
 import com.cabybara.prolearningplatform.dto.response.social.*;
 import com.cabybara.prolearningplatform.enums.ContentType;
 import com.cabybara.prolearningplatform.enums.ResourceType;
@@ -118,16 +121,16 @@ public class SocialServiceImpl implements SocialService {
 
         // Process views
         ContentType filterType = (type != null) ? type.toContentType() : null;
-        List<Object[]> viewsList;
+        List<ResourceViewCountProjection> viewsList;
         if (filterType == null) {
             viewsList = resourceViewLogRepository.findTopResourcesByViews(startDateTime, PageRequest.of(0, topN * 10));
         } else {
             viewsList = resourceViewLogRepository.findTopResourcesByViewsAndType(filterType, startDateTime, PageRequest.of(0, topN * 10));
         }
-        for (Object[] row : viewsList) {
-            Long rId = ((Number) row[0]).longValue();
-            ContentType rType = ContentType.valueOf(String.valueOf(row[1]));
-            Long count = ((Number) row[2]).longValue();
+        for (ResourceViewCountProjection row : viewsList) {
+            Long rId = row.getResourceId();
+            ContentType rType = ContentType.valueOf(row.getResourceType());
+            Long count = row.getViewCount();
             String key = rType.name() + "_" + rId;
             viewCounts.put(key, count);
             resourceTypes.put(key, rType);
@@ -136,12 +139,12 @@ public class SocialServiceImpl implements SocialService {
 
         // Process sessions
         List<String> allowedTypesStr = List.of(ContentType.NOTE.name(), ContentType.FLASHCARD.name(), ContentType.EXAM.name());
-        List<Object[]> sessionsList = activityLogRepository.findTopResourcesBySessions(
+        List<ResourceSessionCountProjection> sessionsList = activityLogRepository.findTopResourcesBySessions(
                 startLocalDate, allowedTypesStr, PageRequest.of(0, topN * 10));
-        for (Object[] row : sessionsList) {
-            Long rId = ((Number) row[0]).longValue();
-            ContentType rType = ContentType.valueOf(String.valueOf(row[1]));
-            Long count = ((Number) row[2]).longValue();
+        for (ResourceSessionCountProjection row : sessionsList) {
+            Long rId = row.getSetId();
+            ContentType rType = ContentType.valueOf(row.getContentType());
+            Long count = row.getSessionCount();
 
             // Filter by type if not ALL
             if (filterType != null && rType != filterType) {
@@ -295,14 +298,14 @@ public class SocialServiceImpl implements SocialService {
     @Override
     public List<TopTopicResponseDto> getTopTopics(TrendingPeriod period, int topN) {
         OffsetDateTime since = period.toSinceDateTime();
-        List<Object[]> topics = cardItemRepository.findTopTopics(since, PageRequest.of(0, topN));
+        List<TopicCountProjection> topics = cardItemRepository.findTopTopics(since, PageRequest.of(0, topN));
 
         List<TopTopicResponseDto> result = new ArrayList<>();
         int rank = 1;
-        for (Object[] row : topics) {
-            String topic = (String) row[0];
-            long totalResources = ((Number) row[1]).longValue();
-            long newResources = ((Number) row[2]).longValue();
+        for (TopicCountProjection row : topics) {
+            String topic = row.getTopic();
+            long totalResources = row.getTotalResources();
+            long newResources = row.getNewResources();
 
             result.add(new TopTopicResponseDto(
                     rank++,

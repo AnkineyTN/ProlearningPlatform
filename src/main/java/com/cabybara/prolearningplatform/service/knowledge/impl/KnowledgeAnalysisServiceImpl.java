@@ -140,12 +140,17 @@ public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
         List<Long> flashcardIds = flashcardRepository.findIdsBySetId(setId);
         List<Long> examIds      = examRepository.findIdsBySetId(setId);
 
-        // Gather latest analysis per resource
-        List<KnowledgeAnalysis> sources = new ArrayList<>();
-        flashcardIds.forEach(fId -> analysisRepository.findLatestBySourceTypeAndSourceId(KnowledgeSourceType.FLASHCARD, fId)
-                .ifPresent(sources::add));
-        examIds.forEach(eId -> analysisRepository.findLatestBySourceTypeAndSourceId(KnowledgeSourceType.EXAM, eId)
-                .ifPresent(sources::add));
+        // Gather latest analysis per resource (batch fetch to avoid N+1)
+        List<KnowledgeAnalysis> flashcardAnalyses = analysisRepository
+                .findAllBySourceTypeAndSourceIdInOrderByCreatedAtDesc(KnowledgeSourceType.FLASHCARD, flashcardIds);
+        List<KnowledgeAnalysis> examAnalyses = analysisRepository
+                .findAllBySourceTypeAndSourceIdInOrderByCreatedAtDesc(KnowledgeSourceType.EXAM, examIds);
+
+        Map<Long, KnowledgeAnalysis> latestBySourceId = new LinkedHashMap<>();
+        flashcardAnalyses.forEach(a -> latestBySourceId.putIfAbsent(a.getSourceId(), a));
+        examAnalyses.forEach(a -> latestBySourceId.putIfAbsent(a.getSourceId(), a));
+
+        List<KnowledgeAnalysis> sources = new ArrayList<>(latestBySourceId.values());
 
         if (sources.isEmpty()) {
             throw new BadRequestException("No analyses found for resources in this set. Analyze individual flashcards or exams first.");

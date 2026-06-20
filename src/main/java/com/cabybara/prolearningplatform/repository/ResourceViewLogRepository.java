@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.dto.helper.ResourceViewCountProjection;
 import com.cabybara.prolearningplatform.enums.ContentType;
 import com.cabybara.prolearningplatform.model.ResourceViewLog;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +19,7 @@ public interface ResourceViewLogRepository extends JpaRepository<ResourceViewLog
             Long resourceId, ContentType resourceType, String viewerIp, OffsetDateTime since);
 
     @Query(value = """
-        SELECT r.resource_id, r.resource_type, COUNT(r.id) as viewCount
+        SELECT r.resource_id AS resourceId, r.resource_type AS resourceType, COUNT(r.id) AS viewCount
         FROM resource_view_log r
         LEFT JOIN note n ON r.resource_id = n.id AND CAST(r.resource_type AS varchar) = 'NOTE'
         LEFT JOIN flashcard f ON r.resource_id = f.id AND CAST(r.resource_type AS varchar) = 'FLASHCARD'
@@ -28,12 +29,12 @@ public interface ResourceViewLogRepository extends JpaRepository<ResourceViewLog
         GROUP BY r.resource_id, r.resource_type
         ORDER BY viewCount DESC
         """, nativeQuery = true)
-    List<Object[]> findTopResourcesByViews(
+    List<ResourceViewCountProjection> findTopResourcesByViews(
             @Param("since") OffsetDateTime since,
             Pageable pageable);
 
     @Query(value = """
-        SELECT r.resource_id, r.resource_type, COUNT(r.id) as viewCount
+        SELECT r.resource_id AS resourceId, r.resource_type AS resourceType, COUNT(r.id) AS viewCount
         FROM resource_view_log r
         LEFT JOIN note n ON r.resource_id = n.id AND CAST(r.resource_type AS varchar) = 'NOTE'
         LEFT JOIN flashcard f ON r.resource_id = f.id AND CAST(r.resource_type AS varchar) = 'FLASHCARD'
@@ -43,7 +44,7 @@ public interface ResourceViewLogRepository extends JpaRepository<ResourceViewLog
         GROUP BY r.resource_id, r.resource_type
         ORDER BY viewCount DESC
         """, nativeQuery = true)
-    List<Object[]> findTopResourcesByViewsAndType(
+    List<ResourceViewCountProjection> findTopResourcesByViewsAndType(
             @Param("resourceType") ContentType resourceType,
             @Param("since") OffsetDateTime since,
             Pageable pageable);
