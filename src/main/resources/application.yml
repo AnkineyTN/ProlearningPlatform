@@ -15,6 +15,9 @@ payos:
     return-url-mobile: ${MOBILE_PAYMENT_RETURN_URL}
     cancel-url-mobile: ${MOBILE_PAYMENT_CANCEL_URL}
 
+pdftohtml:
+    api: ${PDF_TO_HTML_API:https://prolearning-pdftohtmlconverter.onrender.com/convert?url=}
+
 schedule:
     due-card-reminder:
         cron: "0 0 8 * * *"

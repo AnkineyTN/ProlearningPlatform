@@ -59,7 +59,7 @@ public class PomodoroSoundServiceImpl implements PomodoroSoundService {
 
         return sounds.stream()
                 .map(s -> toDto(s, favoriteIds.contains(s.getId()), activeMap.get(s.getId())))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

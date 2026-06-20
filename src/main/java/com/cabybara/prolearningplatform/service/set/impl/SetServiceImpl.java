@@ -67,7 +67,7 @@ public class SetServiceImpl implements SetService {
     }
 
     @Override
-    @Cacheable(value = "set_detail", key = "#setId")
+    @Cacheable(value = "set_detail", key = "#setId", sync = true)
     public SetResponseDto getSet(Long setId) {
         Set set = setRepository.findById(setId)
                 .orElseThrow(() -> new ResourceNotFoundException("Set with id " + setId + " not found"));
@@ -96,6 +96,7 @@ public class SetServiceImpl implements SetService {
     }
 
     @Override
+    @Transactional
     @CacheEvict(value = "set_detail", key = "#setId")
     public SetResponseDto updateSet(Long setId, Long userId, SetUpdatingRequestDto setUpdatingRequestDto) {
         Set set = setRepository.findById(setId)
@@ -116,6 +117,7 @@ public class SetServiceImpl implements SetService {
     }
 
     @Override
+    @Transactional
     @CacheEvict(value = "set_detail", key = "#setId")
     public void deleteSet(Long setId, Long userId) {
         Set set = setRepository.findById(setId)

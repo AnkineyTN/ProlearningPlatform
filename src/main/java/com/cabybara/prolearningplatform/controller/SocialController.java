@@ -14,6 +14,7 @@ import com.cabybara.prolearningplatform.utils.ValidateSort;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/social")
 @RequiredArgsConstructor
+@Slf4j
 @Tag(name = "Social")
 @Validated
 public class SocialController {
@@ -119,7 +121,7 @@ public class SocialController {
         try {
             userId = authenticationContext.getCurrentUserId();
         } catch (Exception e) {
-            // Ignore guest user exceptions
+            log.warn("Failed to resolve current user for resource view tracking", e);
         }
         resourceViewLogService.recordView(id, type, ip, userId);
         return ResponseEntity.status(HttpStatus.OK)

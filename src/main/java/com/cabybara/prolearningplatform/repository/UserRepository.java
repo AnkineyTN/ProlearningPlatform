@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.dto.helper.LabelCountProjection;
 import com.cabybara.prolearningplatform.enums.AccountType;
 import com.cabybara.prolearningplatform.model.User;
 
@@ -34,28 +35,31 @@ public interface UserRepository extends JpaRepository<User, Long> {
     );
 
     @Query(value = """
-            SELECT COALESCE(CAST(u.education AS text), 'UNSET'), CAST(COUNT(*) AS bigint)
+            SELECT COALESCE(CAST(u.education AS text), 'UNSET') AS label,
+                   CAST(COUNT(*) AS bigint)                     AS count
             FROM users u
             GROUP BY u.education
             ORDER BY COUNT(*) DESC
             """, nativeQuery = true)
-    List<Object[]> aggregateEducation();
+    List<LabelCountProjection> aggregateEducation();
 
     @Query(value = """
-            SELECT COALESCE(CAST(u.hear_app_from AS text), 'UNSET'), CAST(COUNT(*) AS bigint)
+            SELECT COALESCE(CAST(u.hear_app_from AS text), 'UNSET') AS label,
+                   CAST(COUNT(*) AS bigint)                          AS count
             FROM users u
             GROUP BY u.hear_app_from
             ORDER BY COUNT(*) DESC
             """, nativeQuery = true)
-    List<Object[]> aggregateHearAppFrom();
+    List<LabelCountProjection> aggregateHearAppFrom();
 
     @Query(value = """
-            SELECT u.account_type, CAST(COUNT(*) AS bigint)
+            SELECT u.account_type          AS label,
+                   CAST(COUNT(*) AS bigint) AS count
             FROM users u
             GROUP BY u.account_type
             ORDER BY COUNT(*) DESC
             """, nativeQuery = true)
-    List<Object[]> aggregateAccountType();
+    List<LabelCountProjection> aggregateAccountType();
 
     // bỏ qua những user đã là ACTIVE member của note (cho phép re-invite pending members)
     @Query("""
