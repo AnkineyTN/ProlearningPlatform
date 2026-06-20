@@ -1,12 +1,7 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.response.admin.AdminPlatformStatsResponseDto;
-import com.cabybara.prolearningplatform.repository.ExamRepository;
-import com.cabybara.prolearningplatform.repository.FlashcardRepository;
-import com.cabybara.prolearningplatform.repository.FlashcardStudySessionRepository;
-import com.cabybara.prolearningplatform.repository.NoteRepository;
-import com.cabybara.prolearningplatform.repository.PomodoroSessionRepository;
-import com.cabybara.prolearningplatform.repository.UserRepository;
+import com.cabybara.prolearningplatform.service.admin.AdminPlatformStatsService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,41 +22,13 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = "bearerAuth")
 public class AdminPlatformStatsController {
 
-    private final UserRepository userRepository;
-    private final NoteRepository noteRepository;
-    private final FlashcardRepository flashcardRepository;
-    private final ExamRepository examRepository;
-    private final PomodoroSessionRepository pomodoroSessionRepository;
-    private final FlashcardStudySessionRepository flashcardStudySessionRepository;
+    private final AdminPlatformStatsService adminPlatformStatsService;
 
     @Operation(summary = "Platform statistics", description = "Returns aggregate counts: users, notes, flashcards, exams, sessions.")
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping
     public ResponseEntity<ApiResponse<AdminPlatformStatsResponseDto>> getStats() {
-        long totalUsers = userRepository.count();
-        long blockedUsers = userRepository.findByIsBlocked(true, org.springframework.data.domain.Pageable.unpaged()).getTotalElements();
-        long proUsers = 0;
-        long freeUsers = 0;
-        for (var r : userRepository.aggregateAccountType()) {
-            if ("PRO".equals(r.getLabel())) {
-                proUsers = r.getCount();
-            } else {
-                freeUsers += r.getCount();
-            }
-        }
-
-        AdminPlatformStatsResponseDto stats = AdminPlatformStatsResponseDto.builder()
-                .totalUsers(totalUsers)
-                .blockedUsers(blockedUsers)
-                .proUsers(proUsers)
-                .freeUsers(freeUsers)
-                .totalNotes(noteRepository.count())
-                .totalFlashcards(flashcardRepository.count())
-                .totalExams(examRepository.count())
-                .totalPomodoroSessions(pomodoroSessionRepository.count())
-                .totalStudySessions(flashcardStudySessionRepository.count())
-                .build();
-
+        AdminPlatformStatsResponseDto stats = adminPlatformStatsService.getStats();
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully", stats, null));
     }
