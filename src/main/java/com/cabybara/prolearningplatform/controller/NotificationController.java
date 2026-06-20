@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,6 +37,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/notifications")
 @RequiredArgsConstructor
+@Slf4j
 @Validated
 @Tag(name = "Notifications")
 public class NotificationController {
@@ -285,6 +287,7 @@ public class NotificationController {
                 ));
             }
         } catch (Exception e) {
+            log.error("Failed to send push notification", e);
             return ResponseEntity.badRequest().body(Map.of(
                     "status", "error",
                     "message", e.getMessage()

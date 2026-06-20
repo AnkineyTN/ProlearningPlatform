@@ -7,6 +7,7 @@ import com.cabybara.prolearningplatform.enums.TrendingPeriod;
 import com.cabybara.prolearningplatform.repository.*;
 import com.cabybara.prolearningplatform.service.social.SocialService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SocialServiceImpl implements SocialService {
 
     private final NoteRepository noteRepository;
@@ -36,6 +38,7 @@ public class SocialServiceImpl implements SocialService {
         try {
             return authenticationContext.getCurrentUserId();
         } catch (Exception e) {
+            log.warn("Failed to get current user ID for social query", e);
             return null;
         }
     }

@@ -3,6 +3,7 @@ package com.cabybara.prolearningplatform.service.upload.impl;
 import com.cabybara.prolearningplatform.service.upload.ConvertToHTMLService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -12,7 +13,8 @@ import java.io.IOException;
 @Slf4j
 @RequiredArgsConstructor
 public class ConvertToHTMLServiceImpl implements ConvertToHTMLService {
-    private final String PDF_TO_HTML_API = "https://prolearning-pdftohtmlconverter.onrender.com/convert?url=";
+    @Value("${pdftohtml.api}")
+    private String pdfToHtmlApi;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -23,7 +25,7 @@ public class ConvertToHTMLServiceImpl implements ConvertToHTMLService {
         }
 
         try {
-            String apiUrl = PDF_TO_HTML_API + url;
+            String apiUrl = pdfToHtmlApi + url;
             log.info("Calling PDF to HTML API: {}", apiUrl);
 
             String htmlContent = restTemplate.getForObject(apiUrl, String.class);

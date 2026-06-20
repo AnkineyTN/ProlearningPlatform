@@ -8,12 +8,14 @@ import com.cabybara.prolearningplatform.repository.SearchIndexRepository;
 import com.cabybara.prolearningplatform.service.search.SearchService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SearchServiceImpl implements SearchService {
     private final AuthenticationContext authenticationContext;
     private final SearchIndexRepository searchIndexRepository;
@@ -24,6 +26,7 @@ public class SearchServiceImpl implements SearchService {
         try {
             return authenticationContext.getCurrentUserId();
         } catch (Exception e) {
+            log.warn("Failed to get current user ID for search query", e);
             return null;
         }
     }

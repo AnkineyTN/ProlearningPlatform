@@ -2,7 +2,6 @@ package com.cabybara.prolearningplatform.service.pomodoro.impl;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -57,7 +56,7 @@ public class PomodoroSpaceServiceImpl implements PomodoroSpaceService {
         return spaces.stream()
                 .map(s -> toDto(s, favoriteIds.contains(s.getId()),
                                    s.getId().equals(activeSpaceId)))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
