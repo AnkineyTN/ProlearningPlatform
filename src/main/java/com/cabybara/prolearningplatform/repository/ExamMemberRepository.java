@@ -29,6 +29,15 @@ public interface ExamMemberRepository extends JpaRepository<ExamMember, Long> {
         @Param("userId") Long userId
     );
 
+    @Query("""
+        SELECT m FROM ExamMember m
+        JOIN FETCH m.user
+        WHERE m.exam.id = :examId AND m.user.id IN :userIds
+        """)
+    List<ExamMember> findWithUserByExamIdAndUserIdIn(
+        @Param("examId") Long examId,
+        @Param("userIds") List<Long> userIds);
+
     Optional<ExamMember> findByExamIdAndUserIdAndStatus(
         Long examId, Long userId, ExamMemberStatus status);
 

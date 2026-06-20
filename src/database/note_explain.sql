@@ -1,4 +1,4 @@
-CREATE TABLE note_explain
+CREATE TABLE note_explains
 (
     id         BIGSERIAL PRIMARY KEY,
     id_note    BIGINT       NOT NULL,

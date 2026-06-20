@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -124,12 +123,12 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         List<String> imageIds = assets.stream()
                 .filter(a -> a.getAssetType().equals(AssetType.IMAGE))
                 .map(AssetToDeleteDto::getPublicId)
-                .collect(Collectors.toList());
+                .toList();
 
         List<String> rawIds = assets.stream()
                 .filter(a -> a.getAssetType().equals(AssetType.DOCUMENT))
                 .map(AssetToDeleteDto::getPublicId)
-                .collect(Collectors.toList());
+                .toList();
 
         if (!imageIds.isEmpty()) {
             batchDelete(imageIds, "image");

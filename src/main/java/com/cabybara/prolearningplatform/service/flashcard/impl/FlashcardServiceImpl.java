@@ -178,7 +178,7 @@ public class FlashcardServiceImpl implements FlashcardService {
                         .backCard(source.getBackCard())
                         .topic(source.getTopic())
                         .build())
-                .collect(Collectors.toList());
+                .toList();
 
         flashcard.setCards(copiedCards);
 
@@ -194,7 +194,7 @@ public class FlashcardServiceImpl implements FlashcardService {
                 .map(CardItemCreateRequestDto::getImageAssetId)
                 .filter(Objects::nonNull)
                 .distinct()
-                .collect(Collectors.toList());
+                .toList();
 
         return assetService.findAndActivateAssets(assetIdsToActivate, userId);
     }
@@ -215,7 +215,7 @@ public class FlashcardServiceImpl implements FlashcardService {
                     cardItem.setFlashcard(flashcard);
                     return cardItem;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -267,7 +267,7 @@ public class FlashcardServiceImpl implements FlashcardService {
         // Get note IDs from the request
         List<Long> noteIds = request.getNotes().stream()
                 .map(NoteRequestDto::getNoteId)
-                .collect(Collectors.toList());
+                .toList();
         
         List<Note> notes = noteRepository.findAllById(noteIds);
 
@@ -360,7 +360,7 @@ public class FlashcardServiceImpl implements FlashcardService {
                     fc.getSetId(),
                     fc.getInvitedAt()
                 ))
-                .collect(java.util.stream.Collectors.toList());
+                .toList();
     }
 
     @Override

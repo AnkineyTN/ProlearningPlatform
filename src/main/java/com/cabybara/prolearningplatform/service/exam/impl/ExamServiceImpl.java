@@ -296,7 +296,7 @@ public class ExamServiceImpl implements ExamService {
         // Get note IDs from the request
         List<Long> noteIds = request.getNotes().stream()
                 .map(NoteRequestDto::getNoteId)
-                .collect(Collectors.toList());
+                .toList();
         
         List<Note> notes = noteRepository.findAllById(noteIds);
 
@@ -385,7 +385,7 @@ public class ExamServiceImpl implements ExamService {
                     exam.getSetId(),
                     exam.getInvitedAt()
                 ))
-                .collect(java.util.stream.Collectors.toList());
+                .toList();
     }
 
     @Override

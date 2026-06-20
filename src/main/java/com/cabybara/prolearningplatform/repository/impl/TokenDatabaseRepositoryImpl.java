@@ -61,7 +61,7 @@ public class TokenDatabaseRepositoryImpl implements TokenDatabaseRepository<Stor
     public Collection<StoredCredential> values() {
         return googleCredentialRepository.findAll().stream()
                 .map(googleAuthItemMapper::toStoreCredential)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override

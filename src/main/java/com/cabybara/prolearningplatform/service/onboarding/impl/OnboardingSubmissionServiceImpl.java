@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.service.onboarding.impl;
 
+import com.cabybara.prolearningplatform.dto.helper.LabelCountProjection;
 import com.cabybara.prolearningplatform.dto.request.onboarding.OnboardingSubmissionRequestDto;
 import com.cabybara.prolearningplatform.dto.response.onboarding.ChartBucketResponseDto;
 import com.cabybara.prolearningplatform.dto.response.onboarding.OnboardingAnalyticsResponseDto;
@@ -61,17 +62,17 @@ public class OnboardingSubmissionServiceImpl implements OnboardingSubmissionServ
                 .build();
     }
 
-    private List<ChartBucketResponseDto> toBuckets(List<Object[]> rows, long denominator) {
+    private List<ChartBucketResponseDto> toBuckets(List<LabelCountProjection> rows, long denominator) {
         List<ChartBucketResponseDto> out = new ArrayList<>();
         if (rows == null || denominator <= 0) {
             return out;
         }
-        for (Object[] row : rows) {
-            if (row == null || row.length < 2) {
+        for (LabelCountProjection row : rows) {
+            if (row == null) {
                 continue;
             }
-            String label = row[0] != null ? row[0].toString() : "UNSET";
-            long count = ((Number) row[1]).longValue();
+            String label = row.getLabel() != null ? row.getLabel() : "UNSET";
+            long count = row.getCount();
             out.add(ChartBucketResponseDto.builder()
                     .label(label)
                     .count(count)
@@ -81,16 +82,16 @@ public class OnboardingSubmissionServiceImpl implements OnboardingSubmissionServ
         return out;
     }
 
-    private PremiumAccountStatsResponseDto toPremiumStats(List<Object[]> rows, long denominator) {
+    private PremiumAccountStatsResponseDto toPremiumStats(List<LabelCountProjection> rows, long denominator) {
         long proCount = 0;
         long freeCount = 0;
         if (rows != null) {
-            for (Object[] row : rows) {
-                if (row == null || row.length < 2) {
+            for (LabelCountProjection row : rows) {
+                if (row == null) {
                     continue;
                 }
-                String type = row[0] != null ? row[0].toString() : "";
-                long c = ((Number) row[1]).longValue();
+                String type = row.getLabel() != null ? row.getLabel() : "";
+                long c = row.getCount();
                 if ("PRO".equalsIgnoreCase(type)) {
                     proCount += c;
                 } else {

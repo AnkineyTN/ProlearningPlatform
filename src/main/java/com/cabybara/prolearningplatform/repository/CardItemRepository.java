@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.dto.helper.TopicCountProjection;
 import com.cabybara.prolearningplatform.dto.helper.UserDueCardProjection;
 import com.cabybara.prolearningplatform.dto.helper.UserDueFlashcardProjection;
 import com.cabybara.prolearningplatform.dto.helper.UserDueStatDto;
@@ -96,11 +97,11 @@ public interface CardItemRepository extends JpaRepository<CardItem, Long> {
             WHERE e.privacy = 'PUBLIC' AND q.topic IS NOT NULL AND q.topic <> ''
         )
         SELECT topic,
-               COUNT(DISTINCT CONCAT(type, '_', resource_id)) AS total_resources,
-               COUNT(DISTINCT CASE WHEN created_at >= :since THEN CONCAT(type, '_', resource_id) END) AS new_resources
+               COUNT(DISTINCT CONCAT(type, '_', resource_id)) AS totalResources,
+               COUNT(DISTINCT CASE WHEN created_at >= :since THEN CONCAT(type, '_', resource_id) END) AS newResources
         FROM combined_topics
         GROUP BY topic
-        ORDER BY total_resources DESC, new_resources DESC
+        ORDER BY totalResources DESC, newResources DESC
     """, nativeQuery = true)
-    List<Object[]> findTopTopics(@Param("since") OffsetDateTime since, org.springframework.data.domain.Pageable pageable);
+    List<TopicCountProjection> findTopTopics(@Param("since") OffsetDateTime since, org.springframework.data.domain.Pageable pageable);
 }
