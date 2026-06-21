@@ -143,7 +143,7 @@ public class ExamServiceImpl implements ExamService {
         }
 
         if (method == CreationMethod.AI) {
-            topicAssignmentAsyncService.assignTopicsToExamAsync(examId);
+            topicAssignmentAsyncService.assignTopicsToExamAsync(examId, userId);
         }
 
         if (setId != null) {

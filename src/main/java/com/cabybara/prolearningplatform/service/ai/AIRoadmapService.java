@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.service.ai;
 
+import com.cabybara.prolearningplatform.dto.internal.DecryptedLlmConfig;
 import com.cabybara.prolearningplatform.dto.internal.roadmap.TopicContentAiRequestDto;
 import com.cabybara.prolearningplatform.dto.internal.roadmap.TopicContentAiResponseDto;
 import com.cabybara.prolearningplatform.dto.internal.roadmap.UserKnowledgeProfileDto;
@@ -9,6 +10,9 @@ import com.cabybara.prolearningplatform.dto.response.roadmap.RoadmapPreviewRespo
 import java.util.List;
 
 public interface AIRoadmapService {
+    /** Sync call (roadmap preview): resolves the current authenticated user's active LLM config. */
     RoadmapPreviewResponseDto generateRoadmap(RoadmapPreviewRequestDto request, List<UserKnowledgeProfileDto> knowledgeProfiles);
-    TopicContentAiResponseDto generateTopicContent(TopicContentAiRequestDto request);
+
+    /** Async/no-context call: caller supplies the resolved LLM config (by owning user id). */
+    TopicContentAiResponseDto generateTopicContent(TopicContentAiRequestDto request, DecryptedLlmConfig cfg);
 }

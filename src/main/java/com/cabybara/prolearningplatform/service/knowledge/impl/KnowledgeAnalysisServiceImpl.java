@@ -63,7 +63,7 @@ public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
                 });
 
         // lazy topic assignment for MANUAL cards
-        topicAssignmentService.assignTopicsToFlashcard(flashcardId);
+        topicAssignmentService.assignTopicsToFlashcard(flashcardId, userId);
 
         List<TopicAccuracyDto> accuracies = accuracyService.computeFromSession(sessionId);
         if (accuracies.isEmpty()) {
@@ -108,7 +108,7 @@ public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
                 });
 
         // lazy topic assignment for MANUAL questions
-        topicAssignmentService.assignTopicsToExam(examId);
+        topicAssignmentService.assignTopicsToExam(examId, userId);
 
         List<TopicAccuracyDto> accuracies = accuracyService.computeFromAttempt(attemptId, examId);
         if (accuracies.isEmpty()) {
@@ -227,16 +227,18 @@ public class KnowledgeAnalysisServiceImpl implements KnowledgeAnalysisService {
 
     @Override
     public int assignTopicsManualFlashcard(Long setId, Long flashcardId) {
+        Long userId = authenticationContext.getCurrentUserId();
         flashcardRepository.findByIdAndSetId(flashcardId, setId)
                 .orElseThrow(() -> new ResourceNotFoundException("Flashcard not found in set"));
-        return topicAssignmentService.assignTopicsToFlashcard(flashcardId);
+        return topicAssignmentService.assignTopicsToFlashcard(flashcardId, userId);
     }
 
     @Override
     public int assignTopicsManualExam(Long setId, Long examId) {
+        Long userId = authenticationContext.getCurrentUserId();
         examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
-        return topicAssignmentService.assignTopicsToExam(examId);
+        return topicAssignmentService.assignTopicsToExam(examId, userId);
     }
 
 

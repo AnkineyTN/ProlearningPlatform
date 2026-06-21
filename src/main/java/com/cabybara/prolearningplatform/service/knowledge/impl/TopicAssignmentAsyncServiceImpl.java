@@ -16,21 +16,23 @@ public class TopicAssignmentAsyncServiceImpl implements TopicAssignmentAsyncServ
 
     @Override
     @Async("heavyTaskExecutor")
-    public void assignTopicsToFlashcardAsync(Long flashcardId) {
+    public void assignTopicsToFlashcardAsync(Long flashcardId, Long userId) {
         try {
-            topicAssignmentService.assignTopicsToFlashcard(flashcardId);
+            topicAssignmentService.assignTopicsToFlashcard(flashcardId, userId);
         } catch (Exception e) {
-            log.error("Async topic assignment failed for flashcard {}: {}", flashcardId, e.getMessage());
+            // Includes LlmNotConfiguredException when the user has no active LLM config —
+            // topic assignment is skipped, the original create flow is unaffected.
+            log.warn("Async topic assignment failed for flashcard {}: {}", flashcardId, e.getMessage());
         }
     }
 
     @Override
     @Async("heavyTaskExecutor")
-    public void assignTopicsToExamAsync(Long examId) {
+    public void assignTopicsToExamAsync(Long examId, Long userId) {
         try {
-            topicAssignmentService.assignTopicsToExam(examId);
+            topicAssignmentService.assignTopicsToExam(examId, userId);
         } catch (Exception e) {
-            log.error("Async topic assignment failed for exam {}: {}", examId, e.getMessage());
+            log.warn("Async topic assignment failed for exam {}: {}", examId, e.getMessage());
         }
     }
 }
