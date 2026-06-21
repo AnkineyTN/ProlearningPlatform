@@ -20,8 +20,8 @@ public class TopicAssignmentAsyncServiceImpl implements TopicAssignmentAsyncServ
         try {
             topicAssignmentService.assignTopicsToFlashcard(flashcardId, userId);
         } catch (Exception e) {
-            // Includes LlmNotConfiguredException when the user has no active LLM config —
-            // topic assignment is skipped, the original create flow is unaffected.
+            // Non-critical: topic assignment runs in the background; any failure is logged and skipped.
+            // If the user has no active LLM config, the AI Service uses its default model.
             log.warn("Async topic assignment failed for flashcard {}: {}", flashcardId, e.getMessage());
         }
     }

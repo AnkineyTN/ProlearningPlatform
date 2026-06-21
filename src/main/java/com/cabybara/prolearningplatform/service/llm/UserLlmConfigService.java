@@ -22,9 +22,15 @@ public interface UserLlmConfigService {
     LlmConfigResponseDto setActive(Long id);
 
     // ---- Internal: used by the AI layer to forward the user's key ----
-    /** Returns the user's ACTIVE decrypted config, or throws LlmNotConfiguredException if none is active. */
+    /**
+     * Returns the user's ACTIVE decrypted config, or {@code null} if no config is active.
+     * When null is passed to {@code AIServiceClient}, the AI Service falls back to its own default model.
+     */
     DecryptedLlmConfig getDecryptedConfig(Long userId);
 
-    /** Convenience for request-thread calls: resolves the current authenticated user. */
+    /**
+     * Convenience for request-thread calls: resolves the current authenticated user.
+     * Returns {@code null} when the user has no active config (AI Service uses its default).
+     */
     DecryptedLlmConfig getDecryptedConfigForCurrentUser();
 }

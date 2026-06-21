@@ -5,7 +5,6 @@ import com.cabybara.prolearningplatform.dto.request.llm.SaveLlmConfigRequestDto;
 import com.cabybara.prolearningplatform.dto.response.llm.LlmConfigResponseDto;
 import com.cabybara.prolearningplatform.enums.LlmProvider;
 import com.cabybara.prolearningplatform.exception.BadRequestException;
-import com.cabybara.prolearningplatform.exception.LlmNotConfiguredException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.LlmConfigMapper;
 import com.cabybara.prolearningplatform.model.llm.UserLlmConfig;
@@ -116,12 +115,12 @@ public class UserLlmConfigServiceImpl implements UserLlmConfigService {
     @Override
     @Transactional(readOnly = true)
     public DecryptedLlmConfig getDecryptedConfig(Long userId) {
-        UserLlmConfig config = repository.findByUserIdAndActiveTrue(userId)
-                .orElseThrow(LlmNotConfiguredException::new);
-        return new DecryptedLlmConfig(
-                config.getProvider(),
-                config.getModel(),
-                encryptor.decrypt(config.getApiKeyEncrypted()));
+        return repository.findByUserIdAndActiveTrue(userId)
+                .map(config -> new DecryptedLlmConfig(
+                        config.getProvider(),
+                        config.getModel(),
+                        encryptor.decrypt(config.getApiKeyEncrypted())))
+                .orElse(null);
     }
 
     @Override
