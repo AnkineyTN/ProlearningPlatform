@@ -1,22 +1,23 @@
 package com.cabybara.prolearningplatform.service.ai.impl;
 
 import com.cabybara.prolearningplatform.dto.internal.CardContent;
+import com.cabybara.prolearningplatform.dto.internal.DecryptedLlmConfig;
 import com.cabybara.prolearningplatform.dto.internal.QuestionContent;
 import com.cabybara.prolearningplatform.dto.request.exam.*;
 import com.cabybara.prolearningplatform.dto.response.exam.EssayGradingResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExplainWrongAnswerResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.GenerateExamByAIResponseDto;
-import com.cabybara.prolearningplatform.enums.Language;
+import com.cabybara.prolearningplatform.exception.AIServiceException;
+import com.cabybara.prolearningplatform.exception.LlmNotConfiguredException;
 import com.cabybara.prolearningplatform.service.ai.AIExamService;
-import com.cabybara.prolearningplatform.utils.RestHttpClientUtil;
+import com.cabybara.prolearningplatform.service.ai.AIServiceClient;
+import com.cabybara.prolearningplatform.service.llm.UserLlmConfigService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -32,13 +33,10 @@ import java.util.Map;
 @Slf4j
 @RequiredArgsConstructor
 public class AIExamServiceImpl implements AIExamService {
-    
+
     // ##################################################
     // #################  PREPARATION  ##################
     // ##################################################
-
-    @Value("${aiservice.api}")
-    private String aiServiceBaseApi;
 
     private static final String GENERATE_EXAM_BY_FILE_PATH = "/tests/from-file";
     private static final String GENERATE_EXAM_BY_NOTE_PATH = "/tests/from-note";
@@ -49,20 +47,13 @@ public class AIExamServiceImpl implements AIExamService {
     private static final String GENERATE_EXAM_FROM_FORGOTTEN_FLASHCARD = "/tests/from-forgotten-cards";
     private static final String GENERATE_EXAM_FROM_WRONG_ANSWERS = "/tests/from-wrong-answers";
 
-    private final RestHttpClientUtil restHttpClientUtil;
+    private final AIServiceClient aiServiceClient;
     private final ObjectMapper objectMapper;
+    private final UserLlmConfigService userLlmConfigService;
 
     // ##################################################
     // #################  UTILS METHOD  #################
     // ##################################################
-
-    private String parseData(String json) {
-        try {
-            return objectMapper.readTree(json).path("data").asText("");
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to parse AI service response", e);
-        }
-    }
 
     private GenerateExamByAIResponseDto parseExamResponse(String json) {
         try {
@@ -89,11 +80,6 @@ public class AIExamServiceImpl implements AIExamService {
 
     // MCQ|Question content|opt1|opt2|opt3|opt4|correctIndex (1-based)
     private CreateQuestionRequestDto parseMCQ(String[] parts) {
-        // parts[0] = "MCQ"
-        // parts[1] = question content
-        // parts[2..n-1] = options
-        // parts[n] = correct answer index (1-based)
-
         String content = parts[1].trim();
 
         int correctIndex = Integer.parseInt(parts[parts.length - 1].trim()); // 1-based
@@ -159,6 +145,7 @@ public class AIExamServiceImpl implements AIExamService {
 
     @Override
     public GenerateExamByAIResponseDto generateExamByFiles(GenerateExamByFileRequestDto request) {
+        DecryptedLlmConfig cfg = userLlmConfigService.getDecryptedConfigForCurrentUser();
         try {
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
@@ -170,14 +157,13 @@ public class AIExamServiceImpl implements AIExamService {
             body.add("free_text", request.getFreeText());
             body.add("language", request.getLanguage());
 
-            String raw = restHttpClientUtil.postMultipart(
-                    aiServiceBaseApi + GENERATE_EXAM_BY_FILE_PATH,
-                    body,
-                    String.class
-            );
+            String raw = aiServiceClient.postMultipartForGeneration(
+                    GENERATE_EXAM_BY_FILE_PATH, body, cfg, String.class);
 
             return parseExamResponse(raw);
 
+        } catch (AIServiceException | LlmNotConfiguredException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Exam by Files", e);
         }
@@ -185,17 +171,17 @@ public class AIExamServiceImpl implements AIExamService {
 
     @Override
     public GenerateExamByAIResponseDto generateExamByNotes(AIGenerateExamByNoteRequestDto request) {
+        DecryptedLlmConfig cfg = userLlmConfigService.getDecryptedConfigForCurrentUser();
         try {
             Map<String, Object> body = objectMapper.convertValue(request, Map.class);
 
-            String raw = restHttpClientUtil.post(
-                    aiServiceBaseApi + GENERATE_EXAM_BY_NOTE_PATH,
-                    body,
-                    String.class
-            );
+            String raw = aiServiceClient.postForGeneration(
+                    GENERATE_EXAM_BY_NOTE_PATH, body, cfg, String.class);
 
             return parseExamResponse(raw);
 
+        } catch (AIServiceException | LlmNotConfiguredException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Exam by Notes", e);
         }
@@ -203,6 +189,7 @@ public class AIExamServiceImpl implements AIExamService {
 
     @Override
     public GenerateExamByAIResponseDto generateExamByWeb(GenerateExamByWebRequestDto request) {
+        DecryptedLlmConfig cfg = userLlmConfigService.getDecryptedConfigForCurrentUser();
         try {
             Map<String, Object> body = new HashMap<>();
             body.put("urls", request.getUrls());
@@ -211,14 +198,13 @@ public class AIExamServiceImpl implements AIExamService {
             body.put("free_text", request.getFreeText() != null ? request.getFreeText() : "");
             body.put("language", request.getLanguage() != null ? request.getLanguage() : "English");
 
-            String raw = restHttpClientUtil.post(
-                    aiServiceBaseApi + GENERATE_EXAM_BY_WEB_PATH,
-                    body,
-                    String.class
-            );
+            String raw = aiServiceClient.postForGeneration(
+                    GENERATE_EXAM_BY_WEB_PATH, body, cfg, String.class);
 
             return parseExamResponse(raw);
 
+        } catch (AIServiceException | LlmNotConfiguredException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Exam by Web", e);
         }
@@ -226,6 +212,7 @@ public class AIExamServiceImpl implements AIExamService {
 
     @Override
     public GenerateExamByAIResponseDto generateExamByExistingExam(GenerateExamByExistingExamRequestDto request) {
+        DecryptedLlmConfig cfg = userLlmConfigService.getDecryptedConfigForCurrentUser();
         try {
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
@@ -233,14 +220,13 @@ public class AIExamServiceImpl implements AIExamService {
                 body.add("files", convertToResource(file));
             }
 
-            String raw = restHttpClientUtil.postMultipart(
-                    aiServiceBaseApi + GENERATE_EXAM_BY_EXISTING_EXAM_PATH,
-                    body,
-                    String.class
-            );
+            String raw = aiServiceClient.postMultipartForGeneration(
+                    GENERATE_EXAM_BY_EXISTING_EXAM_PATH, body, cfg, String.class);
 
             return parseExamResponse(raw);
 
+        } catch (AIServiceException | LlmNotConfiguredException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Exam by Existing exam", e);
         }
@@ -248,17 +234,14 @@ public class AIExamServiceImpl implements AIExamService {
 
     @Override
     public CreateExamFromReviewRequestDto generateExamFromCards(List<CardContent> cards) {
+        DecryptedLlmConfig cfg = userLlmConfigService.getDecryptedConfigForCurrentUser();
         try {
             Map<String, Object> body = new HashMap<>();
             body.put("cards", cards);
 
-            String raw = restHttpClientUtil.post(
-                    aiServiceBaseApi + GENERATE_EXAM_FROM_FORGOTTEN_FLASHCARD,
-                    body,
-                    String.class
-            );
+            String raw = aiServiceClient.postForGeneration(
+                    GENERATE_EXAM_FROM_FORGOTTEN_FLASHCARD, body, cfg, String.class);
 
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode root = objectMapper.readTree(raw);
 
             return CreateExamFromReviewRequestDto.builder()
@@ -268,6 +251,8 @@ public class AIExamServiceImpl implements AIExamService {
                     .questions(parseReviewData(root.get("data").asText()))
                     .build();
 
+        } catch (AIServiceException | LlmNotConfiguredException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Exam from Review", e);
         }
@@ -275,17 +260,14 @@ public class AIExamServiceImpl implements AIExamService {
 
     @Override
     public CreateExamFromReviewRequestDto generateExamFromQuestions(List<QuestionContent> questions) {
+        DecryptedLlmConfig cfg = userLlmConfigService.getDecryptedConfigForCurrentUser();
         try {
             Map<String, Object> body = new HashMap<>();
             body.put("questions", questions);
 
-            String raw = restHttpClientUtil.post(
-                    aiServiceBaseApi + GENERATE_EXAM_FROM_WRONG_ANSWERS,
-                    body,
-                    String.class
-            );
+            String raw = aiServiceClient.postForGeneration(
+                    GENERATE_EXAM_FROM_WRONG_ANSWERS, body, cfg, String.class);
 
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode root = objectMapper.readTree(raw);
 
             return CreateExamFromReviewRequestDto.builder()
@@ -295,6 +277,8 @@ public class AIExamServiceImpl implements AIExamService {
                     .questions(parseReviewData(root.get("data").asText()))
                     .build();
 
+        } catch (AIServiceException | LlmNotConfiguredException e) {
+            throw e;
         } catch (Exception e) {
             throw new RuntimeException("Failed to call AI service for generating Exam from Questions", e);
         }
@@ -302,6 +286,7 @@ public class AIExamServiceImpl implements AIExamService {
 
     @Override
     public EssayGradingResponseDto gradeEssay(EssayGradingRequestDto request) {
+        DecryptedLlmConfig cfg = userLlmConfigService.getDecryptedConfigForCurrentUser();
         try {
             Map<String, Object> body = new HashMap<>();
             body.put("question_content", request.questionContent());
@@ -310,13 +295,9 @@ public class AIExamServiceImpl implements AIExamService {
             body.put("language", "English");
             body.put("max_score", request.maxPoints());
 
-            String raw = restHttpClientUtil.post(
-                    aiServiceBaseApi + GRADE_ESSAY_PATH,
-                    body,
-                    String.class
-            );
+            String raw = aiServiceClient.postForGeneration(
+                    GRADE_ESSAY_PATH, body, cfg, String.class);
 
-            // Parse the AI service response
             Map<String, Object> responseData = objectMapper.readValue(raw, Map.class);
 
             Double score = ((Number) responseData.get("score")).doubleValue();
@@ -330,6 +311,8 @@ public class AIExamServiceImpl implements AIExamService {
                     feedback
             );
 
+        } catch (AIServiceException | LlmNotConfiguredException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Failed to call AI service for grading essay", e);
             throw new RuntimeException("Failed to call AI service for grading essay", e);
@@ -338,6 +321,7 @@ public class AIExamServiceImpl implements AIExamService {
 
     @Override
     public ExplainWrongAnswerResponseDto explainWrongAnswer(ExplainWrongAnswerRequestDto request) {
+        DecryptedLlmConfig cfg = userLlmConfigService.getDecryptedConfigForCurrentUser();
         try {
             Map<String, Object> body = new HashMap<>();
             body.put("question", request.question());
@@ -345,18 +329,16 @@ public class AIExamServiceImpl implements AIExamService {
             body.put("user_answer", request.userAnswer());
             body.put("language", request.language() != null ? request.language() : "English");
 
-            String raw = restHttpClientUtil.post(
-                    aiServiceBaseApi + EXPLAIN_WRONG_ANSWER_PATH,
-                    body,
-                    String.class
-            );
+            String raw = aiServiceClient.postForGeneration(
+                    EXPLAIN_WRONG_ANSWER_PATH, body, cfg, String.class);
 
-            // Parse the AI service response
             Map<String, Object> responseData = objectMapper.readValue(raw, Map.class);
             String explanation = (String) responseData.get("explanation");
 
             return new ExplainWrongAnswerResponseDto(explanation);
 
+        } catch (AIServiceException | LlmNotConfiguredException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Failed to call AI service for explaining wrong answer", e);
             throw new RuntimeException("Failed to call AI service for explaining wrong answer", e);

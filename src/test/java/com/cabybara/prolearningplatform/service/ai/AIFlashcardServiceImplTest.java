@@ -1,10 +1,12 @@
 package com.cabybara.prolearningplatform.service.ai;
 
+import com.cabybara.prolearningplatform.dto.internal.DecryptedLlmConfig;
 import com.cabybara.prolearningplatform.dto.request.flashcard.AIGenerateFlashcardByNoteRequestDto;
 import com.cabybara.prolearningplatform.dto.request.flashcard.GenerateFlashcardByFileRequestDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.GenerateFlashcardByAIResponseDto;
+import com.cabybara.prolearningplatform.enums.LlmProvider;
 import com.cabybara.prolearningplatform.service.ai.impl.AIFlashcardServiceImpl;
-import com.cabybara.prolearningplatform.utils.RestHttpClientUtil;
+import com.cabybara.prolearningplatform.service.llm.UserLlmConfigService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,19 +24,25 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AIFlashcardServiceImplTest {
 
+    private static final DecryptedLlmConfig CFG = new DecryptedLlmConfig(LlmProvider.OPENAI, "gpt-4o-mini", "sk-test");
+
     @Mock
-    private RestHttpClientUtil restHttpClientUtil;
+    private AIServiceClient aiServiceClient;
+
+    @Mock
+    private UserLlmConfigService userLlmConfigService;
 
     @Test
     void generateFlashcardByNotesReturnsCards() {
-        AIFlashcardServiceImpl service = new AIFlashcardServiceImpl(restHttpClientUtil, new ObjectMapper());
+        AIFlashcardServiceImpl service = new AIFlashcardServiceImpl(aiServiceClient, new ObjectMapper(), userLlmConfigService);
 
         AIGenerateFlashcardByNoteRequestDto request = AIGenerateFlashcardByNoteRequestDto.builder()
                 .notes(List.of())
                 .freeText("test topic")
                 .build();
 
-        when(restHttpClientUtil.post(anyString(), any(), eq(String.class)))
+        when(userLlmConfigService.getDecryptedConfigForCurrentUser()).thenReturn(CFG);
+        when(aiServiceClient.postForGeneration(anyString(), any(), any(), eq(String.class)))
                 .thenReturn("{\"title\":\"Test Title\",\"description\":\"Test Description\",\"data\":\"card data\"}");
 
         GenerateFlashcardByAIResponseDto response = service.generateFlashcardByNotes(request);
@@ -45,14 +53,15 @@ class AIFlashcardServiceImplTest {
 
     @Test
     void generateFlashcardByFileReturnsCards() {
-        AIFlashcardServiceImpl service = new AIFlashcardServiceImpl(restHttpClientUtil, new ObjectMapper());
+        AIFlashcardServiceImpl service = new AIFlashcardServiceImpl(aiServiceClient, new ObjectMapper(), userLlmConfigService);
 
         GenerateFlashcardByFileRequestDto request = GenerateFlashcardByFileRequestDto.builder()
                 .files(List.of())
                 .freeText("test topic")
                 .build();
 
-        when(restHttpClientUtil.postMultipart(anyString(), any(), eq(String.class)))
+        when(userLlmConfigService.getDecryptedConfigForCurrentUser()).thenReturn(CFG);
+        when(aiServiceClient.postMultipartForGeneration(anyString(), any(), any(), eq(String.class)))
                 .thenReturn("{\"title\":\"Test Title\",\"description\":\"Test Description\",\"data\":\"card data\"}");
 
         GenerateFlashcardByAIResponseDto response = service.generateFlashcardByFiles(request);

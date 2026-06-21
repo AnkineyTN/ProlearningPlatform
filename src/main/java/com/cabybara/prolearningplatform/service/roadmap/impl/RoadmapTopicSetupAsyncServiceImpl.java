@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.service.roadmap.impl;
 
+import com.cabybara.prolearningplatform.dto.internal.DecryptedLlmConfig;
 import com.cabybara.prolearningplatform.dto.internal.roadmap.TopicContentAiRequestDto;
 import com.cabybara.prolearningplatform.dto.internal.roadmap.TopicContentAiResponseDto;
 import com.cabybara.prolearningplatform.enums.Privacy;
@@ -35,6 +36,7 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
     private final NotePermissionService notePermissionService;
     private final AIRoadmapService aiRoadmapService;
     private final CacheManager cacheManager;
+    private final com.cabybara.prolearningplatform.service.llm.UserLlmConfigService userLlmConfigService;
 
     @Override
     @Async("heavyTaskExecutor")
@@ -58,8 +60,11 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
                 return;
             }
 
+            // Resolve the owning user's active LLM config (no SecurityContext in @Async threads).
+            DecryptedLlmConfig llmConfig = userLlmConfigService.getDecryptedConfig(userId);
+
             TopicContentAiResponseDto aiResponse = callAiForTopicContent(
-                    topicTitle, description, chapterTitle, chapterObjective, roadmapTitle, roadmapId);
+                    topicTitle, description, chapterTitle, chapterObjective, roadmapTitle, roadmapId, llmConfig);
 
             Note savedNote = noteRepository.save(Note.builder()
                     .title(topicTitle)
@@ -91,7 +96,8 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
 
     private TopicContentAiResponseDto callAiForTopicContent(String topicTitle, String description,
                                                              String chapterTitle, String chapterObjective,
-                                                             String roadmapTitle, Long roadmapId) {
+                                                             String roadmapTitle, Long roadmapId,
+                                                             DecryptedLlmConfig llmConfig) {
         List<TopicContentAiRequestDto.SummaryContextDto> previousSummaries =
                 roadmapTopicRepository.findTopicsWithSummaryByRoadmapId(roadmapId).stream()
                         .map(t -> TopicContentAiRequestDto.SummaryContextDto.builder()
@@ -109,7 +115,7 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
                 .previousSummaries(previousSummaries)
                 .build();
 
-        return aiRoadmapService.generateTopicContent(request);
+        return aiRoadmapService.generateTopicContent(request, llmConfig);
     }
 
     private void markFailed(RoadmapTopic topic) {

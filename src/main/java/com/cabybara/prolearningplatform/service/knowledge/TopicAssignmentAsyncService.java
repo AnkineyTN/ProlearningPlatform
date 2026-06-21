@@ -1,6 +1,6 @@
 package com.cabybara.prolearningplatform.service.knowledge;
 
 public interface TopicAssignmentAsyncService {
-    void assignTopicsToFlashcardAsync(Long flashcardId);
-    void assignTopicsToExamAsync(Long examId);
+    void assignTopicsToFlashcardAsync(Long flashcardId, Long userId);
+    void assignTopicsToExamAsync(Long examId, Long userId);
 }

@@ -85,6 +85,10 @@ app:
 
 aiservice:
   api: http://localhost:8081/api/v1
+  internal-api-key: test-internal-api-key
+
+llm-encryption:
+  master-key: Phe6lq4EzTuZhp5W8K2/Om+3TSVVF13MbosJFFeasDY=
 
 internal:
   service-key: test-service-key

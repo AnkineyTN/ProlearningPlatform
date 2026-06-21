@@ -150,7 +150,7 @@ public class FlashcardServiceImpl implements FlashcardService {
         flashcardPermissionService.addOwner(savedFlashcard.getId(), userId);
 
         if (flashcard.getCreate_method() == CreationMethod.AI) {
-            topicAssignmentAsyncService.assignTopicsToFlashcardAsync(savedFlashcard.getId());
+            topicAssignmentAsyncService.assignTopicsToFlashcardAsync(savedFlashcard.getId(), userId);
         }
 
         setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());

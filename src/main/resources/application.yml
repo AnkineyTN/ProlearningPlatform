@@ -1,5 +1,9 @@
 aiservice:
     api: ${AI_SERVICE_BASE_API:https://prolearning-ai-service-dev.onrender.com/api/v1}
+    internal-api-key: ${AI_INTERNAL_API_KEY:}
+
+llm-encryption:
+    master-key: ${LLM_MASTER_KEY:}
 
 firebase:
     googleCredentials: ${FIREBASE_CONFIG_PATH:prolearningplatform-bc37d-firebase-adminsdk-fbsvc-5dfd0cf044.json}

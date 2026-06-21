@@ -58,7 +58,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             BadRequestException.class,
             FlashcardStudySessionException.class,
-            InvalidSortFieldException.class
+            InvalidSortFieldException.class,
+            LlmNotConfiguredException.class
     })
     public ResponseEntity<ApiResponse<Object>> handleBadRequest(
             RuntimeException ex, WebRequest request) {
@@ -149,6 +150,23 @@ public class GlobalExceptionHandler {
                 null, "ACCOUNT_BLOCKED", path
         );
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    // ---- AI Service / BYOK LLM ----
+
+    @ExceptionHandler(AIServiceException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAiService(
+            AIServiceException ex, WebRequest request) {
+        log.error("AI service error: {}", ex.getMessage(), ex);
+        return buildResponse(ex.getStatus(), ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(EncryptionException.class)
+    public ResponseEntity<ApiResponse<Object>> handleEncryption(
+            EncryptionException ex, WebRequest request) {
+        log.error("Encryption/decryption failure: {}", ex.getMessage(), ex);
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Failed to process secured credentials", request);
     }
 
     // ---- Helper ----

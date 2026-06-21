@@ -341,7 +341,7 @@ class ExamServiceImplTest {
         service.createExamFromFlashcard(1L, 1L);
 
         verify(questionService).createQuestion(eq(2L), eq(aiGeneratedContent.questions()));
-        verify(topicAssignmentAsyncService).assignTopicsToExamAsync(2L);
+        verify(topicAssignmentAsyncService).assignTopicsToExamAsync(2L, 1L);
         verify(setRepository).updateLastModifiedDate(eq(1L), any(OffsetDateTime.class));
     }
 }

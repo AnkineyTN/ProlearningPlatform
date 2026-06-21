@@ -1,11 +1,13 @@
 package com.cabybara.prolearningplatform.service.ai;
 
+import com.cabybara.prolearningplatform.dto.internal.DecryptedLlmConfig;
 import com.cabybara.prolearningplatform.dto.request.exam.EssayGradingRequestDto;
 import com.cabybara.prolearningplatform.dto.request.exam.ExplainWrongAnswerRequestDto;
 import com.cabybara.prolearningplatform.dto.response.exam.EssayGradingResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.ExplainWrongAnswerResponseDto;
+import com.cabybara.prolearningplatform.enums.LlmProvider;
 import com.cabybara.prolearningplatform.service.ai.impl.AIExamServiceImpl;
-import com.cabybara.prolearningplatform.utils.RestHttpClientUtil;
+import com.cabybara.prolearningplatform.service.llm.UserLlmConfigService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,17 +24,23 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AIExamServiceImplTest {
 
+    private static final DecryptedLlmConfig CFG = new DecryptedLlmConfig(LlmProvider.OPENAI, "gpt-4o-mini", "sk-test");
+
     @Mock
-    private RestHttpClientUtil restHttpClientUtil;
+    private AIServiceClient aiServiceClient;
+
+    @Mock
+    private UserLlmConfigService userLlmConfigService;
 
     @Test
     void gradeEssayReturnsScore() {
-        AIExamServiceImpl service = new AIExamServiceImpl(restHttpClientUtil, new ObjectMapper());
+        AIExamServiceImpl service = new AIExamServiceImpl(aiServiceClient, new ObjectMapper(), userLlmConfigService);
 
         EssayGradingRequestDto request = new EssayGradingRequestDto(
                 1L, 100L, "What is Java?", "A language", "A programming language", 10);
 
-        when(restHttpClientUtil.post(anyString(), any(), eq(String.class)))
+        when(userLlmConfigService.getDecryptedConfigForCurrentUser()).thenReturn(CFG);
+        when(aiServiceClient.postForGeneration(anyString(), any(), any(), eq(String.class)))
                 .thenReturn("{\"score\": 8.5, \"feedback\": \"Good answer\"}");
 
         EssayGradingResponseDto response = service.gradeEssay(request);
@@ -43,12 +51,13 @@ class AIExamServiceImplTest {
 
     @Test
     void explainWrongAnswerReturnsExplanation() {
-        AIExamServiceImpl service = new AIExamServiceImpl(restHttpClientUtil, new ObjectMapper());
+        AIExamServiceImpl service = new AIExamServiceImpl(aiServiceClient, new ObjectMapper(), userLlmConfigService);
 
         ExplainWrongAnswerRequestDto request = new ExplainWrongAnswerRequestDto(
                 "What is polymorphism?", "Multiple forms", "Inheritance", null);
 
-        when(restHttpClientUtil.post(anyString(), any(), eq(String.class)))
+        when(userLlmConfigService.getDecryptedConfigForCurrentUser()).thenReturn(CFG);
+        when(aiServiceClient.postForGeneration(anyString(), any(), any(), eq(String.class)))
                 .thenReturn("{\"explanation\": \"Polymorphism allows objects of different types to be treated as a common type\"}");
 
         ExplainWrongAnswerResponseDto response = service.explainWrongAnswer(request);
