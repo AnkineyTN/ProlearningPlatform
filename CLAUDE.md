@@ -111,11 +111,13 @@ Each user owns their own LLM provider + model + API key. All AI generation endpo
 - **DB table**: `src/database/user_llm_config.sql` — must be applied manually (as with all migrations).
 - **FE integration guide**: `docs/FE_BYOK_INTEGRATION.md`.
 
+**Fallback behavior:** when a user has no active LLM config, `getDecryptedConfig()` returns `null`. `AIServiceClient.generationHeaders(null)` omits the 3 `X-LLM-*` headers → AI Service falls back to its own default provider/model (Groq). No error is thrown for the "no config" case.
+
 **Error mapping from AI Service (in `AiServiceClient`):**
 | AI Service status | Mapped to | Reason |
 |---|---|---|
 | 401 | 502 | Internal key misconfiguration (server-side) |
-| 400 "missing required llm" | 400 `LlmNotConfiguredException` | User hasn't set up a config |
+| 400 "missing required llm" | 400 `LlmNotConfiguredException` | Defensive — should not occur with fallback in place |
 | 402 / 403 | 400 | User's provider key issue (billing/permission) |
 | 429 | 429 | Provider rate limit |
 | Others | 502 | AI service unavailable |

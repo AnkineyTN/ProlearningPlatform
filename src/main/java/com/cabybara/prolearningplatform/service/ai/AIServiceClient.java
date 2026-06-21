@@ -100,15 +100,16 @@ public class AIServiceClient {
     }
 
     private HttpHeaders generationHeaders(DecryptedLlmConfig cfg) {
-        if (cfg == null || cfg.provider() == null
-                || cfg.model() == null || cfg.model().isBlank()
-                || cfg.apiKey() == null || cfg.apiKey().isBlank()) {
-            throw new LlmNotConfiguredException();
-        }
         HttpHeaders headers = internalHeaders();
-        headers.add(HEADER_LLM_PROVIDER, cfg.provider().getWireValue());
-        headers.add(HEADER_LLM_MODEL, cfg.model());
-        headers.add(HEADER_LLM_API_KEY, cfg.apiKey());
+        // When cfg is null (user has no active config), omit X-LLM-* headers.
+        // The AI Service falls back to its own default provider/model.
+        if (cfg != null && cfg.provider() != null
+                && cfg.model() != null && !cfg.model().isBlank()
+                && cfg.apiKey() != null && !cfg.apiKey().isBlank()) {
+            headers.add(HEADER_LLM_PROVIDER, cfg.provider().getWireValue());
+            headers.add(HEADER_LLM_MODEL, cfg.model());
+            headers.add(HEADER_LLM_API_KEY, cfg.apiKey());
+        }
         return headers;
     }
 

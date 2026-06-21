@@ -5,7 +5,6 @@ import com.cabybara.prolearningplatform.dto.request.llm.SaveLlmConfigRequestDto;
 import com.cabybara.prolearningplatform.dto.response.llm.LlmConfigResponseDto;
 import com.cabybara.prolearningplatform.enums.LlmProvider;
 import com.cabybara.prolearningplatform.exception.BadRequestException;
-import com.cabybara.prolearningplatform.exception.LlmNotConfiguredException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.LlmConfigMapper;
 import com.cabybara.prolearningplatform.model.User;
@@ -153,8 +152,8 @@ class UserLlmConfigServiceImplTest {
     }
 
     @Test
-    void getDecryptedConfigWithNoActiveConfigThrows() {
+    void getDecryptedConfigWithNoActiveConfigReturnsNull() {
         when(repository.findByUserIdAndActiveTrue(1L)).thenReturn(Optional.empty());
-        assertThrows(LlmNotConfiguredException.class, () -> service.getDecryptedConfig(1L));
+        assertNull(service.getDecryptedConfig(1L));
     }
 }
