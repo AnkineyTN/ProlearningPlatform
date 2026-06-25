@@ -70,3 +70,5 @@ ALTER TABLE todo ADD COLUMN IF NOT EXISTS flashcard_refs TEXT;
 ALTER TABLE todo ADD COLUMN IF NOT EXISTS exam_refs      TEXT;
 CREATE INDEX IF NOT EXISTS idx_todo_user_type   ON todo(user_id, type);
 CREATE INDEX IF NOT EXISTS idx_todo_user_status ON todo(user_id, status);
+
+ALTER TABLE todo ADD COLUMN IF NOT EXISTS calendar_event_id VARCHAR(255);

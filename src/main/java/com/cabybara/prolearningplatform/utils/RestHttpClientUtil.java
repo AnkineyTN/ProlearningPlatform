@@ -22,12 +22,16 @@ public class RestHttpClientUtil {
         return headers;
     }
 
+    // NOTE: header values are intentionally never logged (they may carry secret API keys).
+    // Request/response bodies are logged at DEBUG only to avoid leaking large or sensitive payloads.
+
     public <T, R> R post(String url, T body, Class<R> responseType) {
         HttpEntity<T> entity = new HttpEntity<>(body, buildJsonHeaders());
-        log.info("POST {} | body: {}", url, body);
+        log.info("POST {}", url);
+        log.debug("POST {} | body: {}", url, body);
 
         ResponseEntity<R> response = restTemplate.exchange(url, HttpMethod.POST, entity, responseType);
-        log.info("✅ Response [{}]: {}", response.getStatusCode(), response.getBody());
+        log.debug("Response [{}]: {}", response.getStatusCode(), response.getBody());
 
         return response.getBody();
     }
@@ -37,16 +41,24 @@ public class RestHttpClientUtil {
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
-        log.info("POST MULTIPART {} | body: {}", url, body);
+        log.info("POST MULTIPART {}", url);
 
-        ResponseEntity<R> response = restTemplate.exchange(
-                url,
-                HttpMethod.POST,
-                entity,
-                responseType
-        );
+        ResponseEntity<R> response = restTemplate.exchange(url, HttpMethod.POST, entity, responseType);
+        log.debug("Response [{}]: {}", response.getStatusCode(), response.getBody());
 
-        log.info("✅ Response [{}]: {}", response.getStatusCode(), response.getBody());
+        return response.getBody();
+    }
+
+    public <R> R postMultipart(String url, MultiValueMap<String, Object> body, HttpHeaders extraHeaders, Class<R> responseType) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.addAll(extraHeaders);
+
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(body, headers);
+        log.info("POST MULTIPART {}", url);
+
+        ResponseEntity<R> response = restTemplate.exchange(url, HttpMethod.POST, entity, responseType);
+        log.debug("Response [{}]: {}", response.getStatusCode(), response.getBody());
 
         return response.getBody();
     }
@@ -56,17 +68,18 @@ public class RestHttpClientUtil {
         log.info("GET {}", url);
 
         ResponseEntity<R> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
-        log.info("✅ Response [{}]: {}", response.getStatusCode(), response.getBody());
+        log.debug("Response [{}]: {}", response.getStatusCode(), response.getBody());
 
         return response.getBody();
     }
 
     public <T, R> R put(String url, T body, Class<R> responseType) {
         HttpEntity<T> entity = new HttpEntity<>(body, buildJsonHeaders());
-        log.info("PUT {} | body: {}", url, body);
+        log.info("PUT {}", url);
+        log.debug("PUT {} | body: {}", url, body);
 
         ResponseEntity<R> response = restTemplate.exchange(url, HttpMethod.PUT, entity, responseType);
-        log.info("Response [{}]: {}", response.getStatusCode(), response.getBody());
+        log.debug("Response [{}]: {}", response.getStatusCode(), response.getBody());
 
         return response.getBody();
     }
@@ -75,10 +88,11 @@ public class RestHttpClientUtil {
         HttpHeaders headers = buildJsonHeaders();
         headers.addAll(extraHeaders);
         HttpEntity<T> entity = new HttpEntity<>(body, headers);
-        log.info("POST {} | body: {}", url, body);
+        log.info("POST {}", url);
+        log.debug("POST {} | body: {}", url, body);
 
         ResponseEntity<R> response = restTemplate.exchange(url, HttpMethod.POST, entity, responseType);
-        log.info("Response [{}]: {}", response.getStatusCode(), response.getBody());
+        log.debug("Response [{}]: {}", response.getStatusCode(), response.getBody());
 
         return response.getBody();
     }
@@ -90,7 +104,7 @@ public class RestHttpClientUtil {
         log.info("GET {}", url);
 
         ResponseEntity<R> response = restTemplate.exchange(url, HttpMethod.GET, entity, responseType);
-        log.info("Response [{}]: {}", response.getStatusCode(), response.getBody());
+        log.debug("Response [{}]: {}", response.getStatusCode(), response.getBody());
 
         return response.getBody();
     }
@@ -100,6 +114,16 @@ public class RestHttpClientUtil {
         log.info("DELETE {}", url);
 
         restTemplate.exchange(url, HttpMethod.DELETE, entity, Void.class);
-        log.info("✅ DELETE {} completed", url);
+        log.debug("DELETE {} completed", url);
+    }
+
+    public void delete(String url, HttpHeaders extraHeaders) {
+        HttpHeaders headers = buildJsonHeaders();
+        headers.addAll(extraHeaders);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        log.info("DELETE {}", url);
+
+        restTemplate.exchange(url, HttpMethod.DELETE, entity, Void.class);
+        log.debug("DELETE {} completed", url);
     }
 }

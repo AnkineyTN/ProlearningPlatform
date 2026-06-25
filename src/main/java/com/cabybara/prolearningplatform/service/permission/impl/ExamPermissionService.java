@@ -315,18 +315,14 @@ public class ExamPermissionService {
                         throw new IllegalStateException("User is already a member");
                     }
                     
-                    // If DECLINED: delete old record and create new
                     if (existing.getStatus() == ExamMemberStatus.DECLINED) {
-                        log.info("[exam-invite] Re-inviting user {} with DECLINED status, creating new invite", targetUserId);
-                        examMemberRepository.delete(existing);
-                        createNewInvite(examId, targetUserId, role, token, expiresAt);
-                    } else {
-                        // PENDING: update existing record
-                        existing.setRole(role);
-                        existing.setStatus(ExamMemberStatus.PENDING);
-                        existing.setInviteToken(token);
-                        existing.setInviteTokenExpiresAt(expiresAt);
+                        log.info("[exam-invite] Re-inviting user {} with DECLINED status, updating existing invite", targetUserId);
                     }
+                    // PENDING or DECLINED: update existing record
+                    existing.setRole(role);
+                    existing.setStatus(ExamMemberStatus.PENDING);
+                    existing.setInviteToken(token);
+                    existing.setInviteTokenExpiresAt(expiresAt);
                 },
                 () -> createNewInvite(examId, targetUserId, role, token, expiresAt)
             );

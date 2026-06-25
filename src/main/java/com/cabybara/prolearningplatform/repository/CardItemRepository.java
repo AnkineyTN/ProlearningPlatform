@@ -1,6 +1,8 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.dto.helper.TopicCountProjection;
 import com.cabybara.prolearningplatform.dto.helper.UserDueCardProjection;
+import com.cabybara.prolearningplatform.dto.helper.UserDueFlashcardProjection;
 import com.cabybara.prolearningplatform.dto.helper.UserDueStatDto;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import org.springframework.data.domain.Pageable;
@@ -49,6 +51,18 @@ public interface CardItemRepository extends JpaRepository<CardItem, Long> {
             "WHERE c.nextReviewAt <= :now AND c.flashcard.set IS NOT NULL")
     List<UserDueCardProjection> findDueCardsByUser(@Param("now") OffsetDateTime now);
 
+    @Query("SELECT c.flashcard.user.id AS userId, " +
+            "c.flashcard.set.id AS setId, " +
+            "c.flashcard.id AS flashcardId, " +
+            "c.flashcard.title AS flashcardTitle, " +
+            "COUNT(c) AS dueCount, " +
+            "c.flashcard.user.language AS userLanguage " +
+            "FROM CardItem c " +
+            "WHERE c.nextReviewAt <= :now AND c.flashcard.set IS NOT NULL " +
+            "GROUP BY c.flashcard.user.id, c.flashcard.set.id, c.flashcard.id, c.flashcard.title, c.flashcard.user.language " +
+            "ORDER BY c.flashcard.user.id ASC, COUNT(c) DESC")
+    List<UserDueFlashcardProjection> findDueFlashcardsByUser(@Param("now") OffsetDateTime now);
+
     @Query("SELECT c FROM CardItem c WHERE c.flashcard.id = :flashcardId ORDER BY c.id ASC")
     List<CardItem> findAllByFlashcardId(@Param("flashcardId") Long flashcardId);
 
@@ -60,4 +74,34 @@ public interface CardItemRepository extends JpaRepository<CardItem, Long> {
 
     @Query("SELECT c FROM CardItem c WHERE c.flashcard.id = :flashcardId AND c.topic IS NULL")
     List<CardItem> findByFlashcardIdAndTopicIsNull(@Param("flashcardId") Long flashcardId);
+
+    @Query(value = """
+        WITH combined_topics AS (
+            SELECT ci.topic,
+                   'FLASHCARD' AS type,
+                   f.id AS resource_id,
+                   f.created_at
+            FROM card_item ci
+            INNER JOIN flashcard f ON ci.flashcard_id = f.id
+            WHERE f.privacy = 'PUBLIC' AND ci.topic IS NOT NULL AND ci.topic <> ''
+            
+            UNION ALL
+            
+            SELECT q.topic,
+                   'EXAM' AS type,
+                   e.id AS resource_id,
+                   e.created_at
+            FROM questions q
+            INNER JOIN exam_questions eq ON eq.question_id = q.id
+            INNER JOIN exams e ON eq.exam_id = e.id
+            WHERE e.privacy = 'PUBLIC' AND q.topic IS NOT NULL AND q.topic <> ''
+        )
+        SELECT topic,
+               COUNT(DISTINCT CONCAT(type, '_', resource_id)) AS totalResources,
+               COUNT(DISTINCT CASE WHEN created_at >= :since THEN CONCAT(type, '_', resource_id) END) AS newResources
+        FROM combined_topics
+        GROUP BY topic
+        ORDER BY totalResources DESC, newResources DESC
+    """, nativeQuery = true)
+    List<TopicCountProjection> findTopTopics(@Param("since") OffsetDateTime since, org.springframework.data.domain.Pageable pageable);
 }

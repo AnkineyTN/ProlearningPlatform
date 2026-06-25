@@ -29,6 +29,15 @@ public interface NoteMemberRepository extends JpaRepository<NoteMember, Long> {
         @Param("userId") Long userId
     );
 
+    @Query("""
+        SELECT m FROM NoteMember m
+        JOIN FETCH m.user
+        WHERE m.note.id = :noteId AND m.user.id IN :userIds
+        """)
+    List<NoteMember> findWithUserByNoteIdAndUserIdIn(
+        @Param("noteId") Long noteId,
+        @Param("userIds") List<Long> userIds);
+
     Optional<NoteMember> findByNoteIdAndUserIdAndStatus(
         Long noteId, Long userId, NoteMemberStatus status);
 

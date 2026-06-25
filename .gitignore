@@ -40,6 +40,9 @@ build/
 docker-compose-*.yml
 .notes
 .claude/
+.opencode/
+AGENTS.md
+opencode.json
 logs/*
 
 prolearningplatform-*-firebase-adminsdk-*.json

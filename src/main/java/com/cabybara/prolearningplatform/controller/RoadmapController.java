@@ -38,9 +38,11 @@ public class RoadmapController {
     @PreAuthorize("isAuthenticated() and @accountPermissionService.isPro(@authenticationContext.getCurrentUserId())")
     @PostMapping("/preview")
     public ResponseEntity<ApiResponse<RoadmapPreviewResponseDto>> previewRoadmap(
-            @Valid @RequestBody RoadmapPreviewRequestDto request
+            @Valid @RequestBody RoadmapPreviewRequestDto request,
+            @AuthenticationPrincipal Jwt jwt
     ) {
-        RoadmapPreviewResponseDto preview = roadmapService.previewRoadmap(request);
+        Long userId = (Long) jwt.getClaims().get("id");
+        RoadmapPreviewResponseDto preview = roadmapService.previewRoadmap(userId, request);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Roadmap preview generated", preview, null));

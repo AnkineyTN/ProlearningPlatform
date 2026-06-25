@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.service.roadmap.impl;
 
+import com.cabybara.prolearningplatform.dto.internal.roadmap.UserKnowledgeProfileDto;
 import com.cabybara.prolearningplatform.dto.request.roadmap.AcceptRoadmapRequestDto;
 import com.cabybara.prolearningplatform.dto.request.roadmap.RoadmapPreviewRequestDto;
 import com.cabybara.prolearningplatform.dto.response.roadmap.RoadmapDetailResponseDto;
@@ -10,6 +11,7 @@ import com.cabybara.prolearningplatform.dto.response.roadmap.TopicStartResponseD
 import com.cabybara.prolearningplatform.dto.helper.RoadmapSetRef;
 import com.cabybara.prolearningplatform.dto.helper.RoadmapTopicNoteRef;
 import com.cabybara.prolearningplatform.enums.ChapterStatus;
+import com.cabybara.prolearningplatform.enums.KnowledgeSourceType;
 import com.cabybara.prolearningplatform.enums.Privacy;
 import com.cabybara.prolearningplatform.enums.RoadmapStatus;
 import com.cabybara.prolearningplatform.enums.TopicContentStatus;
@@ -19,6 +21,8 @@ import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.model.roadmap.Roadmap;
 import com.cabybara.prolearningplatform.model.roadmap.RoadmapChapter;
 import com.cabybara.prolearningplatform.model.roadmap.RoadmapTopic;
+import com.cabybara.prolearningplatform.model.knowledge.KnowledgeAnalysis;
+import com.cabybara.prolearningplatform.repository.KnowledgeAnalysisRepository;
 import com.cabybara.prolearningplatform.repository.RoadmapChapterRepository;
 import com.cabybara.prolearningplatform.repository.RoadmapRepository;
 import com.cabybara.prolearningplatform.repository.NoteRepository;
@@ -40,6 +44,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -54,12 +59,34 @@ public class RoadmapServiceImpl implements RoadmapService {
     private final SetRepository setRepository;
     private final NoteRepository noteRepository;
     private final UserRepository userRepository;
+    private final KnowledgeAnalysisRepository knowledgeAnalysisRepository;
     private final AIRoadmapService aiRoadmapService;
     private final RoadmapTopicSetupAsyncService topicSetupAsyncService;
 
     @Override
-    public RoadmapPreviewResponseDto previewRoadmap(RoadmapPreviewRequestDto request) {
-        return aiRoadmapService.generateRoadmap(request);
+    public RoadmapPreviewResponseDto previewRoadmap(Long userId, RoadmapPreviewRequestDto request) {
+        // Newest set-level analysis per set for this user (analyses are ordered newest-first,
+        // so the first one seen for each set is the latest).
+        List<UserKnowledgeProfileDto> knowledgeProfiles = knowledgeAnalysisRepository
+                .findAllByUserIdAndSourceTypeOrderByCreatedAtDesc(userId, KnowledgeSourceType.SET)
+                .stream()
+                .collect(Collectors.toMap(
+                        KnowledgeAnalysis::getSourceId,
+                        ka -> UserKnowledgeProfileDto.builder()
+                                .setId(ka.getSourceId())
+                                .topicAccuracies(ka.getTopicAccuracies())
+                                .strengths(ka.getStrengths())
+                                .weaknesses(ka.getWeaknesses())
+                                .improvements(ka.getImprovements())
+                                .build(),
+                        (latest, older) -> latest,
+                        LinkedHashMap::new))
+                .values()
+                .stream()
+                .toList();
+
+        return aiRoadmapService.generateRoadmap(request,
+                knowledgeProfiles.isEmpty() ? null : knowledgeProfiles);
     }
 
     @Override

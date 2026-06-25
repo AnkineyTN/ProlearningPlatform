@@ -4,6 +4,7 @@ import com.cabybara.prolearningplatform.dto.request.note.*;
 import com.cabybara.prolearningplatform.dto.request.share.InviteMemberRequest;
 import com.cabybara.prolearningplatform.dto.response.note.AcceptByTokenResponse;
 import com.cabybara.prolearningplatform.dto.response.note.CreateNoteResponseDTO;
+import com.cabybara.prolearningplatform.dto.response.note.GenerateNoteWithAIResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.GetAllNotesResponseDTO;
 import com.cabybara.prolearningplatform.dto.response.note.SharedNoteResponseDto;
 import com.cabybara.prolearningplatform.dto.response.note.GetDetailNoteResponseDTO;
@@ -19,6 +20,8 @@ import java.util.List;
 
 public interface NoteService {
     public CreateNoteResponseDTO createNote(Long setId, CreateNoteRequestDTO request);
+
+    public GenerateNoteWithAIResponseDTO createNoteWithAI(Long setId, GenerateNoteWithAIRequestDTO request);
 
     public void saveNote(Long setId, Long noteId, SaveNoteRequestDTO request);
 

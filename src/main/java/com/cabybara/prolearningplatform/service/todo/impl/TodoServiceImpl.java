@@ -12,6 +12,7 @@ import com.cabybara.prolearningplatform.model.Todo;
 import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.repository.GoalRepository;
 import com.cabybara.prolearningplatform.repository.TodoRepository;
+import com.cabybara.prolearningplatform.service.calendar.CalendarService;
 import com.cabybara.prolearningplatform.service.todo.TodoService;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
@@ -32,6 +33,7 @@ public class TodoServiceImpl implements TodoService {
     private final GoalRepository goalRepository;
     private final UserService userService;
     private final AuthenticationContext authenticationContext;
+    private final CalendarService calendarService;
 
     @Override
     public Page<TodoResponse> getAllTodos(Long goalId, Boolean completed, TodoPriority priority, Boolean noGoal, TodoType type, TodoStatus status, Pageable pageable) {
@@ -80,7 +82,9 @@ public class TodoServiceImpl implements TodoService {
                 .goal(goal)
                 .build();
 
-        return toTodoResponse(todoRepository.save(todo));
+        Todo saved = todoRepository.save(todo);
+        calendarService.createEvent(saved);
+        return toTodoResponse(saved);
     }
 
     @Override
@@ -120,7 +124,9 @@ public class TodoServiceImpl implements TodoService {
             todo.setGoal(goal);
         }
 
-        return toTodoResponse(todoRepository.save(todo));
+        Todo saved = todoRepository.save(todo);
+        calendarService.updateEvent(saved);
+        return toTodoResponse(saved);
     }
 
     @Override
@@ -129,7 +135,9 @@ public class TodoServiceImpl implements TodoService {
         Long userId = authenticationContext.getCurrentUserId();
         Todo todo = todoRepository.findByIdAndUserId(todoId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Todo not found"));
+        String calendarEventId = todo.getCalendarEventId();
         todoRepository.delete(todo);
+        calendarService.deleteEvent(calendarEventId, userId);
     }
 
     @Override
@@ -144,7 +152,9 @@ public class TodoServiceImpl implements TodoService {
         todo.setCompletedAt(newDone ? OffsetDateTime.now() : null);
         todo.setStatus(newDone ? TodoStatus.DONE : TodoStatus.TODO);
 
-        return toTodoResponse(todoRepository.save(todo));
+        Todo saved = todoRepository.save(todo);
+        calendarService.updateEvent(saved);
+        return toTodoResponse(saved);
     }
 
     private TodoResponse toTodoResponse(Todo todo) {
@@ -168,6 +178,7 @@ public class TodoServiceImpl implements TodoService {
                 .examRefs(todo.getExamRefs())
                 .createdAt(todo.getCreatedAt())
                 .updatedAt(todo.getUpdatedAt())
+                .calendarSynced(todo.getCalendarEventId() != null)
                 .build();
     }
 }

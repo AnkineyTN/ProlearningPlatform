@@ -10,6 +10,8 @@ import com.cabybara.prolearningplatform.model.UserAppeal;
 import com.cabybara.prolearningplatform.repository.UserAppealRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.appeal.AppealService;
+import com.cabybara.prolearningplatform.service.admin.impl.AdminUserManagementServiceImpl;
+import com.cabybara.prolearningplatform.service.redis.RedisService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +26,7 @@ public class AppealServiceImpl implements AppealService {
 
     private final UserAppealRepository appealRepository;
     private final UserRepository userRepository;
+    private final RedisService redisService;
 
     @Override
     @Transactional
@@ -68,8 +71,10 @@ public class AppealServiceImpl implements AppealService {
         if (dto.getStatus() == AppealStatus.ACCEPTED) {
             User user = appeal.getUser();
             user.setBlocked(false);
+            user.setBlockReason(null);
             user.setBlockedAt(null);
             userRepository.save(user);
+            redisService.delete(AdminUserManagementServiceImpl.BLOCKED_USER_KEY_PREFIX + user.getId());
         }
         return toDto(appealRepository.save(appeal));
     }

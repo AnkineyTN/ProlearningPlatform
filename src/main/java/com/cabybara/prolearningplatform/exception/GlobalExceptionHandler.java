@@ -10,6 +10,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
@@ -45,10 +46,20 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.BAD_REQUEST, "Malformed request body", request);
     }
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Object>> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex, WebRequest request) {
+        String message = String.format("Invalid value '%s' for parameter '%s'. Expected type: %s",
+                ex.getValue(), ex.getName(),
+                ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "unknown");
+        return buildResponse(HttpStatus.BAD_REQUEST, message, request);
+    }
+
     @ExceptionHandler({
             BadRequestException.class,
             FlashcardStudySessionException.class,
-            InvalidSortFieldException.class
+            InvalidSortFieldException.class,
+            LlmNotConfiguredException.class
     })
     public ResponseEntity<ApiResponse<Object>> handleBadRequest(
             RuntimeException ex, WebRequest request) {
@@ -139,6 +150,23 @@ public class GlobalExceptionHandler {
                 null, "ACCOUNT_BLOCKED", path
         );
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    // ---- AI Service / BYOK LLM ----
+
+    @ExceptionHandler(AIServiceException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAiService(
+            AIServiceException ex, WebRequest request) {
+        log.error("AI service error: {}", ex.getMessage(), ex);
+        return buildResponse(ex.getStatus(), ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(EncryptionException.class)
+    public ResponseEntity<ApiResponse<Object>> handleEncryption(
+            EncryptionException ex, WebRequest request) {
+        log.error("Encryption/decryption failure: {}", ex.getMessage(), ex);
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR,
+                "Failed to process secured credentials", request);
     }
 
     // ---- Helper ----

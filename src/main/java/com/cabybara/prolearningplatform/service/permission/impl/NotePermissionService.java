@@ -301,18 +301,14 @@ public class NotePermissionService implements ResourcePermissionService  {
                         throw new IllegalStateException("User is already a member");
                     }
                     
-                    // If DECLINED: delete old record and create new
                     if (existing.getStatus() == NoteMemberStatus.DECLINED) {
-                        log.info("[note-invite] Re-inviting user {} with DECLINED status, creating new invite", targetUserId);
-                        noteMemberRepository.delete(existing);
-                        createNewInvite(noteId, targetUserId, role, token, expiresAt);
-                    } else {
-                        // PENDING: update existing record
-                        existing.setRole(role);
-                        existing.setStatus(NoteMemberStatus.PENDING);
-                        existing.setInviteToken(token);
-                        existing.setInviteTokenExpiresAt(expiresAt);
+                        log.info("[note-invite] Re-inviting user {} with DECLINED status, updating existing invite", targetUserId);
                     }
+                    // PENDING or DECLINED: update existing record
+                    existing.setRole(role);
+                    existing.setStatus(NoteMemberStatus.PENDING);
+                    existing.setInviteToken(token);
+                    existing.setInviteTokenExpiresAt(expiresAt);
                 },
                 () -> createNewInvite(noteId, targetUserId, role, token, expiresAt)
             );
@@ -330,11 +326,24 @@ public class NotePermissionService implements ResourcePermissionService  {
     }
 
     public NoteRole getUserRoleInNote(Long noteId, Long userId) {
-        return noteMemberRepository
-            .findByNoteIdAndUserIdAndStatus(noteId, userId, NoteMemberStatus.ACTIVE)
-            .map(NoteMember::getRole)
-            .orElseThrow(() -> new AccessDeniedException(
-                "User " + userId + " has no access to note " + noteId));
+        // 1. Try to find user as a member
+        var optionalMember = noteMemberRepository
+            .findByNoteIdAndUserIdAndStatus(noteId, userId, NoteMemberStatus.ACTIVE);
+        
+        if (optionalMember.isPresent()) {
+            // User is a member: return their actual role
+            return optionalMember.get().getRole();
+        }
+        
+        // 2. User is not a member
+        if (isNotePublic(noteId)) {
+            // PUBLIC note: non-member = VIEWER role
+            return NoteRole.VIEWER;
+        }
+        
+        // PRIVATE note: non-member = AccessDenied
+        throw new AccessDeniedException(
+            "User " + userId + " has no access to note " + noteId);
     }
 
     @Transactional

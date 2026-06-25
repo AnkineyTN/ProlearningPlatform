@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.service.roadmap.impl;
 
+import com.cabybara.prolearningplatform.dto.internal.DecryptedLlmConfig;
 import com.cabybara.prolearningplatform.dto.internal.roadmap.TopicContentAiRequestDto;
 import com.cabybara.prolearningplatform.dto.internal.roadmap.TopicContentAiResponseDto;
 import com.cabybara.prolearningplatform.enums.Privacy;
@@ -15,6 +16,8 @@ import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionSe
 import com.cabybara.prolearningplatform.service.roadmap.RoadmapTopicSetupAsyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +35,8 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
     private final NoteRepository noteRepository;
     private final NotePermissionService notePermissionService;
     private final AIRoadmapService aiRoadmapService;
+    private final CacheManager cacheManager;
+    private final com.cabybara.prolearningplatform.service.llm.UserLlmConfigService userLlmConfigService;
 
     @Override
     @Async("heavyTaskExecutor")
@@ -55,8 +60,11 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
                 return;
             }
 
+            // Resolve the owning user's active LLM config (no SecurityContext in @Async threads).
+            DecryptedLlmConfig llmConfig = userLlmConfigService.getDecryptedConfig(userId);
+
             TopicContentAiResponseDto aiResponse = callAiForTopicContent(
-                    topicTitle, description, chapterTitle, chapterObjective, roadmapTitle, roadmapId);
+                    topicTitle, description, chapterTitle, chapterObjective, roadmapTitle, roadmapId, llmConfig);
 
             Note savedNote = noteRepository.save(Note.builder()
                     .title(topicTitle)
@@ -74,18 +82,23 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
             topic.setSummary(aiResponse.getSummary());
             topic.setContentStatus(TopicContentStatus.READY);
             roadmapTopicRepository.save(topic);
+            evictRoadmapDetailCache(userId, roadmapId);
 
             log.info("Topic {} content generated and set to READY", topicId);
 
         } catch (Exception e) {
             log.error("Async content generation failed for topic {}: {}", topicId, e.getMessage());
-            roadmapTopicRepository.findById(topicId).ifPresent(this::markFailed);
+            roadmapTopicRepository.findById(topicId).ifPresent(topic -> {
+                markFailed(topic);
+                evictRoadmapDetailCache(userId, roadmapId);
+            });
         }
     }
 
     private TopicContentAiResponseDto callAiForTopicContent(String topicTitle, String description,
                                                              String chapterTitle, String chapterObjective,
-                                                             String roadmapTitle, Long roadmapId) {
+                                                             String roadmapTitle, Long roadmapId,
+                                                             DecryptedLlmConfig llmConfig) {
         List<TopicContentAiRequestDto.SummaryContextDto> previousSummaries =
                 roadmapTopicRepository.findTopicsWithSummaryByRoadmapId(roadmapId).stream()
                         .map(t -> TopicContentAiRequestDto.SummaryContextDto.builder()
@@ -103,11 +116,18 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
                 .previousSummaries(previousSummaries)
                 .build();
 
-        return aiRoadmapService.generateTopicContent(request);
+        return aiRoadmapService.generateTopicContent(request, llmConfig);
     }
 
     private void markFailed(RoadmapTopic topic) {
         topic.setContentStatus(TopicContentStatus.FAILED);
         roadmapTopicRepository.save(topic);
+    }
+
+    private void evictRoadmapDetailCache(Long userId, Long roadmapId) {
+        Cache cache = cacheManager.getCache("roadmap_detail");
+        if (cache != null) {
+            cache.evict(userId + ":" + roadmapId);
+        }
     }
 }

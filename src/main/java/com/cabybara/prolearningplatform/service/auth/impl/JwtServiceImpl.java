@@ -8,6 +8,7 @@ import com.cabybara.prolearningplatform.service.auth.JwtService;
 import com.cabybara.prolearningplatform.service.redis.RedisService;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -93,10 +94,17 @@ public class JwtServiceImpl implements JwtService {
 
     @Override
     public Boolean validateToken(String token) {
-        io.jsonwebtoken.Claims claims = parse(token);
+        io.jsonwebtoken.Claims claims;
+        try {
+            claims = parse(token);
+        } catch (JwtException | IllegalArgumentException ex) {
+            return false;
+        }
+
         if (!claims.getExpiration().after(new Date())) {
             return false;
         }
+
         String jti = claims.getId();
         return jti == null || !redisService.hasKey(BLACKLIST_JTI_KEY_PREFIX + jti);
     }

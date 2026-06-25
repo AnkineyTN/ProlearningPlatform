@@ -1,5 +1,9 @@
 aiservice:
     api: ${AI_SERVICE_BASE_API:https://prolearning-ai-service-dev.onrender.com/api/v1}
+    internal-api-key: ${AI_INTERNAL_API_KEY:}
+
+llm-encryption:
+    master-key: ${LLM_MASTER_KEY:}
 
 firebase:
     googleCredentials: ${FIREBASE_CONFIG_PATH:prolearningplatform-bc37d-firebase-adminsdk-fbsvc-5dfd0cf044.json}
@@ -15,6 +19,9 @@ payos:
     return-url-mobile: ${MOBILE_PAYMENT_RETURN_URL}
     cancel-url-mobile: ${MOBILE_PAYMENT_CANCEL_URL}
 
+pdftohtml:
+    api: ${PDF_TO_HTML_API:https://prolearning-pdftohtmlconverter.onrender.com/convert?url=}
+
 schedule:
     due-card-reminder:
         cron: "0 0 8 * * *"
@@ -25,6 +32,8 @@ schedule:
         days-old: 30
     payment-expired-cleanup:
         cron: "0 0 2 * * *"
+    todo-goal-reminder:
+        cron: "0 0 * * * *"
 
 server:
     forward-headers-strategy: framework
@@ -115,6 +124,12 @@ spring:
                         client-secret: ${OAUTH2_GOOGLE_CLIENT_SECRET}
                         redirect-uri: ${GOOGLE_REDIRECT_URI}
                         scope: "email,profile,openid,calendar.events"
+
+google:
+    calendar:
+        redirect-uri: ${GOOGLE_CALENDAR_REDIRECT_URI:http://localhost:8080/api/calendar/auth/callback}
+        frontend-success-url: ${FRONTEND_CALENDAR_SUCCESS_URL:http://localhost:3000/settings/calendar?connected=true}
+        frontend-failure-url: ${FRONTEND_CALENDAR_FAILURE_URL:http://localhost:3000/settings/calendar?connected=false}
 
     springdoc:
         swagger-ui:

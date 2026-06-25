@@ -32,4 +32,5 @@ public class TodoResponse {
     private List<ResourceRef> examRefs;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
+    private Boolean calendarSynced;
 }

@@ -20,4 +20,5 @@ public class GetAllNotesResponseDTO {
     private String created_at;
     private String updated_at;
     private List<GetDocsInNoteResponseDTO> noteDocs;
+    private Boolean isFavorited;
 }

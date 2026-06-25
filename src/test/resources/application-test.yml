@@ -1,0 +1,94 @@
+server:
+  servlet:
+    context-path: /api
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:prolearning-test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    database-platform: org.hibernate.dialect.H2Dialect
+  flyway:
+    enabled: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      ttl-ms: 60000
+  security:
+    jwt:
+      secret: test-secret-key-test-secret-key-123456
+      access-ttl-ms: 1800000
+      refresh-ttl-ms: 604800000
+    oauth2:
+      client:
+        frontend_dashboard_url: http://localhost:3000
+        frontend_login_google_failure_url: http://localhost:3000/login-error
+        registration:
+          google:
+            client-id: test-google-client-id
+            client-secret: test-google-client-secret
+            redirect-uri: http://localhost:8080/login/oauth2/code/google
+            scope: email,profile,openid
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+  mail:
+    host: localhost
+    port: 2525
+    username: test
+    password: test
+
+firebase:
+  googleCredentials: firebase-test-credentials.json
+
+cloud:
+  cloudinary:
+    name: test-cloud
+    apiKey: test-api-key
+    apiSecret: test-api-secret
+    image_preset: test-image-preset
+    document_preset: test-document-preset
+    video_preset: test-video-preset
+    audio_preset: test-audio-preset
+
+payos:
+  client-id: test-client-id
+  api-key: test-api-key
+  checksum-key: test-checksum-key
+  base-url: https://api-merchant.payos.vn
+  webhook-url: http://localhost:8080/api/webhook/payos
+  return-url: http://localhost:3000/payment/success
+  cancel-url: http://localhost:3000/payment/cancel
+
+app:
+  mail:
+    from: noreply@test.local
+    from-name: ProLearning Test
+  rabbitmq:
+    exchange: email.exchange
+    queues:
+      transactional: email.transactional
+      dead-letter: email.dead-letter
+  frontend-url: http://localhost:3000
+  token:
+    verify-expiry-minutes: 10
+    reset-expiry-minutes: 15
+    reset-token-expiry-minutes: 5
+    invite-token-expiry-hours: 72
+
+aiservice:
+  api: http://localhost:8081/api/v1
+  internal-api-key: test-internal-api-key
+
+llm-encryption:
+  master-key: Phe6lq4EzTuZhp5W8K2/Om+3TSVVF13MbosJFFeasDY=
+
+internal:
+  service-key: test-service-key

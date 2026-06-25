@@ -61,16 +61,14 @@ public class InviteNotificationSender {
 
         notificationDispatcher.dispatchToMany(notifications);
 
-        userIds.forEach(userId ->
-            flashcardMemberRepository.findWithUserByFlashcardIdAndUserId(flashcardId, userId)
-                .ifPresent(member -> emailService.sendFlashcardInviteNotification(
-                    member.getUser().getEmail(),
-                    inviterName,
-                    flashcardTitle,
-                    member.getRole().name(),
-                    frontendUrl + "/flashcard-invites/accept?token=" + member.getInviteToken()
-                ))
-        );
+        flashcardMemberRepository.findWithUserByFlashcardIdAndUserIdIn(flashcardId, userIds)
+            .forEach(member -> emailService.sendFlashcardInviteNotification(
+                member.getUser().getEmail(),
+                inviterName,
+                flashcardTitle,
+                member.getRole().name(),
+                frontendUrl + "/flashcard-invites/accept?token=" + member.getInviteToken()
+            ));
     }
 
     @Async
@@ -103,16 +101,14 @@ public class InviteNotificationSender {
 
         notificationDispatcher.dispatchToMany(notifications);
 
-        userIds.forEach(userId ->
-            noteMemberRepository.findWithUserByNoteIdAndUserId(noteId, userId)
-                .ifPresent(member -> emailService.sendNoteInviteNotification(
-                    member.getUser().getEmail(),
-                    inviterName,
-                    noteTitle,
-                    member.getRole().name(),
-                    frontendUrl + "/invites/accept?token=" + member.getInviteToken()
-                ))
-        );
+        noteMemberRepository.findWithUserByNoteIdAndUserIdIn(noteId, userIds)
+            .forEach(member -> emailService.sendNoteInviteNotification(
+                member.getUser().getEmail(),
+                inviterName,
+                noteTitle,
+                member.getRole().name(),
+                frontendUrl + "/invites/accept?token=" + member.getInviteToken()
+            ));
     }
 
     @Async
@@ -144,15 +140,13 @@ public class InviteNotificationSender {
 
         notificationDispatcher.dispatchToMany(notifications);
 
-        userIds.forEach(userId ->
-            examMemberRepository.findWithUserByExamIdAndUserId(examId, userId)
-                .ifPresent(member -> emailService.sendExamInviteNotification(
-                    member.getUser().getEmail(),
-                    inviterName,
-                    examTitle,
-                    member.getRole().name(),
-                    frontendUrl + "/exam-invites/accept?token=" + member.getInviteToken()
-                ))
-        );
+        examMemberRepository.findWithUserByExamIdAndUserIdIn(examId, userIds)
+            .forEach(member -> emailService.sendExamInviteNotification(
+                member.getUser().getEmail(),
+                inviterName,
+                examTitle,
+                member.getRole().name(),
+                frontendUrl + "/exam-invites/accept?token=" + member.getInviteToken()
+            ));
     }
 }

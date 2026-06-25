@@ -29,6 +29,15 @@ public interface FlashcardMemberRepository extends JpaRepository<FlashcardMember
         @Param("userId") Long userId
     );
 
+    @Query("""
+        SELECT m FROM FlashcardMember m
+        JOIN FETCH m.user
+        WHERE m.flashcard.id = :flashcardId AND m.user.id IN :userIds
+        """)
+    List<FlashcardMember> findWithUserByFlashcardIdAndUserIdIn(
+        @Param("flashcardId") Long flashcardId,
+        @Param("userIds") List<Long> userIds);
+
     Optional<FlashcardMember> findByFlashcardIdAndUserIdAndStatus(
         Long flashcardId, Long userId, FlashcardMemberStatus status);
 

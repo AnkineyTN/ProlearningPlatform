@@ -17,6 +17,8 @@ public interface SetNotificationPreferenceRepository
 
     @Query("""
         SELECT p FROM SetNotificationPreference p
+        JOIN FETCH p.set s
+        JOIN FETCH s.user
         WHERE p.weeklySummaryEnabled = true
           AND p.weeklySummaryDay = :dayValue
         """)
@@ -24,8 +26,10 @@ public interface SetNotificationPreferenceRepository
 
     @Query("""
         SELECT p FROM SetNotificationPreference p
+        JOIN FETCH p.set s
+        JOIN FETCH s.user
         WHERE p.weeklySummaryEnabled = true
-          AND p.set.user.id = :userId
+          AND s.user.id = :userId
         """)
     List<SetNotificationPreference> findEnabledByUserId(@Param("userId") Long userId);
 }

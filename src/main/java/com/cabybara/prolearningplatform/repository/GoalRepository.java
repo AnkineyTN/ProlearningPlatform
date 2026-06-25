@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,4 +38,34 @@ public interface GoalRepository extends JpaRepository<Goal, Long> {
     Optional<Goal> findByIdAndUserId(Long id, Long userId);
 
     List<Goal> findByParentGoalIdAndUserId(Long parentGoalId, Long userId);
+
+    @Query("""
+            SELECT g FROM Goal g
+            JOIN FETCH g.user
+            WHERE g.user.id IN :userIds
+              AND g.status = com.cabybara.prolearningplatform.enums.GoalStatus.IN_PROGRESS
+              AND g.targetDate = :targetDate
+            """)
+    List<Goal> findGoalsWithTargetDate(
+            @Param("userIds") List<Long> userIds,
+            @Param("targetDate") LocalDate targetDate
+    );
+
+    @Query("""
+            SELECT DISTINCT g FROM Goal g
+            JOIN FETCH g.user
+            WHERE g.user.id IN :userIds
+              AND g.status = com.cabybara.prolearningplatform.enums.GoalStatus.IN_PROGRESS
+              AND g.targetDate IS NOT NULL
+              AND g.updatedAt < :cutoffTime
+              AND NOT EXISTS (
+                  SELECT 1 FROM Todo t
+                  WHERE t.goal = g
+                  AND t.updatedAt >= :cutoffTime
+              )
+            """)
+    List<Goal> findInactiveGoals(
+            @Param("userIds") List<Long> userIds,
+            @Param("cutoffTime") OffsetDateTime cutoffTime
+    );
 }

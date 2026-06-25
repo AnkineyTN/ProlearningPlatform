@@ -10,7 +10,9 @@ import com.cabybara.prolearningplatform.service.fcm.FCMService;
 import com.cabybara.prolearningplatform.service.notification.NotificationService;
 import com.cabybara.prolearningplatform.enums.NotificationType;
 import com.cabybara.prolearningplatform.mapper.NotificationMapper;
+import com.cabybara.prolearningplatform.service.notification.GoalReminderService;
 import com.cabybara.prolearningplatform.service.notification.NotificationDispatcher;
+import com.cabybara.prolearningplatform.service.notification.TodoReminderService;
 import com.cabybara.prolearningplatform.service.notification.WeeklySummaryService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -22,6 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,6 +37,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/notifications")
 @RequiredArgsConstructor
+@Slf4j
 @Validated
 @Tag(name = "Notifications")
 public class NotificationController {
@@ -44,6 +48,8 @@ public class NotificationController {
     private final WeeklySummaryService weeklySummaryService;
     private final NotificationDispatcher notificationDispatcher;
     private final NotificationMapper notificationMapper;
+    private final TodoReminderService todoReminderService;
+    private final GoalReminderService goalReminderService;
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
@@ -227,6 +233,34 @@ public class NotificationController {
                 "Weekly summary sent to user " + userId, null, null));
     }
 
+    @Operation(summary = "[Debug] Trigger daily todo reminders", description = "Gửi ngay daily todo reminder cho tất cả user đang bật — bỏ qua check giờ")
+    @PostMapping("/debug/todo-reminder/daily")
+    public ResponseEntity<ApiResponse<Map<String, String>>> debugDailyTodoReminder() {
+        todoReminderService.debugSendDailyTodoReminders();
+        return ResponseEntity.ok(ResponseUtil.success("Daily todo reminders triggered", null, null));
+    }
+
+    @Operation(summary = "[Debug] Trigger weekly todo reminders", description = "Gửi ngay weekly todo reminder cho tất cả user đang bật — bỏ qua check giờ và ngày Chủ nhật")
+    @PostMapping("/debug/todo-reminder/weekly")
+    public ResponseEntity<ApiResponse<Map<String, String>>> debugWeeklyTodoReminder() {
+        todoReminderService.debugSendWeeklyTodoReminders();
+        return ResponseEntity.ok(ResponseUtil.success("Weekly todo reminders triggered", null, null));
+    }
+
+    @Operation(summary = "[Debug] Trigger goal deadline reminders", description = "Gửi ngay goal deadline reminder cho tất cả user đang bật — bỏ qua check giờ")
+    @PostMapping("/debug/goal-reminder/deadline")
+    public ResponseEntity<ApiResponse<Map<String, String>>> debugGoalDeadlineReminder() {
+        goalReminderService.debugSendGoalDeadlineReminders();
+        return ResponseEntity.ok(ResponseUtil.success("Goal deadline reminders triggered", null, null));
+    }
+
+    @Operation(summary = "[Debug] Trigger goal inactive reminders", description = "Gửi ngay goal inactive reminder cho tất cả user đang bật — bỏ qua check giờ và ngày thứ Hai")
+    @PostMapping("/debug/goal-reminder/inactive")
+    public ResponseEntity<ApiResponse<Map<String, String>>> debugGoalInactiveReminder() {
+        goalReminderService.debugSendGoalInactiveReminders();
+        return ResponseEntity.ok(ResponseUtil.success("Goal inactive reminders triggered", null, null));
+    }
+
     @Hidden
     @PostMapping("/test-push")
     public ResponseEntity<Object> testPush(@RequestBody Map<String, String> body) {
@@ -253,6 +287,7 @@ public class NotificationController {
                 ));
             }
         } catch (Exception e) {
+            log.error("Failed to send push notification", e);
             return ResponseEntity.badRequest().body(Map.of(
                     "status", "error",
                     "message", e.getMessage()

@@ -1,5 +1,6 @@
 package com.cabybara.prolearningplatform.repository;
 
+import com.cabybara.prolearningplatform.dto.helper.LabelCountProjection;
 import com.cabybara.prolearningplatform.enums.AccountType;
 import com.cabybara.prolearningplatform.model.User;
 
@@ -21,11 +22,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("""
         SELECT u FROM User u
-        WHERE (:keyword IS NULL
+        WHERE (:#{#keyword == null} = true
             OR LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%'))
             OR LOWER(u.lastName)  LIKE LOWER(CONCAT('%', :keyword, '%'))
             OR LOWER(u.email)     LIKE LOWER(CONCAT('%', :keyword, '%')))
-        AND (:accountType IS NULL OR u.accountType = :accountType)
+        AND (:#{#accountType == null} = true OR u.accountType = :accountType)
     """)
     Page<User> searchForAdmin(
         @Param("keyword")     String keyword,
@@ -34,28 +35,31 @@ public interface UserRepository extends JpaRepository<User, Long> {
     );
 
     @Query(value = """
-            SELECT COALESCE(CAST(u.education AS text), 'UNSET'), CAST(COUNT(*) AS bigint)
+            SELECT COALESCE(CAST(u.education AS text), 'UNSET') AS label,
+                   CAST(COUNT(*) AS bigint)                     AS count
             FROM users u
             GROUP BY u.education
             ORDER BY COUNT(*) DESC
             """, nativeQuery = true)
-    List<Object[]> aggregateEducation();
+    List<LabelCountProjection> aggregateEducation();
 
     @Query(value = """
-            SELECT COALESCE(CAST(u.hear_app_from AS text), 'UNSET'), CAST(COUNT(*) AS bigint)
+            SELECT COALESCE(CAST(u.hear_app_from AS text), 'UNSET') AS label,
+                   CAST(COUNT(*) AS bigint)                          AS count
             FROM users u
             GROUP BY u.hear_app_from
             ORDER BY COUNT(*) DESC
             """, nativeQuery = true)
-    List<Object[]> aggregateHearAppFrom();
+    List<LabelCountProjection> aggregateHearAppFrom();
 
     @Query(value = """
-            SELECT u.account_type, CAST(COUNT(*) AS bigint)
+            SELECT u.account_type          AS label,
+                   CAST(COUNT(*) AS bigint) AS count
             FROM users u
             GROUP BY u.account_type
             ORDER BY COUNT(*) DESC
             """, nativeQuery = true)
-    List<Object[]> aggregateAccountType();
+    List<LabelCountProjection> aggregateAccountType();
 
     // bỏ qua những user đã là ACTIVE member của note (cho phép re-invite pending members)
     @Query("""
@@ -128,4 +132,51 @@ public interface UserRepository extends JpaRepository<User, Long> {
     ORDER BY u.lastName ASC, u.firstName ASC
     """)
     Page<User> findAllExcludingExamMembers(@Param("examId") Long examId, Pageable pageable);
+
+    @Query(value = """
+        WITH public_counts AS (
+            SELECT id_user AS user_id, 
+                   COUNT(*) AS total,
+                   COUNT(CASE WHEN created_at >= :since THEN 1 END) AS new_count
+            FROM note
+            WHERE privacy = 'PUBLIC'
+            GROUP BY id_user
+            
+            UNION ALL
+            
+            SELECT id_user AS user_id, 
+                   COUNT(*) AS total,
+                   COUNT(CASE WHEN created_at >= :since THEN 1 END) AS new_count
+            FROM flashcard
+            WHERE privacy = 'PUBLIC'
+            GROUP BY id_user
+            
+            UNION ALL
+            
+            SELECT created_by AS user_id, 
+                   COUNT(*) AS total,
+                   COUNT(CASE WHEN created_at >= :since THEN 1 END) AS new_count
+            FROM exams
+            WHERE privacy = 'PUBLIC'
+            GROUP BY created_by
+        ),
+        aggregated_counts AS (
+            SELECT user_id, 
+                   SUM(total) AS total_resources,
+                   SUM(new_count) AS new_resources
+            FROM public_counts
+            GROUP BY user_id
+        )
+        SELECT u.id, 
+               u.first_name, 
+               u.last_name, 
+               u.email, 
+               u.avatar_url, 
+               COALESCE(ac.total_resources, 0) AS total_resources,
+               COALESCE(ac.new_resources, 0) AS new_resources
+        FROM users u
+        INNER JOIN aggregated_counts ac ON u.id = ac.user_id
+        ORDER BY total_resources DESC, new_resources DESC
+    """, nativeQuery = true)
+    List<Object[]> findTopCreators(@Param("since") java.time.OffsetDateTime since, Pageable pageable);
 }
