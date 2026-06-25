@@ -16,7 +16,7 @@ public interface RoadmapService {
 
     RoadmapDetailResponseDto acceptRoadmap(Long userId, AcceptRoadmapRequestDto dto);
 
-    Page<RoadmapListItemResponseDto> getRoadmaps(Long userId, Pageable pageable);
+    Page<RoadmapListItemResponseDto> getRoadmaps(Long userId, String status, Pageable pageable);
 
     RoadmapDetailResponseDto getRoadmap(Long userId, Long roadmapId);
 

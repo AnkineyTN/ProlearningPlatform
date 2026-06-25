@@ -60,15 +60,16 @@ public class RoadmapController {
                 .body(ResponseUtil.success("Roadmap created successfully", response, null));
     }
 
-    @Operation(summary = "List all roadmaps of the current user with progress")
+    @Operation(summary = "List all roadmaps of the current user with progress. Optional status filter: ACTIVE, COMPLETED, ABANDONED")
     @PreAuthorize("isAuthenticated() and @accountPermissionService.isPro(@authenticationContext.getCurrentUserId())")
     @GetMapping("")
     public ResponseEntity<ApiResponse<Object>> getRoadmaps(
             @AuthenticationPrincipal Jwt jwt,
+            @RequestParam(required = false) String status,
             @ParameterObject @PageableDefault(page = 0, size = 10, sort = "id") Pageable pageable
     ) {
         Long userId = (Long) jwt.getClaims().get("id");
-        Page<RoadmapListItemResponseDto> page = roadmapService.getRoadmaps(userId, pageable);
+        Page<RoadmapListItemResponseDto> page = roadmapService.getRoadmaps(userId, status, pageable);
 
         PaginationResponseDto pagination = PaginationResponseDto.builder()
                 .currentPage(page.getNumber())
