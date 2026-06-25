@@ -43,7 +43,7 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
     @Transactional
     public void generateTopicContent(Long userId, Long topicId, Long setId, String topicTitle,
                                      String description, String chapterTitle, String chapterObjective,
-                                     Long roadmapId, String roadmapTitle) {
+                                     Long roadmapId, String roadmapTitle, String roadmapOverview) {
         try {
             log.info("Generating content for topic {} ('{}') in roadmap '{}'", topicId, topicTitle, roadmapTitle);
 
@@ -69,6 +69,7 @@ public class RoadmapTopicSetupAsyncServiceImpl implements RoadmapTopicSetupAsync
             Note savedNote = noteRepository.save(Note.builder()
                     .title(topicTitle)
                     .content(aiResponse.getContent())
+                    .description(roadmapOverview)
                     .privacy(Privacy.PRIVATE)
                     .set(set)
                     .user(set.getUser())

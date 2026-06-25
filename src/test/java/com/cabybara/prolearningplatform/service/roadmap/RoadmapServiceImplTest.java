@@ -191,7 +191,7 @@ class RoadmapServiceImplTest {
         when(roadmapChapterRepository.countByRoadmapIdAndStatus(1L, ChapterStatus.COMPLETED)).thenReturn(1L);
         when(roadmapChapterRepository.countByRoadmapIdAndStatus(2L, ChapterStatus.COMPLETED)).thenReturn(0L);
 
-        var result = service.getRoadmaps(1L, pageable);
+        var result = service.getRoadmaps(1L, null, pageable);
 
         assertEquals(2, result.getContent().size());
     }

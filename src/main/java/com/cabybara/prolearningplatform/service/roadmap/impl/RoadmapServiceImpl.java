@@ -110,8 +110,14 @@ public class RoadmapServiceImpl implements RoadmapService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<RoadmapListItemResponseDto> getRoadmaps(Long userId, Pageable pageable) {
-        Page<Roadmap> page = roadmapRepository.findByUserId(userId, pageable);
+    public Page<RoadmapListItemResponseDto> getRoadmaps(Long userId, String status, Pageable pageable) {
+        Page<Roadmap> page;
+        if (status != null && !status.isBlank()) {
+            RoadmapStatus roadmapStatus = RoadmapStatus.valueOf(status.trim().toUpperCase());
+            page = roadmapRepository.findByUserIdAndStatus(userId, roadmapStatus, pageable);
+        } else {
+            page = roadmapRepository.findByUserId(userId, pageable);
+        }
 
         List<Long> roadmapIds = page.getContent().stream().map(Roadmap::getId).toList();
         Map<Long, Long> setIdByRoadmap = roadmapIds.isEmpty()
@@ -268,13 +274,15 @@ public class RoadmapServiceImpl implements RoadmapService {
         String chapterObjective = chapter.getObjective();
         Long roadmapId = roadmap.getId();
         String roadmapTitle = roadmap.getTitle();
+        String roadmapOverview = roadmap.getOverview();
 
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
                 topicSetupAsyncService.generateTopicContent(userId,
                         topicId, setId, topicTitle, description,
-                        chapterTitle, chapterObjective, roadmapId, roadmapTitle);
+                        chapterTitle, chapterObjective, roadmapId, roadmapTitle,
+                        roadmapOverview);
             }
         });
     }
