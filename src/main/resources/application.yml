@@ -199,6 +199,15 @@ app:
         reset-expiry-minutes: 15
         reset-token-expiry-minutes: 5
         invite-token-expiry-hours: ${INVITE_TOKEN_EXPIRY_HOURS:72}
+    rate-limit:
+        ai-generation:
+            free-limit: ${AI_GEN_FREE_LIMIT:5}
+            pro-limit: ${AI_GEN_PRO_LIMIT:100}
+            period-seconds: ${AI_GEN_PERIOD_SECONDS:86400}
+        ai-interactive:
+            free-limit: ${AI_INT_FREE_LIMIT:20}
+            pro-limit: ${AI_INT_PRO_LIMIT:500}
+            period-seconds: ${AI_INT_PERIOD_SECONDS:86400}
 
 internal:
     service-key: ${INTERNAL_SERVICE_SECRET_KEY}

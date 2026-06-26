@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import com.cabybara.prolearningplatform.service.permission.annotation.AiRateLimit;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,6 +26,7 @@ public class KnowledgeAnalysisController {
     @PostMapping("/sets/{setId}/flashcards/{flashcardId}/topics/assign")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Manually trigger topic assignment for all cards in a flashcard")
+    @AiRateLimit(type = "AI_INTERACTIVE")
     public ResponseEntity<ApiResponse<Map<String, Integer>>> assignFlashcardTopics(
             @PathVariable Long setId,
             @PathVariable Long flashcardId) {
@@ -35,6 +37,7 @@ public class KnowledgeAnalysisController {
     @PostMapping("/sets/{setId}/exams/{examId}/topics/assign")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Manually trigger topic assignment for all questions in an exam")
+    @AiRateLimit(type = "AI_INTERACTIVE")
     public ResponseEntity<ApiResponse<Map<String, Integer>>> assignExamTopics(
             @PathVariable Long setId,
             @PathVariable Long examId) {
@@ -47,6 +50,7 @@ public class KnowledgeAnalysisController {
     @PostMapping("/sets/{setId}/flashcards/{flashcardId}/sessions/{sessionId}/analysis")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Analyze knowledge after a completed study session")
+    @AiRateLimit(type = "AI_INTERACTIVE")
     public ResponseEntity<ApiResponse<KnowledgeAnalysisResponseDto>> analyzeSession(
             @PathVariable Long setId,
             @PathVariable Long flashcardId,
@@ -59,6 +63,7 @@ public class KnowledgeAnalysisController {
     @PostMapping("/sets/{setId}/exams/{examId}/attempts/{attemptId}/analysis")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Analyze knowledge after a submitted exam attempt")
+    @AiRateLimit(type = "AI_INTERACTIVE")
     public ResponseEntity<ApiResponse<KnowledgeAnalysisResponseDto>> analyzeAttempt(
             @PathVariable Long setId,
             @PathVariable Long examId,
@@ -71,6 +76,7 @@ public class KnowledgeAnalysisController {
     @PostMapping("/sets/{setId}/analysis")
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Analyze knowledge across all resources in a set")
+    @AiRateLimit(type = "AI_INTERACTIVE")
     public ResponseEntity<ApiResponse<KnowledgeAnalysisResponseDto>> analyzeSet(
             @PathVariable Long setId) {
         KnowledgeAnalysisResponseDto dto = knowledgeAnalysisService.analyzeSet(setId);

@@ -16,6 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import com.cabybara.prolearningplatform.service.permission.annotation.AiRateLimit;
 
 @RestController
 @RequestMapping("/review-bundles")
@@ -56,6 +57,7 @@ public class ReviewBundleController {
 
     @Operation(summary = "Generate review flashcard", description = "Calls AI to generate a new flashcard set from the incorrect cards in this bundle")
     @PostMapping("/{bundleId}/generate-flashcard")
+    @AiRateLimit(type = "AI_GENERATION")
     public ResponseEntity<ApiResponse<FlashcardResponseDto>> generateFlashcard(
             @PathVariable Long bundleId
     ) {
@@ -67,6 +69,7 @@ public class ReviewBundleController {
 
     @Operation(summary = "Generate review exam", description = "Calls AI to generate a new exam from the incorrect cards in this bundle")
     @PostMapping("/{bundleId}/generate-exam")
+    @AiRateLimit(type = "AI_GENERATION")
     public ResponseEntity<ApiResponse<ExamResponseDto>> generateExam(
             @PathVariable Long bundleId
     ) {

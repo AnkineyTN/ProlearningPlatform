@@ -161,6 +161,13 @@ public class GlobalExceptionHandler {
         return buildResponse(ex.getStatus(), ex.getMessage(), request);
     }
 
+    @ExceptionHandler(RateLimitExceededException.class)
+    public ResponseEntity<ApiResponse<Object>> handleRateLimit(
+            RateLimitExceededException ex, WebRequest request) {
+        log.warn("Rate limit exceeded | {}", ex.getMessage());
+        return buildResponse(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request);
+    }
+
     @ExceptionHandler(EncryptionException.class)
     public ResponseEntity<ApiResponse<Object>> handleEncryption(
             EncryptionException ex, WebRequest request) {

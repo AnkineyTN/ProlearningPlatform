@@ -36,6 +36,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import com.cabybara.prolearningplatform.service.permission.annotation.AiRateLimit;
 
 @RestController
 @RequestMapping("/sets/{setId}/notes")
@@ -294,6 +295,7 @@ public class NoteController {
     @Operation(method = "POST", summary = "Create note with AI-generated content", description = "Generate note content from topic description and reference links using AI")
     @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "/ai-generate")
+    @AiRateLimit(type = "AI_GENERATION")
     public ResponseData<GenerateNoteWithAIResponseDTO> createNoteWithAI(
             @Parameter(description = "The ID of the Set", required = true)
             @PathVariable Long setId,
@@ -332,6 +334,7 @@ public class NoteController {
 
     @Operation(method = "POST", summary = "Convert file to vector DB", description = "Convert file to vector DB to query when explaining with AI")
     @PostMapping(value = "/convert-to-vectordb")
+    @AiRateLimit(type = "AI_GENERATION")
     public ResponseData<Void> convertFileToVector(@Valid @RequestBody ConvertFileToVectorRequestDTO request) {
         log.info("Convert file to vector DB");
         try {
@@ -345,6 +348,7 @@ public class NoteController {
 
     @Operation(method = "POST", summary = "Explain note with AI", description = "Explain selected text in note with AI")
     @PostMapping(value = "/explain")
+    @AiRateLimit(type = "AI_INTERACTIVE")
     public ResponseData<ExplainNoteResponseDTO> explainNote(@Valid @RequestBody ExplainNoteRequestDTO request) {
         log.info("Explain note with AI");
         try {
@@ -358,6 +362,7 @@ public class NoteController {
 
     @Operation(method = "POST", summary = "Summarize file with AI", description = "Summarize file with AI")
     @PostMapping(value = "/summarize")
+    @AiRateLimit(type = "AI_INTERACTIVE")
     public ResponseData<SummarizeFileResponseDTO> summarizeFile(@Valid @RequestBody SummarizeFileRequestDTO request) {
         log.info("Summarize file with AI");
         try {

@@ -40,6 +40,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import org.springframework.data.domain.PageRequest;
+import com.cabybara.prolearningplatform.service.permission.annotation.AiRateLimit;
 
 import static jakarta.servlet.RequestDispatcher.ERROR_MESSAGE;
 
@@ -353,6 +354,7 @@ public class ExamController {
 
     @Operation(method = "POST", summary = "Generate exam by files with AI", description = "Generate exam by file with AI")
     @PostMapping(value = "/ai-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AiRateLimit(type = "AI_GENERATION")
     public ResponseData<GenerateExamByAIResponseDto> generateExamByFile(
             @PathVariable Long setId,
             @RequestPart("files") List<MultipartFile> files,
@@ -380,6 +382,7 @@ public class ExamController {
 
     @Operation(method = "POST", summary = "Generate exam by note with AI", description = "Generate exam by note with AI")
     @PostMapping(value = "/ai-note")
+    @AiRateLimit(type = "AI_GENERATION")
     public ResponseData<GenerateExamByAIResponseDto> generateExamByNote(
             @PathVariable Long setId,
             @RequestBody GenerateExamByNoteRequestDto request
@@ -396,6 +399,7 @@ public class ExamController {
 
     @Operation(method = "POST", summary = "Generate flashcard by web URL with AI", description = "Generate exam by web URL with AI")
     @PostMapping(value = "/ai-web")
+    @AiRateLimit(type = "AI_GENERATION")
     public ResponseData<GenerateExamByAIResponseDto> generateExamByWeb(
             @PathVariable Long setId,
             @Valid @RequestBody GenerateExamByWebRequestDto request
@@ -412,6 +416,7 @@ public class ExamController {
 
     @Operation(method = "POST", summary = "Generate exam by existing exam with AI", description = "Generate exam by existing exam with AI")
     @PostMapping(value = "/ai-existing-exam", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AiRateLimit(type = "AI_GENERATION")
     public ResponseData<GenerateExamByAIResponseDto> generateExamByExistingExam(
             @PathVariable Long setId,
             @RequestPart("files") List<MultipartFile> files
@@ -432,6 +437,7 @@ public class ExamController {
 
     @Operation(method = "POST", summary = "Explain wrong answer with AI", description = "Get AI explanation for an incorrect answer")
     @PostMapping(value = "/ai-explain-wrong-answer")
+    @AiRateLimit(type = "AI_INTERACTIVE")
     public ResponseData<ExplainWrongAnswerResponseDto> explainWrongAnswer(
             @PathVariable Long setId,
             @Valid @RequestBody ExplainWrongAnswerRequestDto request
