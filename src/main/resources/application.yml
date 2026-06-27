@@ -128,8 +128,10 @@ spring:
 google:
     calendar:
         redirect-uri: ${GOOGLE_CALENDAR_REDIRECT_URI:http://localhost:8080/api/calendar/auth/callback}
-        frontend-success-url: ${FRONTEND_CALENDAR_SUCCESS_URL:http://localhost:3000/settings/calendar?connected=true}
-        frontend-failure-url: ${FRONTEND_CALENDAR_FAILURE_URL:http://localhost:3000/settings/calendar?connected=false}
+        frontend-success-url-web: ${FRONTEND_CALENDAR_SUCCESS_URL_WEB:http://localhost:3000/settings/calendar?connected=true}
+        frontend-failure-url-web: ${FRONTEND_CALENDAR_FAILURE_URL_WEB:http://localhost:3000/settings/calendar}
+        frontend-success-url-mobile: ${FRONTEND_CALENDAR_SUCCESS_URL:prolearningplatform://calendar/callback?connected=true}
+        frontend-failure-url-mobile: ${FRONTEND_CALENDAR_FAILURE_URL:prolearningplatform://calendar/callback}
 
     springdoc:
         swagger-ui:
