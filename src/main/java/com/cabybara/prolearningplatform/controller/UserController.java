@@ -6,6 +6,8 @@ import com.cabybara.prolearningplatform.dto.request.user.UserUpdatingRequestDto;
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserResponseDto;
 import com.cabybara.prolearningplatform.dto.response.user.UserSearchResponse;
+import com.cabybara.prolearningplatform.dto.response.user.AiUsageResponseDto;
+import com.cabybara.prolearningplatform.service.permission.AiUsageService;
 import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
@@ -38,6 +40,7 @@ public class UserController {
     private final UserService userService;
     private final AuthenticationContext authenticationContext;
     private final NotePermissionService notePermissionService;
+    private final AiUsageService aiUsageService;
 
     private static Long userIdFromJwt(Jwt jwt) {
         return Long.parseLong(jwt.getClaims().get("id").toString());
@@ -50,6 +53,16 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Successfully", userResponseDto, null));
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/ai-usage")
+    @Operation(summary = "Get AI API usage status", description = "Returns the user's tier, AI quota limits, used requests and reset times.")
+    public ResponseEntity<ApiResponse<AiUsageResponseDto>> getAiUsage(@AuthenticationPrincipal Jwt jwt) {
+        AiUsageResponseDto usage = aiUsageService.getAiUsage(userIdFromJwt(jwt));
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Get AI usage status successfully", usage, null));
     }
 
     @Hidden

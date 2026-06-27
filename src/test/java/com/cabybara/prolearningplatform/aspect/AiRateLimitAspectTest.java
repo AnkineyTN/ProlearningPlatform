@@ -1,12 +1,13 @@
 package com.cabybara.prolearningplatform.aspect;
 
-import com.cabybara.prolearningplatform.exception.RateLimitExceededException;
+import com.cabybara.prolearningplatform.exception.AiRateLimitExceededException;
+import com.cabybara.prolearningplatform.service.llm.UserLlmConfigService;
 import com.cabybara.prolearningplatform.service.permission.AccountPermissionService;
 import com.cabybara.prolearningplatform.service.permission.annotation.AiRateLimit;
 import com.cabybara.prolearningplatform.service.permission.aspect.AiRateLimitAspect;
 import com.cabybara.prolearningplatform.service.redis.RedisService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
-import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,10 +31,13 @@ class AiRateLimitAspectTest {
     private AccountPermissionService accountPermissionService;
 
     @Mock
+    private UserLlmConfigService userLlmConfigService;
+
+    @Mock
     private Environment env;
 
     @Mock
-    private JoinPoint joinPoint;
+    private ProceedingJoinPoint joinPoint;
 
     private StubAuthenticationContext authenticationContext;
     private AiRateLimitAspect aspect;
@@ -41,7 +45,7 @@ class AiRateLimitAspectTest {
     @BeforeEach
     void setUp() {
         authenticationContext = new StubAuthenticationContext();
-        aspect = new AiRateLimitAspect(redisService, authenticationContext, accountPermissionService, env);
+        aspect = new AiRateLimitAspect(redisService, authenticationContext, accountPermissionService, userLlmConfigService, env);
     }
 
     @Test
@@ -89,8 +93,41 @@ class AiRateLimitAspectTest {
         when(redisService.get(key)).thenReturn(5);
         when(redisService.getTTL(key)).thenReturn(5000L);
 
-        assertThrows(RateLimitExceededException.class,
+        assertThrows(AiRateLimitExceededException.class,
                 () -> aspect.checkRateLimit(joinPoint, aiRateLimitAnnotation()));
+    }
+
+    @Test
+    void checkRateLimitBypassesWhenByokActive() throws Exception {
+        authenticationContext.setMockUserId(1L);
+        com.cabybara.prolearningplatform.dto.internal.DecryptedLlmConfig mockConfig = 
+                new com.cabybara.prolearningplatform.dto.internal.DecryptedLlmConfig(
+                        com.cabybara.prolearningplatform.enums.LlmProvider.GOOGLE, "gemini-1.5", "someKey");
+        when(userLlmConfigService.getDecryptedConfig(1L)).thenReturn(mockConfig);
+
+        assertDoesNotThrow(() -> aspect.checkRateLimit(joinPoint, aiRateLimitAnnotation()));
+
+        verifyNoInteractions(redisService);
+    }
+
+    @Test
+    void checkRateLimitDoesNotIncrementOnFailure() throws Throwable {
+        authenticationContext.setMockUserId(1L);
+        when(accountPermissionService.isPro(1L)).thenReturn(false);
+
+        when(env.getProperty("app.rate-limit.ai-generation.free-limit", Integer.class)).thenReturn(5);
+        when(env.getProperty("app.rate-limit.ai-generation.period-seconds", Long.class)).thenReturn(86400L);
+
+        String key = "ratelimit:1:AI_GENERATION";
+        when(redisService.get(key)).thenReturn(null);
+
+        // Stub joinPoint.proceed() to throw an exception
+        when(joinPoint.proceed()).thenThrow(new RuntimeException("AI provider failed"));
+
+        assertThrows(RuntimeException.class, () -> aspect.checkRateLimit(joinPoint, aiRateLimitAnnotation()));
+
+        // Verify redisService.set was NEVER called to increment count because the operation failed
+        verify(redisService, never()).set(anyString(), any(), anyLong());
     }
 
     private AiRateLimit aiRateLimitAnnotation() throws NoSuchMethodException {

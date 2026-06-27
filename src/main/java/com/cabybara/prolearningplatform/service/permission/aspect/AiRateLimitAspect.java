@@ -1,15 +1,16 @@
 package com.cabybara.prolearningplatform.service.permission.aspect;
 
-import com.cabybara.prolearningplatform.exception.RateLimitExceededException;
+import com.cabybara.prolearningplatform.exception.AiRateLimitExceededException;
+import com.cabybara.prolearningplatform.service.llm.UserLlmConfigService;
 import com.cabybara.prolearningplatform.service.permission.AccountPermissionService;
 import com.cabybara.prolearningplatform.service.permission.annotation.AiRateLimit;
 import com.cabybara.prolearningplatform.service.redis.RedisService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
@@ -22,16 +23,23 @@ public class AiRateLimitAspect {
     private final RedisService redisService;
     private final AuthenticationContext authenticationContext;
     private final AccountPermissionService accountPermissionService;
+    private final UserLlmConfigService userLlmConfigService;
     private final Environment env;
 
-    @Before("@annotation(aiRateLimit)")
-    public void checkRateLimit(JoinPoint joinPoint, AiRateLimit aiRateLimit) {
+    @Around("@annotation(aiRateLimit)")
+    public Object checkRateLimit(ProceedingJoinPoint joinPoint, AiRateLimit aiRateLimit) throws Throwable {
         Long userId;
         try {
             userId = authenticationContext.getCurrentUserId();
         } catch (Exception e) {
             log.warn("Rate limit check bypassed: User is not authenticated or context missing. Method: {}", joinPoint.getSignature().toShortString());
-            return;
+            return joinPoint.proceed();
+        }
+
+        // Bypassing rate limiting if user is using their own API key (BYOK)
+        if (userLlmConfigService.getDecryptedConfig(userId) != null) {
+            log.debug("[AiRateLimit] Bypassing rate limit for user {} because they are using BYOK (custom API key).", userId);
+            return joinPoint.proceed();
         }
 
         String type = aiRateLimit.type();
@@ -71,12 +79,19 @@ public class AiRateLimitAspect {
         if (count >= finalLimit) {
             Long ttl = redisService.getTTL(key);
             long remaining = (ttl != null && ttl > 0) ? ttl : finalPeriod;
-            throw new RateLimitExceededException(
-                    String.format("You have exceeded your AI API usage limit (%d requests per %s). Please try again in %s.",
-                            finalLimit, formatPeriod(finalPeriod), formatDuration(remaining))
+            String upgradeMsg = isPro 
+                    ? "Please use your own LLM API Key to get unlimited access or try again later."
+                    : "Please upgrade to PRO or use your own LLM API Key to get unlimited access.";
+            throw new AiRateLimitExceededException(
+                    String.format("You have exceeded your daily AI usage limit (%d requests). %s (Retry in %s)",
+                            finalLimit, upgradeMsg, formatDuration(remaining))
             );
         }
 
+        // Execute the target method
+        Object result = joinPoint.proceed();
+
+        // Increment count ONLY if execution was successful
         if (val == null) {
             redisService.set(key, 1, finalPeriod);
             log.debug("[AiRateLimit] First request initialized for user {}, type {}, period {}s", userId, type, finalPeriod);
@@ -86,6 +101,8 @@ public class AiRateLimitAspect {
             redisService.set(key, count + 1, remainingTtl);
             log.debug("[AiRateLimit] Request incremented for user {}, type {}, count {}/{}", userId, type, count + 1, finalLimit);
         }
+
+        return result;
     }
 
     private String formatPeriod(long seconds) {

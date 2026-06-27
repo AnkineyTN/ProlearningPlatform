@@ -161,11 +161,15 @@ public class GlobalExceptionHandler {
         return buildResponse(ex.getStatus(), ex.getMessage(), request);
     }
 
-    @ExceptionHandler(RateLimitExceededException.class)
-    public ResponseEntity<ApiResponse<Object>> handleRateLimit(
-            RateLimitExceededException ex, WebRequest request) {
+    @ExceptionHandler(AiRateLimitExceededException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAiRateLimitExceeded(
+            AiRateLimitExceededException ex, WebRequest request) {
         log.warn("Rate limit exceeded | {}", ex.getMessage());
-        return buildResponse(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request);
+        String path = request.getDescription(false).replace("uri=", "");
+        ApiResponse<Object> body = ResponseUtil.error(
+                ex.getMessage(), null, "AI_RATE_LIMIT_EXCEEDED", path
+        );
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(body);
     }
 
     @ExceptionHandler(EncryptionException.class)
