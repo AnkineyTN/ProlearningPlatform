@@ -25,6 +25,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
+import com.cabybara.prolearningplatform.service.permission.annotation.AiRateLimit;
 
 @RestController
 @RequestMapping("/roadmaps")
@@ -37,6 +38,7 @@ public class RoadmapController {
     @Operation(summary = "Generate a roadmap preview from AI (stateless)")
     @PreAuthorize("isAuthenticated() and @accountPermissionService.isPro(@authenticationContext.getCurrentUserId())")
     @PostMapping("/preview")
+    @AiRateLimit(type = "AI_GENERATION")
     public ResponseEntity<ApiResponse<RoadmapPreviewResponseDto>> previewRoadmap(
             @Valid @RequestBody RoadmapPreviewRequestDto request,
             @AuthenticationPrincipal Jwt jwt
@@ -102,6 +104,7 @@ public class RoadmapController {
     @Operation(summary = "Start learning a topic: adds a Note to the roadmap's Set and triggers async note generation")
     @PreAuthorize("isAuthenticated() and @accountPermissionService.isPro(@authenticationContext.getCurrentUserId())")
     @PostMapping("/{roadmapId}/topics/{topicId}/start")
+    @AiRateLimit(type = "AI_GENERATION")
     public ResponseEntity<ApiResponse<TopicStartResponseDto>> startTopic(
             @PathVariable Long roadmapId,
             @PathVariable Long topicId,

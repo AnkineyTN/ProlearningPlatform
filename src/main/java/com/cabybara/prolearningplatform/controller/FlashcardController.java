@@ -39,6 +39,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import com.cabybara.prolearningplatform.service.permission.annotation.AiRateLimit;
 
 @Slf4j
 @RestController
@@ -181,6 +182,7 @@ public class FlashcardController {
     // =============================================
     @Operation(method = "POST", summary = "Generate flashcard by files with AI", description = "Generate flashcard by file with AI")
     @PostMapping(value = "/ai-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AiRateLimit(type = "AI_GENERATION")
     public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByFile(
             @Parameter(description = "The ID of the Set", required = true)
             @PathVariable Long setId,
@@ -198,6 +200,7 @@ public class FlashcardController {
 
     @Operation(method = "POST", summary = "Generate flashcard by notes with AI", description = "Generate flashcard by note with AI")
     @PostMapping(value = "/ai-note")
+    @AiRateLimit(type = "AI_GENERATION")
     public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByNote(
             @Parameter(description = "The ID of the Set", required = true)
             @PathVariable Long setId,
@@ -215,6 +218,7 @@ public class FlashcardController {
 
     @Operation(method = "POST", summary = "Generate flashcard by web URL with AI", description = "Generate flashcard by web URL with AI")
     @PostMapping(value = "/ai-web")
+    @AiRateLimit(type = "AI_GENERATION")
     public ResponseData<GenerateFlashcardByAIResponseDto> generateFlashcardByWeb(
             @Parameter(description = "The ID of the Set", required = true)
             @PathVariable Long setId,
