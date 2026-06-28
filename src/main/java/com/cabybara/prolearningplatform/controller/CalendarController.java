@@ -34,8 +34,9 @@ public class CalendarController {
     @Operation(summary = "Get Google OAuth authorization URL to connect Google Calendar")
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/auth/url")
-    public ResponseEntity<ApiResponse<Map<String, String>>> getAuthorizationUrl() throws IOException {
-        String url = calendarService.getAuthorizationUrl();
+    public ResponseEntity<ApiResponse<Map<String, String>>> getAuthorizationUrl(
+            @RequestParam(defaultValue = "web") String platform) throws IOException {
+        String url = calendarService.getAuthorizationUrl(platform);
         return ResponseEntity.ok(ResponseUtil.success("Successfully", Map.of("authorizationUrl", url), null));
     }
 

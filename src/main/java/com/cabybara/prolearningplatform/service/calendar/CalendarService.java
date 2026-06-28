@@ -10,7 +10,7 @@ import java.security.GeneralSecurityException;
 public interface CalendarService {
     CalendarStatusResponse getStatus();
 
-    String getAuthorizationUrl() throws IOException;
+    String getAuthorizationUrl(String platform) throws IOException;
 
     void handleCalendarCallback(String code, String state, HttpServletResponse response) throws IOException, GeneralSecurityException;
 

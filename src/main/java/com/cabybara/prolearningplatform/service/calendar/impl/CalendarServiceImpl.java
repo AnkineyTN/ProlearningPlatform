@@ -26,6 +26,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -50,16 +52,23 @@ public class CalendarServiceImpl implements CalendarService {
     @Value("${google.calendar.redirect-uri}")
     private String calendarRedirectUri;
 
-    @Value("${google.calendar.frontend-success-url}")
-    private String frontendSuccessUrl;
+    @Value("${google.calendar.frontend-success-url-web}")
+    private String frontendSuccessUrlWeb;
 
-    @Value("${google.calendar.frontend-failure-url}")
-    private String frontendFailureUrl;
+    @Value("${google.calendar.frontend-failure-url-web}")
+    private String frontendFailureUrlWeb;
+
+    @Value("${google.calendar.frontend-success-url-mobile}")
+    private String frontendSuccessUrlMobile;
+
+    @Value("${google.calendar.frontend-failure-url-mobile}")
+    private String frontendFailureUrlMobile;
 
     private static final String APP_NAME = "Prolearning Platform";
     private static final String STATE_KEY_PREFIX = "calendar_state:";
     private static final int STATE_TTL_SECONDS = 600;
     private static final String PRIMARY_CALENDAR = "primary";
+    private static final String PLATFORM_MOBILE = "mobile";
 
     private GoogleAuthorizationCodeFlow buildCalendarFlow() throws IOException {
         return new GoogleAuthorizationCodeFlow.Builder(
@@ -103,10 +112,10 @@ public class CalendarServiceImpl implements CalendarService {
     }
 
     @Override
-    public String getAuthorizationUrl() throws IOException {
+    public String getAuthorizationUrl(String platform) throws IOException {
         Long userId = authenticationContext.getCurrentUserId();
         String state = UUID.randomUUID().toString();
-        redisService.set(STATE_KEY_PREFIX + state, userId.toString(), STATE_TTL_SECONDS);
+        redisService.set(STATE_KEY_PREFIX + state, userId + "|" + platform, STATE_TTL_SECONDS);
 
         return buildCalendarFlow()
                 .newAuthorizationUrl()
@@ -120,18 +129,23 @@ public class CalendarServiceImpl implements CalendarService {
     @Transactional
     public void handleCalendarCallback(String code, String state, HttpServletResponse response) throws IOException, GeneralSecurityException {
         if (code == null || state == null) {
-            response.sendRedirect(frontendFailureUrl + "?reason=access_denied");
+            response.sendRedirect(buildFailureUrl(frontendFailureUrlWeb, "access_denied", "User denied access"));
             return;
         }
 
         Object rawValue = redisService.get(STATE_KEY_PREFIX + state);
         if (rawValue == null) {
-            response.sendRedirect(frontendFailureUrl + "?reason=invalid_state");
+            response.sendRedirect(buildFailureUrl(frontendFailureUrlWeb, "invalid_state", "Invalid or expired state"));
             return;
         }
         redisService.delete(STATE_KEY_PREFIX + state);
 
-        Long userId = Long.parseLong(rawValue.toString());
+        String[] parts = rawValue.toString().split("\\|", 2);
+        Long userId = Long.parseLong(parts[0]);
+        String platform = parts.length > 1 ? parts[1] : "web";
+
+        String successUrl = PLATFORM_MOBILE.equals(platform) ? frontendSuccessUrlMobile : frontendSuccessUrlWeb;
+        String failureBaseUrl = PLATFORM_MOBILE.equals(platform) ? frontendFailureUrlMobile : frontendFailureUrlWeb;
 
         TokenResponse tokenResponse;
         try {
@@ -141,7 +155,7 @@ public class CalendarServiceImpl implements CalendarService {
                     .execute();
         } catch (Exception e) {
             log.error("Failed to exchange calendar auth code for userId {}", userId, e);
-            response.sendRedirect(frontendFailureUrl + "?reason=token_exchange_failed");
+            response.sendRedirect(buildFailureUrl(failureBaseUrl, "token_exchange_failed", "Failed to exchange authorization code"));
             return;
         }
 
@@ -162,7 +176,13 @@ public class CalendarServiceImpl implements CalendarService {
         }
 
         calendarSettingRepository.save(setting);
-        response.sendRedirect(frontendSuccessUrl);
+        response.sendRedirect(successUrl);
+    }
+
+    private String buildFailureUrl(String baseUrl, String error, String message) {
+        return baseUrl
+                + "?error=" + URLEncoder.encode(error, StandardCharsets.UTF_8)
+                + "&message=" + URLEncoder.encode(message, StandardCharsets.UTF_8);
     }
 
     @Override
