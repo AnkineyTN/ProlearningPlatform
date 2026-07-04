@@ -310,6 +310,7 @@ public class NoteServiceImpl implements NoteService {
 
     // [PATCH]: /sets/{setId}/notes/update/{noteId}
     @Override
+    @Transactional
     @CacheEvict(value = "note_detail", allEntries = true)
     public void updateNote(Long setId, Long noteId, UpdateNoteRequestDTO request) {
         Long userId = authenticationContext.getCurrentUserId();
