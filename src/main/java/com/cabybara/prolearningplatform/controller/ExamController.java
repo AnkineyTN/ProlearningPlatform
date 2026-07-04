@@ -100,6 +100,7 @@ public class ExamController {
                 .body(ResponseUtil.success("Successfully", examResponseDto, null));
     }
 
+    @PreAuthorize("isAuthenticated() and @accountPermissionService.canCreateExam(@authenticationContext.getCurrentUserId())")
     @PostMapping()
     public ResponseEntity<ApiResponse<ExamResponseDto>> createExam(
             @RequestBody @Valid CreateExamRequestDto createExamRequestDto,
@@ -112,6 +113,7 @@ public class ExamController {
                 .body(ResponseUtil.success("Create exam successfully", examResponseDto, null));
     }
 
+    @PreAuthorize("isAuthenticated() and @examPermissionService.canEdit(@authenticationContext.getCurrentUserId(), #examId)")
     @PutMapping("/{examId}")
     public ResponseEntity<ApiResponse<ExamResponseDto>> updateExam(
             @PathVariable Long setId,
@@ -125,6 +127,7 @@ public class ExamController {
                 .body(ResponseUtil.success("Update exam successfully", response, null));
     }
 
+    @PreAuthorize("@examPermissionService.isOwner(@authenticationContext.getCurrentUserId(), #examId)")
     @DeleteMapping("/{examId}")
     public ResponseEntity<ApiResponse<String>> deleteExam(
             @PathVariable Long setId,
@@ -137,7 +140,7 @@ public class ExamController {
                 .body(ResponseUtil.success("Delete exam successfully", null, null));
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @examPermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #examId)")
     @GetMapping("/{examId}/questions/take")
     public ResponseEntity<ApiResponse<List<ExamQuestionViewDto>>> getQuestionsForTaking(
             @PathVariable Long setId,
@@ -149,6 +152,7 @@ public class ExamController {
                 .body(ResponseUtil.success("Get questions successfully", questions, null));
     }
 
+    @PreAuthorize("isAuthenticated() and @examPermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #examId)")
     @GetMapping("/{examId}/questions")
     public ResponseEntity<ApiResponse<QuestionListResponseDto>> getAllQuestionsByExam(
             @PathVariable Long setId,
@@ -184,6 +188,7 @@ public class ExamController {
                 ));
     }
 
+    @PreAuthorize("isAuthenticated() and @examPermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #examId)")
     @GetMapping("/{examId}/questions/{questionId}")
     public ResponseEntity<ApiResponse<QuestionResponseDto>> getQuestionById(
             @PathVariable Long setId,
@@ -197,6 +202,7 @@ public class ExamController {
                 .body(ResponseUtil.success("Get question successfully", question, null));
     }
 
+    @PreAuthorize("isAuthenticated() and @examPermissionService.canEdit(@authenticationContext.getCurrentUserId(), #examId)")
     @PostMapping("/{examId}/questions")
     public ResponseEntity<ApiResponse<QuestionListResponseDto>> createQuestion(
             @PathVariable Long examId,
@@ -209,6 +215,7 @@ public class ExamController {
                 .body(ResponseUtil.success("Create question successfully", response, null));
     }
 
+    @PreAuthorize("isAuthenticated() and @examPermissionService.canEdit(@authenticationContext.getCurrentUserId(), #examId)")
     @PutMapping("/{examId}/questions/{questionId}")
     public ResponseEntity<ApiResponse<QuestionResponseDto>> updateQuestion(
             @PathVariable Long setId,
@@ -223,6 +230,7 @@ public class ExamController {
                 .body(ResponseUtil.success("Update question successfully", response, null));
     }
 
+    @PreAuthorize("isAuthenticated() and @examPermissionService.canEdit(@authenticationContext.getCurrentUserId(), #examId)")
     @DeleteMapping("/{examId}/questions/{questionId}")
     public ResponseEntity<ApiResponse<Void>> deleteQuestion(
             @PathVariable Long setId,
@@ -240,7 +248,7 @@ public class ExamController {
             summary = "Start a new exam attempt",
             description = "Initializes a new attempt record for the specified exam and returns the initial attempt data."
     )
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @examPermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #examId)")
     @PostMapping("/{examId}/attempts")
     public ResponseEntity<ApiResponse<ExamAttemptDto>> startAttempt(
             @PathVariable Long setId,
@@ -335,7 +343,7 @@ public class ExamController {
                 .body(ResponseUtil.success("Exam generated from flashcard", exam, null));
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @examPermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #examId)")
     @PostMapping("/{examId}/generate-review-exam")
     public ResponseEntity<ApiResponse<ExamResponseDto>> generateReviewExam(
             @PathVariable Long setId,

@@ -128,8 +128,14 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
 
     @Override
     public FlashcardStudySessionResultResponseDto getSessionResult(Long sessionId) throws BadRequestException {
+        Long userId = authenticationContext.getCurrentUserId();
+
         FlashcardStudySession session = flashcardStudySessionRepository.findById(sessionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
+
+        if (!session.getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("Access denied: session does not belong to current user");
+        }
 
         if (session.getStatus() != FlashcardStudySessionStatus.COMPLETED) {
             throw new FlashcardStudySessionException("Session has not completed");

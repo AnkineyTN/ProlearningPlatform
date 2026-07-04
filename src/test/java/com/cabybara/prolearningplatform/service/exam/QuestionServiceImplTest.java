@@ -5,7 +5,6 @@ import com.cabybara.prolearningplatform.dto.request.exam.QuestionOptionDto;
 import com.cabybara.prolearningplatform.dto.request.exam.UpdateQuestionRequestDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionListResponseDto;
 import com.cabybara.prolearningplatform.dto.response.exam.QuestionResponseDto;
-import com.cabybara.prolearningplatform.enums.QuestionType;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.mapper.ExamMapper;
 import com.cabybara.prolearningplatform.model.exam.Exam;
@@ -16,6 +15,7 @@ import com.cabybara.prolearningplatform.repository.ExamQuestionRepository;
 import com.cabybara.prolearningplatform.repository.ExamRepository;
 import com.cabybara.prolearningplatform.repository.QuestionRepository;
 import com.cabybara.prolearningplatform.service.exam.impl.QuestionServiceImpl;
+import com.cabybara.prolearningplatform.service.permission.impl.ExamPermissionService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -47,13 +46,16 @@ class QuestionServiceImplTest {
     private ExamMapper examMapper;
     @Mock
     private AuthenticationContext authenticationContext;
+    @Mock
+    private ExamPermissionService examPermissionService;
 
     @Test
     void createQuestionsWithOptions() {
         QuestionServiceImpl service = new QuestionServiceImpl(
-                examRepository, questionRepository, examQuestionRepository, examMapper, authenticationContext);
+                examRepository, questionRepository, examQuestionRepository, examMapper, authenticationContext, examPermissionService);
 
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
+        when(examPermissionService.canEdit(1L, 1L)).thenReturn(true);
 
         Exam exam = new Exam();
         exam.setId(1L);
@@ -98,9 +100,10 @@ class QuestionServiceImplTest {
     @Test
     void createQuestionWithoutCorrectOptionSavesAnyway() {
         QuestionServiceImpl service = new QuestionServiceImpl(
-                examRepository, questionRepository, examQuestionRepository, examMapper, authenticationContext);
+                examRepository, questionRepository, examQuestionRepository, examMapper, authenticationContext, examPermissionService);
 
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
+        when(examPermissionService.canEdit(1L, 1L)).thenReturn(true);
 
         Exam exam = new Exam();
         exam.setId(1L);
@@ -132,8 +135,10 @@ class QuestionServiceImplTest {
     @Test
     void updateQuestionChangesOptions() {
         QuestionServiceImpl service = new QuestionServiceImpl(
-                examRepository, questionRepository, examQuestionRepository, examMapper, authenticationContext);
+                examRepository, questionRepository, examQuestionRepository, examMapper, authenticationContext, examPermissionService);
 
+        when(authenticationContext.getCurrentUserId()).thenReturn(1L);
+        when(examPermissionService.canEdit(1L, 1L)).thenReturn(true);
         when(examRepository.existsById(1L)).thenReturn(true);
 
         Question existing = new Question();
@@ -171,8 +176,10 @@ class QuestionServiceImplTest {
     @Test
     void deleteQuestionRemovesFromExam() {
         QuestionServiceImpl service = new QuestionServiceImpl(
-                examRepository, questionRepository, examQuestionRepository, examMapper, authenticationContext);
+                examRepository, questionRepository, examQuestionRepository, examMapper, authenticationContext, examPermissionService);
 
+        when(authenticationContext.getCurrentUserId()).thenReturn(1L);
+        when(examPermissionService.canEdit(1L, 1L)).thenReturn(true);
         when(examRepository.existsById(1L)).thenReturn(true);
         when(examQuestionRepository.findByExamIdAndQuestionId(1L, 1L))
                 .thenReturn(Optional.of(new ExamQuestion()));
@@ -186,8 +193,10 @@ class QuestionServiceImplTest {
     @Test
     void deleteQuestionFromNonExistentExamThrows() {
         QuestionServiceImpl service = new QuestionServiceImpl(
-                examRepository, questionRepository, examQuestionRepository, examMapper, authenticationContext);
+                examRepository, questionRepository, examQuestionRepository, examMapper, authenticationContext, examPermissionService);
 
+        when(authenticationContext.getCurrentUserId()).thenReturn(1L);
+        when(examPermissionService.canEdit(1L, 99L)).thenReturn(true);
         when(examRepository.existsById(99L)).thenReturn(false);
 
         assertThrows(ResourceNotFoundException.class, () -> service.deleteQuestion(99L, 1L));

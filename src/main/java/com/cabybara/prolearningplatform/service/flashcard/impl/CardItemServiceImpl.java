@@ -14,12 +14,14 @@ import com.cabybara.prolearningplatform.repository.FlashcardRepository;
 import com.cabybara.prolearningplatform.service.flashcard.CardItemService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
+import com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermissionService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -35,12 +37,17 @@ public class CardItemServiceImpl implements CardItemService {
     private final CardItemRepository cardItemRepository;
     private final AssetService assetService;
     private final FlashcardRepository flashcardRepository;
+    private final FlashcardPermissionService flashcardPermissionService;
 
     @Override
     @Transactional
     @CacheEvict(value = "flashcard_detail", allEntries = true)
     public DetailFlashcardResponseDto addCardToFlashcard(Long setId, Long flashcardId, List<CardItemCreateRequestDto> dtos) {
         Long userId = authenticationContext.getCurrentUserId();
+
+        if (!flashcardPermissionService.canEdit(userId, flashcardId)) {
+            throw new AccessDeniedException("Access denied: cannot add cards to flashcard " + flashcardId);
+        }
 
         Flashcard flashcard = flashcardService.getFlashcardById(flashcardId);
 
@@ -76,8 +83,15 @@ public class CardItemServiceImpl implements CardItemService {
     @CacheEvict(value = "flashcard_detail", allEntries = true)
     public CardItemResponseDto updateCardItem(Long setId, Long flashcardId, Long cardId, CardItemUpdatingRequestDto updateFlashcardRequestDto) {
         Long userId = authenticationContext.getCurrentUserId();
+
         CardItem cardItem = cardItemRepository.findById(cardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Card Item with id: " + cardId + " not found."));
+
+        if (!cardItem.getFlashcard().getId().equals(flashcardId)
+                || !cardItem.getFlashcard().getSet().getId().equals(setId)
+                || !cardItem.getFlashcard().getSet().getUser().getId().equals(userId)) {
+            throw new AccessDeniedException("Access denied: card does not belong to current user");
+        }
 
         cardItemMapper.updateCardFromDto(updateFlashcardRequestDto, cardItem);
 
@@ -123,7 +137,7 @@ public class CardItemServiceImpl implements CardItemService {
     @Override
     @Transactional
     @CacheEvict(value = "flashcard_detail", allEntries = true)
-    public void deleteCard(Long setId, Long flashcardId, Long cardId) throws BadRequestException {
+    public void deleteCard(Long setId, Long flashcardId, Long cardId) {
         Long userId = authenticationContext.getCurrentUserId();
         CardItem cardItem = cardItemRepository.findById(cardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Card not found."));
@@ -132,7 +146,7 @@ public class CardItemServiceImpl implements CardItemService {
                 !cardItem.getFlashcard().getSet().getId().equals(setId) ||
                 !cardItem.getFlashcard().getSet().getUser().getId().equals(userId)) {
 
-            throw new BadRequestException("The card does not match the provided ownership criteria.");
+            throw new AccessDeniedException("The card does not match the provided ownership criteria.");
         }
 
         if (cardItem.getImage() != null) {
@@ -146,8 +160,15 @@ public class CardItemServiceImpl implements CardItemService {
     @Override
     public List<CardItem> getCardsForReview(Long setId, Long flashcardId, int limit) {
         Long userId = authenticationContext.getCurrentUserId();
-        if (!flashcardRepository.existsBySetIdAndIdAndUserId(setId, flashcardId, userId)) {
-            throw new ResourceNotFoundException("Flashcard not found or invalid");
+        Flashcard flashcard = flashcardRepository.findById(flashcardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id " + flashcardId + " not found"));
+
+        if (!Objects.equals(flashcard.getUser().getId(), userId)) {
+            throw new AccessDeniedException("You are not allowed to review this flashcard.");
+        }
+
+        if (!Objects.equals(flashcard.getSet().getId(), setId)) {
+            throw new ResourceNotFoundException("Flashcard does not belong to this set.");
         }
 
         List<CardItem> dueCards = cardItemRepository.findDueCards(flashcardId, OffsetDateTime.now(), PageRequest.of(0, limit));
@@ -167,8 +188,15 @@ public class CardItemServiceImpl implements CardItemService {
     @Override
     public List<CardItem> getAllCardsForReview(Long setId, Long flashcardId, int limit) {
         Long userId = authenticationContext.getCurrentUserId();
-        if (!flashcardRepository.existsBySetIdAndIdAndUserId(setId, flashcardId, userId)) {
-            throw new ResourceNotFoundException("Flashcard not found or invalid");
+        Flashcard flashcard = flashcardRepository.findById(flashcardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id " + flashcardId + " not found"));
+
+        if (!Objects.equals(flashcard.getUser().getId(), userId)) {
+            throw new AccessDeniedException("You are not allowed to review this flashcard.");
+        }
+
+        if (!Objects.equals(flashcard.getSet().getId(), setId)) {
+            throw new ResourceNotFoundException("Flashcard does not belong to this set.");
         }
 
         // Return all cards in random order for review mode
@@ -178,7 +206,7 @@ public class CardItemServiceImpl implements CardItemService {
     @Override
     @Transactional
     @CacheEvict(value = "flashcard_detail", allEntries = true)
-    public void deleteCards(Long setId, Long flashcardId, List<Long> cardIds) throws BadRequestException {
+    public void deleteCards(Long setId, Long flashcardId, List<Long> cardIds) {
         if (cardIds.isEmpty()) {
             return;
         }
@@ -187,14 +215,14 @@ public class CardItemServiceImpl implements CardItemService {
         List<CardItem> cards = cardItemRepository.findAllWithImageByIdIn(cardIds);
 
         if (cards.isEmpty()) {
-            throw new BadRequestException("Flashcard not found or access denied.");
+            throw new ResourceNotFoundException("Cards not found with given IDs.");
         }
 
         for (CardItem card : cards) {
             if (!card.getFlashcard().getId().equals(flashcardId) ||
                     !card.getFlashcard().getSet().getId().equals(setId) ||
                     !card.getFlashcard().getSet().getUser().getId().equals(userId)) {
-                throw new BadRequestException("The card does not match the provided ownership criteria.");
+                throw new AccessDeniedException("The card does not match the provided ownership criteria.");
             }
         }
 
@@ -244,18 +272,18 @@ public class CardItemServiceImpl implements CardItemService {
             List<CardItem> cardItemsToUpdate,
             Map<Long, CardItemUpdatingRequestDto> updateDtoMap,
             Long userId
-    ) throws SecurityException {
+    ) {
         for (CardItem cardItem : cardItemsToUpdate) {
             if (!cardItem.getFlashcard().getSet().getId().equals(setId)) {
-                throw new SecurityException("Card Item with ID " + cardItem.getId() + " does not belong to Set ID " + setId);
+                throw new AccessDeniedException("Card Item with ID " + cardItem.getId() + " does not belong to Set ID " + setId);
             }
 
             if (!cardItem.getFlashcard().getId().equals(flashcardId)) {
-                throw new SecurityException("Card Item with ID " + cardItem.getId() + " is linked to the wrong Flashcard.");
+                throw new AccessDeniedException("Card Item with ID " + cardItem.getId() + " is linked to the wrong Flashcard.");
             }
 
             if (!cardItem.getFlashcard().getUser().getId().equals(userId)) {
-                throw new SecurityException("Access Denied: Card Item with ID " + cardItem.getId() +
+                throw new AccessDeniedException("Access Denied: Card Item with ID " + cardItem.getId() +
                         " does not belong to the current User ID " + userId);
             }
 
@@ -277,7 +305,7 @@ public class CardItemServiceImpl implements CardItemService {
         if (!cardItem.getFlashcard().getId().equals(flashcardId) ||
                 !cardItem.getFlashcard().getSet().getId().equals(setId) ||
                 !cardItem.getFlashcard().getSet().getUser().getId().equals(userId)) {
-            throw new BadRequestException("The card does not match the provided ownership criteria.");
+            throw new AccessDeniedException("The card does not match the provided ownership criteria.");
         }
 
         if (cardItem.getImage() == null) {

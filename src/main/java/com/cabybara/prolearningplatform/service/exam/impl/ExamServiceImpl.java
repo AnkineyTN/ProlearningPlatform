@@ -193,6 +193,11 @@ public class ExamServiceImpl implements ExamService {
     @Override
     @org.springframework.transaction.annotation.Transactional
     public ExamResponseDto createReviewExamFromQuestions(Long examId, List<Long> questionIds) {
+        Long userId = authenticationContext.getCurrentUserId();
+        if (!examPermissionService.hasAccess(userId, examId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: cannot access exam " + examId);
+        }
+
         Exam sourceExam = examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found with id: " + examId));
 
@@ -266,8 +271,13 @@ public class ExamServiceImpl implements ExamService {
     @Transactional
     @CacheEvict(value = "exam_detail", allEntries = true)
     public ExamResponseDto updateExam(Long setId, Long examId, UpdateExamRequestDto updateExamRequestDto) {
+        Long userId = authenticationContext.getCurrentUserId();
         if (!examRepository.existsBySetIdAndId(setId, examId)) {
             throw new ResourceNotFoundException("Cannot find exam with id: " + examId + " in set with id: " + setId);
+        }
+
+        if (!examPermissionService.canEdit(userId, examId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: cannot edit exam " + examId);
         }
 
         Exam exam = examRepository.findById(examId)
@@ -284,8 +294,13 @@ public class ExamServiceImpl implements ExamService {
     @Transactional
     @CacheEvict(value = "exam_detail", allEntries = true)
     public void deleteExam(Long setId, Long examId) {
+        Long userId = authenticationContext.getCurrentUserId();
         Exam exam = examRepository.findBySetIdAndId(setId, examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cannot find exam with id: " + examId));
+
+        if (!examPermissionService.isOwner(userId, examId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: cannot delete exam " + examId);
+        }
 
         examRepository.delete(exam);
         setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());

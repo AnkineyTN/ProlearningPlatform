@@ -32,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.util.Optional;
 
@@ -127,7 +128,7 @@ class FlashcardServiceImplTest {
 
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
         when(userService.getUserById(1L)).thenReturn(user);
-        when(setService.getSetById(1L)).thenReturn(set);
+        when(setRepository.findById(1L)).thenReturn(Optional.of(set));
         when(flashcardRepository.existsBySetIdAndTitle(1L, "My Flashcard")).thenReturn(false);
         when(flashcardMapper.toFlashcard(request)).thenReturn(flashcard);
         when(flashcardRepository.save(captor.capture())).thenReturn(savedFlashcard);
@@ -165,7 +166,7 @@ class FlashcardServiceImplTest {
 
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
         when(userService.getUserById(1L)).thenReturn(user);
-        when(setService.getSetById(1L)).thenReturn(set);
+        when(setRepository.findById(1L)).thenReturn(Optional.of(set));
         when(flashcardRepository.existsBySetIdAndTitle(1L, "dup")).thenReturn(true);
 
         assertThrows(ResourceAlreadyExistsException.class, () -> {
@@ -186,17 +187,19 @@ class FlashcardServiceImplTest {
         );
 
         User user = TestFixtures.user(1L);
+        Set set = new Set();
+        set.setId(1L);
         Flashcard flashcard = new Flashcard();
         flashcard.setId(1L);
         flashcard.setUser(user);
+        flashcard.setSet(set);
 
         when(flashcardRepository.findById(1L)).thenReturn(Optional.of(flashcard));
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
-        when(flashcardRepository.deleteByIdAndSetIdAndSetUserId(1L, 1L, 1L)).thenReturn(1);
 
         service.deleteFlashcard(1L, 1L);
 
-        verify(flashcardRepository).deleteByIdAndSetIdAndSetUserId(1L, 1L, 1L);
+        verify(flashcardRepository).delete(flashcard);
     }
 
     @Test
@@ -216,11 +219,12 @@ class FlashcardServiceImplTest {
 
         when(flashcardRepository.findById(1L)).thenReturn(Optional.of(flashcard));
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
-        when(flashcardRepository.deleteByIdAndSetIdAndSetUserId(1L, 1L, 1L)).thenReturn(0);
 
-        assertThrows(BadRequestException.class, () -> {
+        assertThrows(AccessDeniedException.class, () -> {
             service.deleteFlashcard(1L, 1L);
         });
+
+        verify(flashcardRepository, never()).delete(any());
     }
 
     @Test
@@ -234,10 +238,13 @@ class FlashcardServiceImplTest {
         );
 
         User user = TestFixtures.user(1L);
+        Set set = new Set();
+        set.setId(1L);
         Flashcard existingFlashcard = new Flashcard();
         existingFlashcard.setId(1L);
         existingFlashcard.setTitle("old title");
         existingFlashcard.setUser(user);
+        existingFlashcard.setSet(set);
 
         FlashcardUpdatingRequestDto request = new FlashcardUpdatingRequestDto();
         request.setTitle("new title");
@@ -247,7 +254,7 @@ class FlashcardServiceImplTest {
         ArgumentCaptor<Flashcard> captor = ArgumentCaptor.forClass(Flashcard.class);
 
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
-        when(flashcardRepository.getFlashcardByIdAndSetIdAndSetUserId(1L, 1L, 1L))
+        when(flashcardRepository.findById(1L))
                 .thenReturn(Optional.of(existingFlashcard));
         doAnswer(invocation -> {
             FlashcardUpdatingRequestDto dto = invocation.getArgument(0);

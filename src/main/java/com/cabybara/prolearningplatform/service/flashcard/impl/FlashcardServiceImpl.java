@@ -38,6 +38,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -126,7 +127,12 @@ public class FlashcardServiceImpl implements FlashcardService {
         Long userId = authenticationContext.getCurrentUserId();
         User userFlashcard = userService.getUserById(userId);
 
-        Set setFlashcard = setService.getSetById(setId);
+        Set setFlashcard = setRepository.findById(setId)
+                .orElseThrow(() -> new ResourceNotFoundException("Set with id " + setId + " not found"));
+
+        if (!Objects.equals(setFlashcard.getUser().getId(), userId)) {
+            throw new AccessDeniedException("You are not allowed to add flashcards to this set.");
+        }
 
         if (flashcardRepository.existsBySetIdAndTitle(setId, flashcardCreateRequestDto.getTitle())) {
             throw new ResourceAlreadyExistsException("Flashcard already exists in this set");
@@ -224,12 +230,17 @@ public class FlashcardServiceImpl implements FlashcardService {
     public void deleteFlashcard(Long setId, Long flashcardId) throws BadRequestException {
         Long userId = authenticationContext.getCurrentUserId();
         Flashcard deletedFlashcard = flashcardRepository.findById(flashcardId)
-                .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id: " + flashcardId + "not found!"));
-        int deletedCount = flashcardRepository.deleteByIdAndSetIdAndSetUserId(flashcardId, setId, userId);
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id: " + flashcardId + " not found!"));
 
-        if (deletedCount == 0) {
-            throw new BadRequestException("Flashcard not found or access denied.");
+        if (!Objects.equals(deletedFlashcard.getUser().getId(), userId)) {
+            throw new AccessDeniedException("You are not allowed to delete this flashcard.");
         }
+
+        if (!Objects.equals(deletedFlashcard.getSet().getId(), setId)) {
+            throw new BadRequestException("Flashcard does not belong to this set.");
+        }
+
+        flashcardRepository.delete(deletedFlashcard);
         setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
     }
 
@@ -237,12 +248,17 @@ public class FlashcardServiceImpl implements FlashcardService {
     @Transactional
     @CacheEvict(value = "flashcard_detail", allEntries = true)
     public FlashcardResponseDto updateFlashcard(Long setId, Long flashcardId, FlashcardUpdatingRequestDto flashcardUpdatingRequestDto) throws BadRequestException {
-        Flashcard flashcard = flashcardRepository.getFlashcardByIdAndSetIdAndSetUserId(
-                        flashcardId,
-                        setId,
-                        authenticationContext.getCurrentUserId()
-                )
-                .orElseThrow(() -> new BadRequestException("Flashcard not found or access denied."));
+        Long userId = authenticationContext.getCurrentUserId();
+        Flashcard flashcard = flashcardRepository.findById(flashcardId)
+                .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id: " + flashcardId + " not found!"));
+
+        if (!Objects.equals(flashcard.getUser().getId(), userId)) {
+            throw new AccessDeniedException("You are not allowed to update this flashcard.");
+        }
+
+        if (!Objects.equals(flashcard.getSet().getId(), setId)) {
+            throw new BadRequestException("Flashcard does not belong to this set.");
+        }
 
         flashcardMapper.updateFlashcardFromDto(flashcardUpdatingRequestDto, flashcard);
         Flashcard updatedFlashcard = flashcardRepository.save(flashcard);

@@ -100,7 +100,7 @@ class NoteServiceImplTest {
 
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(setRepository.findByIdAndUserId(100L, 1L)).thenReturn(Optional.of(set));
+        when(setRepository.findById(100L)).thenReturn(Optional.of(set));
         when(noteRepository.save(any(Note.class))).thenAnswer(invocation -> {
             Note note = invocation.getArgument(0);
             note.setId(200L);
@@ -261,7 +261,7 @@ class NoteServiceImplTest {
 
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(setRepository.findByIdAndUserId(100L, 1L)).thenReturn(Optional.of(set));
+        when(setRepository.findById(100L)).thenReturn(Optional.of(set));
         when(aiNoteService.generateNoteContent(request)).thenReturn(aiResponse);
         when(noteRepository.save(any(Note.class))).thenAnswer(invocation -> {
             Note note = invocation.getArgument(0);

@@ -116,7 +116,7 @@ public class NoteController {
     }
 
     @Operation(summary = "Delete document in note", description = "Delete document in note")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @notePermissionService.canEdit(@authenticationContext.getCurrentUserId(), #request.getNoteId())")
     @DeleteMapping("/delete-doc")
     public ResponseData<Void> deleteDocInNote(
             @Parameter(description = "The ID of the Set", required = true)
@@ -152,7 +152,7 @@ public class NoteController {
     }
 
     @Operation(summary = "Delete image in note", description = "Delete image in note")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @notePermissionService.canEdit(@authenticationContext.getCurrentUserId(), #request.getNoteId())")
     @DeleteMapping("/delete-img")
     public ResponseData<Void> deleteImgInNote(
             @Parameter(description = "The ID of the Set", required = true)
@@ -333,6 +333,7 @@ public class NoteController {
     // ##################################################
 
     @Operation(method = "POST", summary = "Convert file to vector DB", description = "Convert file to vector DB to query when explaining with AI")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "/convert-to-vectordb")
     @AiRateLimit(type = "AI_GENERATION")
     public ResponseData<Void> convertFileToVector(@Valid @RequestBody ConvertFileToVectorRequestDTO request) {
@@ -347,6 +348,7 @@ public class NoteController {
     }
 
     @Operation(method = "POST", summary = "Explain note with AI", description = "Explain selected text in note with AI")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "/explain")
     @AiRateLimit(type = "AI_INTERACTIVE")
     public ResponseData<ExplainNoteResponseDTO> explainNote(@Valid @RequestBody ExplainNoteRequestDTO request) {
@@ -361,6 +363,7 @@ public class NoteController {
     }
 
     @Operation(method = "POST", summary = "Summarize file with AI", description = "Summarize file with AI")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "/summarize")
     @AiRateLimit(type = "AI_INTERACTIVE")
     public ResponseData<SummarizeFileResponseDTO> summarizeFile(@Valid @RequestBody SummarizeFileRequestDTO request) {
@@ -419,7 +422,7 @@ public class NoteController {
     }
 
     @Operation(summary = "Get explanation by ID", description = "Get a specific explanation by its ID")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated() and @notePermissionService.hasAccess(@authenticationContext.getCurrentUserId(), #noteId)")
     @GetMapping("/{noteId}/explains/{explainId}")
     public ResponseData<NoteExplainResponseDTO> getExplanationById(
         @PathVariable Long setId,

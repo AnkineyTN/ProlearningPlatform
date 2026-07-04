@@ -5,6 +5,7 @@ import com.cabybara.prolearningplatform.dto.response.note.RealTimeNoteUpdateResp
 import com.cabybara.prolearningplatform.dto.response.note.ActiveUsersResponseDTO;
 import com.cabybara.prolearningplatform.service.note.NoteService;
 import com.cabybara.prolearningplatform.service.note.RealTimeNoteSessionService;
+import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -14,6 +15,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 
 import java.util.Map;
@@ -37,6 +39,7 @@ public class NoteWebSocketController {
     private final RealTimeNoteSessionService sessionService;
     private final SimpMessagingTemplate messagingTemplate;
     private final NoteService noteService;
+    private final NotePermissionService notePermissionService;
 
     /**
      * Handle user joining a note editing session
@@ -48,10 +51,14 @@ public class NoteWebSocketController {
             @DestinationVariable Long noteId,
             SimpMessageHeaderAccessor headerAccessor
     ) {
-        String sessionId = headerAccessor.getSessionId();
-        // Extract user info from session attributes (set during subscription)
         Long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
         String username = (String) headerAccessor.getSessionAttributes().get("username");
+
+        if (!notePermissionService.hasAccess(userId, noteId)) {
+            throw new AccessDeniedException("Access denied: cannot join note " + noteId);
+        }
+
+        String sessionId = headerAccessor.getSessionId();
 
         log.info("User {} ({}) joined note {} in set {}", userId, username, noteId, setId);
         sessionService.addUserSession(setId, noteId, sessionId, userId, username);
@@ -75,6 +82,11 @@ public class NoteWebSocketController {
     ) {
         Long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
         String username = (String) headerAccessor.getSessionAttributes().get("username");
+
+        if (!notePermissionService.canEdit(userId, noteId)) {
+            throw new AccessDeniedException("Access denied: cannot update note " + noteId);
+        }
+
         String sessionId = headerAccessor.getSessionId();
 
         log.info("Note {} content updated by user {} ({})", noteId, userId, username);
@@ -113,6 +125,11 @@ public class NoteWebSocketController {
     ) {
         Long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
         String username = (String) headerAccessor.getSessionAttributes().get("username");
+
+        if (!notePermissionService.hasAccess(userId, noteId)) {
+            throw new AccessDeniedException("Access denied: cannot access note " + noteId);
+        }
+
         String sessionId = headerAccessor.getSessionId();
 
         // Use cursor position sent by frontend
@@ -140,6 +157,12 @@ public class NoteWebSocketController {
             @DestinationVariable Long noteId,
             SimpMessageHeaderAccessor headerAccessor
     ) {
+        Long userId = (Long) headerAccessor.getSessionAttributes().get("userId");
+
+        if (!notePermissionService.hasAccess(userId, noteId)) {
+            throw new AccessDeniedException("Access denied: cannot access note " + noteId);
+        }
+
         ActiveUsersResponseDTO activeUsers = sessionService.getActiveUsers(noteId);
         messagingTemplate.convertAndSend("/topic/notes/" + setId + "/" + noteId + "/active-users", activeUsers);
     }

@@ -67,10 +67,15 @@ public class SetServiceImpl implements SetService {
     }
 
     @Override
-    @Cacheable(value = "set_detail", key = "#setId", sync = true)
+    @Cacheable(value = "set_detail", key = "@authenticationContext.getCurrentUserId() + ':' + #setId", sync = true)
     public SetResponseDto getSet(Long setId) {
+        Long userId = authenticationContext.getCurrentUserId();
         Set set = setRepository.findById(setId)
                 .orElseThrow(() -> new ResourceNotFoundException("Set with id " + setId + " not found"));
+
+        if (!Objects.equals(set.getUser().getId(), userId)) {
+            throw new AccessDeniedException("You are not allowed to view this set.");
+        }
 
         return setMapper.toSetResponseDto(set);
     }
@@ -102,7 +107,7 @@ public class SetServiceImpl implements SetService {
         Set set = setRepository.findById(setId)
                 .orElseThrow(() -> new ResourceNotFoundException("Set with id: " + setId + " not found!"));
 
-        if (set.getUser().getId() != userId) {
+        if (!Objects.equals(set.getUser().getId(), userId)) {
             throw new AccessDeniedException("You are not allowed to update this set.");
         }
 

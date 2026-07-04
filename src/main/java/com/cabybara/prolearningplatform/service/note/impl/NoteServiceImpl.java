@@ -34,6 +34,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,6 +42,7 @@ import org.springframework.data.domain.Sort;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -162,6 +164,13 @@ public class NoteServiceImpl implements NoteService {
     @Transactional
     @CacheEvict(value = "note_detail", allEntries = true)
     public void deleteDocInNote(DeleteNoteDocRequestDTO request) {
+        Long userId = authenticationContext.getCurrentUserId();
+        Note note = getNoteById(request.getNoteId());
+
+        if (!note.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: cannot delete doc in this note");
+        }
+
         noteFileRegionCommentService.deleteAllForNoteAndAsset(request.getNoteId(), request.getAssetId());
         // Mark status "DELETED" in asset table
         Asset asset = getAssetById(request.getAssetId());
@@ -171,7 +180,6 @@ public class NoteServiceImpl implements NoteService {
         NoteDocsId noteDocsId = new NoteDocsId(request.getNoteId(), request.getAssetId());
         noteDocsRepository.deleteById(noteDocsId);
 
-        Note note = getNoteById(request.getNoteId());
         if (note.getSet() != null) {
             setRepository.updateLastModifiedDate(note.getSet().getId(), OffsetDateTime.now());
         }
@@ -199,6 +207,13 @@ public class NoteServiceImpl implements NoteService {
     @Transactional
     @CacheEvict(value = "note_detail", allEntries = true)
     public void deleteImgInNote(DeleteNoteImgRequestDTO request) {
+        Long userId = authenticationContext.getCurrentUserId();
+        Note note = getNoteById(request.getNoteId());
+
+        if (!note.getUser().getId().equals(userId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied: cannot delete img in this note");
+        }
+
         Asset asset = assetRepository.findByUrl(request.getFileUrl());
         noteFileRegionCommentService.deleteAllForNoteAndAsset(request.getNoteId(), asset.getId());
         // Mark status "DELETED" in asset table
@@ -208,7 +223,6 @@ public class NoteServiceImpl implements NoteService {
         NoteImgsId noteImgsId = new NoteImgsId(request.getNoteId(), asset.getId());
         noteImgsRepository.deleteById(noteImgsId);
 
-        Note note = getNoteById(request.getNoteId());
         if (note.getSet() != null) {
             setRepository.updateLastModifiedDate(note.getSet().getId(), OffsetDateTime.now());
         }
@@ -355,8 +369,14 @@ public class NoteServiceImpl implements NoteService {
     }
 
     private Set getSetByIdAndUserId(Long setId, Long userId) {
-        return setRepository.findByIdAndUserId(setId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Set not found or no permission"));
+        Set set = setRepository.findById(setId)
+                .orElseThrow(() -> new ResourceNotFoundException("Set with id " + setId + " not found"));
+
+        if (!Objects.equals(set.getUser().getId(), userId)) {
+            throw new AccessDeniedException("You are not allowed to access this set.");
+        }
+
+        return set;
     }
 
     private Note getNoteById(Long noteId) {

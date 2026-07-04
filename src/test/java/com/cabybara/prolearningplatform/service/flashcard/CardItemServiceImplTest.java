@@ -14,6 +14,7 @@ import com.cabybara.prolearningplatform.repository.FlashcardRepository;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.service.flashcard.impl.CardItemServiceImpl;
+import com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermissionService;
 import com.cabybara.prolearningplatform.support.TestFixtures;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import org.junit.jupiter.api.Test;
@@ -54,11 +55,13 @@ class CardItemServiceImplTest {
 
     @Mock
     private FlashcardRepository flashcardRepository;
+    @Mock
+    private FlashcardPermissionService flashcardPermissionService;
 
     @Test
     void addMultipleCardsToFlashcard() {
         CardItemServiceImpl service = new CardItemServiceImpl(flashcardService, cardItemMapper,
-                authenticationContext, cardItemRepository, assetService, flashcardRepository);
+                authenticationContext, cardItemRepository, assetService, flashcardRepository, flashcardPermissionService);
 
         User user = TestFixtures.user(1L);
         Set set = new Set();
@@ -86,6 +89,7 @@ class CardItemServiceImplTest {
         DetailFlashcardResponseDto responseDto = new DetailFlashcardResponseDto();
 
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
+        when(flashcardPermissionService.canEdit(1L, 1L)).thenReturn(true);
         when(flashcardService.getFlashcardById(1L)).thenReturn(flashcard);
         when(assetService.findAndActivateAssets(any(), eq(1L))).thenReturn(Collections.emptyMap());
         when(cardItemMapper.toCardItem(dto1)).thenReturn(card1);
@@ -102,7 +106,7 @@ class CardItemServiceImplTest {
     @Test
     void updateCardItemFrontAndBack() {
         CardItemServiceImpl service = new CardItemServiceImpl(flashcardService, cardItemMapper,
-                authenticationContext, cardItemRepository, assetService, flashcardRepository);
+                authenticationContext, cardItemRepository, assetService, flashcardRepository, flashcardPermissionService);
 
         User user = TestFixtures.user(1L);
         Set set = new Set();
@@ -154,7 +158,7 @@ class CardItemServiceImplTest {
     @Test
     void deleteCardsPreservesRemainingCards() throws Exception {
         CardItemServiceImpl service = new CardItemServiceImpl(flashcardService, cardItemMapper,
-                authenticationContext, cardItemRepository, assetService, flashcardRepository);
+                authenticationContext, cardItemRepository, assetService, flashcardRepository, flashcardPermissionService);
 
         User user = TestFixtures.user(1L);
         Set set = new Set();
@@ -189,7 +193,7 @@ class CardItemServiceImplTest {
     @Test
     void deleteAllCardsThrowsIfLessThanMin() throws Exception {
         CardItemServiceImpl service = new CardItemServiceImpl(flashcardService, cardItemMapper,
-                authenticationContext, cardItemRepository, assetService, flashcardRepository);
+                authenticationContext, cardItemRepository, assetService, flashcardRepository, flashcardPermissionService);
 
         User user = TestFixtures.user(1L);
         Set set = new Set();

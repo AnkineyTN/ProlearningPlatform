@@ -15,6 +15,7 @@ import com.cabybara.prolearningplatform.repository.QuestionRepository;
 import com.cabybara.prolearningplatform.repository.ExamQuestionRepository;
 import com.cabybara.prolearningplatform.repository.ExamRepository;
 import com.cabybara.prolearningplatform.service.exam.QuestionService;
+import com.cabybara.prolearningplatform.service.permission.impl.ExamPermissionService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -41,6 +43,7 @@ public class QuestionServiceImpl implements QuestionService {
     private final ExamQuestionRepository examQuestionRepository;
     private final ExamMapper examMapper;
     private final AuthenticationContext authenticationContext;
+    private final ExamPermissionService examPermissionService;
 
     // ##################################################
     // #################  MAIN METHOD  ##################
@@ -51,6 +54,10 @@ public class QuestionServiceImpl implements QuestionService {
     @CacheEvict(value = "exam_questions", key = "'exam:' + #examId")
     public QuestionListResponseDto createQuestion(Long examId, List<CreateQuestionRequestDto> createQuestionRequestDtos) {
         Long userId = authenticationContext.getCurrentUserId();
+
+        if (!examPermissionService.canEdit(userId, examId)) {
+            throw new AccessDeniedException("Access denied: cannot create questions for exam " + examId);
+        }
 
         Exam exam = examRepository.findById(examId)
                 .orElseThrow(() -> new ResourceNotFoundException("Exam not found"));
@@ -77,6 +84,11 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @Cacheable(value = "exam_questions", key = "'exam:' + #examId")
     public QuestionListResponseDto getQuestionsByExamId(Long examId) {
+        Long userId = authenticationContext.getCurrentUserId();
+        if (!examPermissionService.hasAccess(userId, examId)) {
+            throw new AccessDeniedException("Access denied: cannot view questions for exam " + examId);
+        }
+
         if (!examRepository.existsById(examId)) {
             throw new ResourceNotFoundException("Exam not found");
         }
@@ -96,6 +108,11 @@ public class QuestionServiceImpl implements QuestionService {
     @Override
     @Cacheable(value = "question", key = "#questionId")
     public QuestionResponseDto getQuestionById(Long examId, Long questionId) {
+        Long userId = authenticationContext.getCurrentUserId();
+        if (!examPermissionService.hasAccess(userId, examId)) {
+            throw new AccessDeniedException("Access denied: cannot view question for exam " + examId);
+        }
+
         if (!examRepository.existsById(examId)) {
             throw new ResourceNotFoundException("Exam not found");
         }
@@ -113,6 +130,11 @@ public class QuestionServiceImpl implements QuestionService {
         evict = @CacheEvict(value = "exam_questions", key = "'exam:' + #examId")
     )
     public QuestionResponseDto updateQuestion(Long examId, Long questionId, UpdateQuestionRequestDto dto) {
+        Long userId = authenticationContext.getCurrentUserId();
+        if (!examPermissionService.canEdit(userId, examId)) {
+            throw new AccessDeniedException("Access denied: cannot update question for exam " + examId);
+        }
+
         validateExamQuestionRelation(examId, questionId);
 
         Question question = questionRepository.findById(questionId)
@@ -138,6 +160,11 @@ public class QuestionServiceImpl implements QuestionService {
         @CacheEvict(value = "question", key = "#questionId", beforeInvocation = true)
     })
     public void deleteQuestion(Long examId, Long questionId) {
+        Long userId = authenticationContext.getCurrentUserId();
+        if (!examPermissionService.canEdit(userId, examId)) {
+            throw new AccessDeniedException("Access denied: cannot delete question for exam " + examId);
+        }
+
         validateExamQuestionRelation(examId, questionId);
 
         examQuestionRepository.deleteByExamIdAndQuestionId(examId, questionId);
@@ -146,6 +173,11 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public List<ExamQuestionViewDto> getQuestionsForTaking(Long examId) {
+        Long userId = authenticationContext.getCurrentUserId();
+        if (!examPermissionService.hasAccess(userId, examId)) {
+            throw new AccessDeniedException("Access denied: cannot take exam " + examId);
+        }
+
         if (!examRepository.existsById(examId)) {
             throw new ResourceNotFoundException("Exam not found");
         }
