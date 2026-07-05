@@ -74,7 +74,7 @@ public class ActivityLogServiceImpl implements ActivityLogService {
         } else {
             // First log of this day: consume freeze token if resuming after a 2-day gap
             List<LocalDate> prevActiveDays = activityLogRepository.findActiveDays(userId)
-                    .stream().map(this::toLocalDate).toList();
+                    .stream().map(p -> toLocalDate(p.getDate())).toList();
             if (!prevActiveDays.isEmpty()) {
                 long gap = date.toEpochDay() - prevActiveDays.get(0).toEpochDay();
                 if (gap == 2 && user.getStreakFreezeTokens() != null && user.getStreakFreezeTokens() > 0) {
