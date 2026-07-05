@@ -170,6 +170,8 @@ class FlashcardStudySessionServiceImplTest {
 
     @Test
     void getSessionResultWithCorrectIncorrectCounts() throws Exception {
+        when(authenticationContext.getCurrentUserId()).thenReturn(1L);
+
         FlashcardStudySession session = buildInProgressSession();
         session.setId(1L);
         session.setStatus(FlashcardStudySessionStatus.COMPLETED);

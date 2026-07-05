@@ -12,4 +12,5 @@ public class NoteMemberResponse {
     private String email;
     private String role;
     private String status;
+    private String avatarUrl;
 }

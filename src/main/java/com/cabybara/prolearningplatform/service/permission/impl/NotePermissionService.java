@@ -259,7 +259,8 @@ public class NotePermissionService implements ResourcePermissionService  {
                 m.getUser().getLastName(),
                 m.getUser().getEmail(),
                 m.getRole().name(),
-                m.getStatus().name()
+                m.getStatus().name(),
+                m.getUser().getAvatarUrl()
             ));
     }   
 
@@ -273,7 +274,8 @@ public class NotePermissionService implements ResourcePermissionService  {
                 m.getUser().getLastName(),
                 m.getUser().getEmail(),
                 m.getRole().name(),
-                m.getStatus().name()
+                m.getStatus().name(),
+                m.getUser().getAvatarUrl()
             ));
     }
 
