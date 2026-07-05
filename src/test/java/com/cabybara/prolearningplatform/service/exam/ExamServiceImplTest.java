@@ -184,6 +184,8 @@ class ExamServiceImplTest {
         exam.setTitle("Test Exam");
         exam.setCreatedBy(1L);
 
+        when(authenticationContext.getCurrentUserId()).thenReturn(1L);
+        when(examPermissionService.isOwner(1L, 1L)).thenReturn(true);
         when(examRepository.findBySetIdAndId(1L, 1L)).thenReturn(Optional.of(exam));
 
         service.deleteExam(1L, 1L);
@@ -207,6 +209,8 @@ class ExamServiceImplTest {
         exam.setTitle("Other Exam");
         exam.setCreatedBy(2L);
 
+        when(authenticationContext.getCurrentUserId()).thenReturn(2L);
+        when(examPermissionService.isOwner(2L, 2L)).thenReturn(true);
         when(examRepository.findBySetIdAndId(1L, 2L)).thenReturn(Optional.of(exam));
 
         service.deleteExam(1L, 2L);
