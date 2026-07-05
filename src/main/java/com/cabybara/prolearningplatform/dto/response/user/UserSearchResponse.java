@@ -12,13 +12,15 @@ public class UserSearchResponse {
     private String firstName;
     private String lastName;
     private String email;
+    private String avatarUrl;
 
     public static UserSearchResponse from(User user) {
         return new UserSearchResponse(
             user.getId(),
             user.getFirstName(),
             user.getLastName(),
-            user.getEmail()
+            user.getEmail(),
+            user.getAvatarUrl()
         );
     }
 }
