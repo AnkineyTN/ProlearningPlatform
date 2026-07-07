@@ -28,7 +28,7 @@ public class NotificationScheduler {
     @Value("${schedule.notification-cleanup.days-old:30}")
     private int cleanupDaysOld;
 
-    @Scheduled(cron = "${schedule.due-card-reminder.cron:0 0 8 * * *}", zone = SCHEDULER_TIME_ZONE)
+    // @Scheduled(cron = "${schedule.due-card-reminder.cron:0 0 8 * * *}", zone = SCHEDULER_TIME_ZONE)
     public void sendDueCardReminders() {
         log.info("Starting due card reminder scheduler");
         try {
