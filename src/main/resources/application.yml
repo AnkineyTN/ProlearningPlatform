@@ -105,9 +105,9 @@ spring:
 
     security:
         jwt:
-            secret: fee55fe254d24a95863994171c5e5404AKN0108cigquahfdja
+            secret: ${JWT_SECRET:9d4a6c8c1b9e5f2d7a8b3e4f6c1d9a7b5e2c8f1a4d6b9e3c7f5a8d2b1c4e6f9}
             access-ttl-ms: ${JWT_EXPIRATION_MS:1800000}
-            refresh-ttl-ms: 604800000
+            refresh-ttl-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
         refresh-cookie:
             name: refresh_token
             secure: false
