@@ -43,7 +43,7 @@ public class CardItemController {
             @Parameter(description = "The ID of the Flashcard to retrieve", required = true)
             @PathVariable Long flashcardId,
 
-            @Valid @RequestBody List<CardItemCreateRequestDto> cardItemCreateRequestDtos
+            @Valid @RequestBody List<@Valid CardItemCreateRequestDto> cardItemCreateRequestDtos
     ) {
         DetailFlashcardResponseDto detailFlashcardResponseDto = cardItemService.addCardToFlashcard(setId, flashcardId, cardItemCreateRequestDtos);
 
@@ -90,7 +90,7 @@ public class CardItemController {
             @Parameter(description = "The ID of the Flashcard to update", required = true)
             @PathVariable Long flashcardId,
 
-            @Valid  @RequestBody List<CardItemUpdatingRequestDto> cardItemUpdatingRequestDto
+            @Valid  @RequestBody List<@Valid CardItemUpdatingRequestDto> cardItemUpdatingRequestDto
     ) {
         List<CardItemResponseDto> updatedCardItems = cardItemService.updateCardItems(setId, flashcardId, cardItemUpdatingRequestDto);
 
