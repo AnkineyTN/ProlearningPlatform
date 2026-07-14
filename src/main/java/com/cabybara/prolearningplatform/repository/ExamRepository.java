@@ -162,8 +162,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
         WHERE e.privacy = 'PUBLIC'
           AND e.create_method IN ('MANUAL', 'AI')
           AND (:q IS NULL OR :q = '' OR (
-               e.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
-               OR (e.title || ' ' || COALESCE(e.description, '')) % unaccent(:q)
+               unaccent(LOWER(e.title || ' ' || COALESCE(e.description, ''))) LIKE '%' || unaccent(LOWER(:q)) || '%'
           ))
         GROUP BY e.id, u.id, u.first_name, u.last_name
     """,
@@ -173,8 +172,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
         WHERE e.privacy = 'PUBLIC'
           AND e.create_method IN ('MANUAL', 'AI')
           AND (:q IS NULL OR :q = '' OR (
-               e.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
-               OR (e.title || ' ' || COALESCE(e.description, '')) % unaccent(:q)
+               unaccent(LOWER(e.title || ' ' || COALESCE(e.description, ''))) LIKE '%' || unaccent(LOWER(:q)) || '%'
           ))
     """,
     nativeQuery = true)

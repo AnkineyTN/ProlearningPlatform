@@ -191,8 +191,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
         WHERE f.privacy = 'PUBLIC'
           AND f.create_method IN ('MANUAL', 'AI')
           AND (:q IS NULL OR :q = '' OR (
-               f.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
-               OR (f.title || ' ' || COALESCE(f.description, '')) % unaccent(:q)
+               unaccent(LOWER(f.title || ' ' || COALESCE(f.description, ''))) LIKE '%' || unaccent(LOWER(:q)) || '%'
           ))
         GROUP BY f.id, u.id, u.first_name, u.last_name
     """,
@@ -202,8 +201,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
         WHERE f.privacy = 'PUBLIC'
           AND f.create_method IN ('MANUAL', 'AI')
           AND (:q IS NULL OR :q = '' OR (
-               f.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
-               OR (f.title || ' ' || COALESCE(f.description, '')) % unaccent(:q)
+               unaccent(LOWER(f.title || ' ' || COALESCE(f.description, ''))) LIKE '%' || unaccent(LOWER(:q)) || '%'
           ))
     """,
     nativeQuery = true)

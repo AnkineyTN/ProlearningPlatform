@@ -39,6 +39,8 @@ public interface FlashcardService {
 
     GenerateFlashcardByAIResponseDto generateFlashcardByNotes(GenerateFlashcardByNoteRequestDto request);
 
+    GenerateFlashcardByAIResponseDto generateFlashcardByNotesForTargetSet(GenerateFlashcardByNoteToSetRequestDto request);
+
     List<InviteResultResponse> inviteMembers(Long setId, Long flashcardId, InviteMemberRequest request);
 
     void acceptInvite(Long flashcardId);

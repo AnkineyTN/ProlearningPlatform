@@ -12,6 +12,7 @@ import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import com.cabybara.prolearningplatform.model.flashcard.Flashcard;
 import com.cabybara.prolearningplatform.model.note.Note;
 import com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermissionService;
+import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import com.cabybara.prolearningplatform.dto.response.flashcard.DetailFlashcardResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponseDto;
@@ -66,6 +67,7 @@ public class FlashcardServiceImpl implements FlashcardService {
 
     private final AIFlashcardService aiFlashcardService;
     private final FlashcardPermissionService flashcardPermissionService;
+    private final NotePermissionService notePermissionService;
     private final com.cabybara.prolearningplatform.service.knowledge.TopicAssignmentAsyncService topicAssignmentAsyncService;
     private final com.cabybara.prolearningplatform.repository.UserFavoriteResourceRepository userFavoriteResourceRepository;
 
@@ -285,6 +287,27 @@ public class FlashcardServiceImpl implements FlashcardService {
 
     @Override
     public GenerateFlashcardByAIResponseDto generateFlashcardByNotes(GenerateFlashcardByNoteRequestDto request) {
+        Long userId = authenticationContext.getCurrentUserId();
+        validateNoteAccess(request.getNotes(), userId);
+        return generateFlashcardByNotesInternal(request);
+    }
+
+    @Override
+    public GenerateFlashcardByAIResponseDto generateFlashcardByNotesForTargetSet(GenerateFlashcardByNoteToSetRequestDto request) {
+        Long userId = authenticationContext.getCurrentUserId();
+        validateTargetSetOwnership(request.getTargetSetId(), userId);
+        validateNoteAccess(request.getNotes(), userId);
+
+        GenerateFlashcardByNoteRequestDto generateRequest = GenerateFlashcardByNoteRequestDto.builder()
+                .notes(request.getNotes())
+                .freeText(request.getFreeText())
+                .language(request.getLanguage())
+                .build();
+
+        return generateFlashcardByNotesInternal(generateRequest);
+    }
+
+    private GenerateFlashcardByAIResponseDto generateFlashcardByNotesInternal(GenerateFlashcardByNoteRequestDto request) {
         // Get note IDs from the request
         List<Long> noteIds = request.getNotes().stream()
                 .map(NoteRequestDto::getNoteId)
@@ -325,6 +348,23 @@ public class FlashcardServiceImpl implements FlashcardService {
                 .build();
 
         return aiFlashcardService.generateFlashcardByNotes(aiRequest);
+    }
+
+    private void validateTargetSetOwnership(Long targetSetId, Long userId) {
+        Set targetSet = setRepository.findById(targetSetId)
+                .orElseThrow(() -> new ResourceNotFoundException(targetSetId.toString()));
+
+        if (!Objects.equals(targetSet.getUser().getId(), userId)) {
+            throw new AccessDeniedException(userId.toString());
+        }
+    }
+
+    private void validateNoteAccess(List<NoteRequestDto> notes, Long userId) {
+        for (NoteRequestDto noteRequest : notes) {
+            if (!notePermissionService.hasAccess(userId, noteRequest.getNoteId())) {
+                throw new AccessDeniedException(noteRequest.getNoteId().toString());
+            }
+        }
     }
 
     @Override

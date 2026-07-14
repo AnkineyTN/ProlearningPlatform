@@ -22,6 +22,7 @@ import com.cabybara.prolearningplatform.service.asset.AssetService;
 import com.cabybara.prolearningplatform.service.flashcard.impl.FlashcardServiceImpl;
 import com.cabybara.prolearningplatform.service.knowledge.TopicAssignmentAsyncService;
 import com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermissionService;
+import com.cabybara.prolearningplatform.service.permission.impl.NotePermissionService;
 import com.cabybara.prolearningplatform.service.set.SetService;
 import com.cabybara.prolearningplatform.service.user.UserService;
 import com.cabybara.prolearningplatform.support.TestFixtures;
@@ -84,6 +85,9 @@ class FlashcardServiceImplTest {
     private FlashcardPermissionService flashcardPermissionService;
 
     @Mock
+    private NotePermissionService notePermissionService;
+
+    @Mock
     private TopicAssignmentAsyncService topicAssignmentAsyncService;
 
     @Mock
@@ -95,7 +99,7 @@ class FlashcardServiceImplTest {
                 authenticationContext, flashcardRepository, noteRepository,
                 userService, setService, flashcardMapper, assetService,
                 cardItemMapper, setRepository, aiFlashcardService,
-                flashcardPermissionService, topicAssignmentAsyncService,
+                flashcardPermissionService, notePermissionService, topicAssignmentAsyncService,
                 userFavoriteResourceRepository
         );
 
@@ -150,7 +154,7 @@ class FlashcardServiceImplTest {
                 authenticationContext, flashcardRepository, noteRepository,
                 userService, setService, flashcardMapper, assetService,
                 cardItemMapper, setRepository, aiFlashcardService,
-                flashcardPermissionService, topicAssignmentAsyncService,
+                flashcardPermissionService, notePermissionService, topicAssignmentAsyncService,
                 userFavoriteResourceRepository
         );
 
@@ -182,7 +186,7 @@ class FlashcardServiceImplTest {
                 authenticationContext, flashcardRepository, noteRepository,
                 userService, setService, flashcardMapper, assetService,
                 cardItemMapper, setRepository, aiFlashcardService,
-                flashcardPermissionService, topicAssignmentAsyncService,
+                flashcardPermissionService, notePermissionService, topicAssignmentAsyncService,
                 userFavoriteResourceRepository
         );
 
@@ -208,7 +212,7 @@ class FlashcardServiceImplTest {
                 authenticationContext, flashcardRepository, noteRepository,
                 userService, setService, flashcardMapper, assetService,
                 cardItemMapper, setRepository, aiFlashcardService,
-                flashcardPermissionService, topicAssignmentAsyncService,
+                flashcardPermissionService, notePermissionService, topicAssignmentAsyncService,
                 userFavoriteResourceRepository
         );
 
@@ -233,7 +237,7 @@ class FlashcardServiceImplTest {
                 authenticationContext, flashcardRepository, noteRepository,
                 userService, setService, flashcardMapper, assetService,
                 cardItemMapper, setRepository, aiFlashcardService,
-                flashcardPermissionService, topicAssignmentAsyncService,
+                flashcardPermissionService, notePermissionService, topicAssignmentAsyncService,
                 userFavoriteResourceRepository
         );
 
@@ -280,7 +284,7 @@ class FlashcardServiceImplTest {
                 authenticationContext, flashcardRepository, noteRepository,
                 userService, setService, flashcardMapper, assetService,
                 cardItemMapper, setRepository, aiFlashcardService,
-                flashcardPermissionService, topicAssignmentAsyncService,
+                flashcardPermissionService, notePermissionService, topicAssignmentAsyncService,
                 userFavoriteResourceRepository
         );
 
