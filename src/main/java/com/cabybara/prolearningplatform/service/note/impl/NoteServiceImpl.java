@@ -133,8 +133,7 @@ public class NoteServiceImpl implements NoteService {
     @CacheEvict(value = "note_detail", allEntries = true)
     public void saveNote(Long setId, Long noteId, SaveNoteRequestDTO request) {
         Long userId = authenticationContext.getCurrentUserId();
-
-        Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
+        Note note = getEditableNoteByIdAndSetId(noteId, setId, userId);
 
         note.setTitle(request.getTitle());
         note.setContent(request.getContent());
@@ -149,7 +148,7 @@ public class NoteServiceImpl implements NoteService {
     @CacheEvict(value = "note_detail", allEntries = true)
     public void saveDocInNote(Long setId, SaveDocInNoteRequestDto request) {
         Long userId = authenticationContext.getCurrentUserId();
-        Note note = getNoteByIdAndUserIdAndSetId(request.getNoteId(), userId, setId);
+        Note note = getEditableNoteByIdAndSetId(request.getNoteId(), setId, userId);
         Asset asset = getAssetById(request.getAssetId());
 
         NoteDocs noteDocs = new NoteDocs(note, asset);
@@ -167,7 +166,7 @@ public class NoteServiceImpl implements NoteService {
         Long userId = authenticationContext.getCurrentUserId();
         Note note = getNoteById(request.getNoteId());
 
-        if (!note.getUser().getId().equals(userId)) {
+        if (!notePermissionService.canEdit(userId, note.getId())) {
             throw new org.springframework.security.access.AccessDeniedException("Access denied: cannot delete doc in this note");
         }
 
@@ -192,7 +191,7 @@ public class NoteServiceImpl implements NoteService {
     @CacheEvict(value = "note_detail", allEntries = true)
     public void saveImgInNote(Long setId, SaveImgInNoteRequestDto request) {
         Long userId = authenticationContext.getCurrentUserId();
-        Note note = getNoteByIdAndUserIdAndSetId(request.getNoteId(), userId, setId);
+        Note note = getEditableNoteByIdAndSetId(request.getNoteId(), setId, userId);
         Asset asset = getAssetById(request.getAssetId());
 
         NoteImgs noteImgs = new NoteImgs(note, asset);
@@ -210,7 +209,7 @@ public class NoteServiceImpl implements NoteService {
         Long userId = authenticationContext.getCurrentUserId();
         Note note = getNoteById(request.getNoteId());
 
-        if (!note.getUser().getId().equals(userId)) {
+        if (!notePermissionService.canEdit(userId, note.getId())) {
             throw new org.springframework.security.access.AccessDeniedException("Access denied: cannot delete img in this note");
         }
 
@@ -328,7 +327,7 @@ public class NoteServiceImpl implements NoteService {
     @CacheEvict(value = "note_detail", allEntries = true)
     public void updateNote(Long setId, Long noteId, UpdateNoteRequestDTO request) {
         Long userId = authenticationContext.getCurrentUserId();
-        Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);
+        Note note = getEditableNoteByIdAndSetId(noteId, setId, userId);
 
         note.setTitle(request.getTitle());
         note.setPrivacy(request.getPrivacy());
@@ -386,6 +385,16 @@ public class NoteServiceImpl implements NoteService {
     private Note getNoteByIdAndSetId(Long noteId, Long setId) {
         return noteRepository.findByIdAndSetId(noteId, setId)
                 .orElseThrow(() -> new ResourceNotFoundException("Note not found or no permission"));
+    }
+
+    private Note getEditableNoteByIdAndSetId(Long noteId, Long setId, Long userId) {
+        Note note = getNoteByIdAndSetId(noteId, setId);
+
+        if (!notePermissionService.canEdit(userId, noteId)) {
+            throw new AccessDeniedException(noteId.toString());
+        }
+
+        return note;
     }
 
     private Note getNoteByIdAndUserIdAndSetId(Long noteId, Long userId, Long setId) {
