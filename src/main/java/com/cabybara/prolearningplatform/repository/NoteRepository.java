@@ -158,8 +158,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
         INNER JOIN users u ON n.id_user = u.id
         WHERE n.privacy = 'PUBLIC'
           AND (:q IS NULL OR :q = '' OR (
-               n.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
-               OR (n.title || ' ' || COALESCE(n.description, '')) % unaccent(:q)
+               unaccent(LOWER(n.title || ' ' || COALESCE(n.description, ''))) LIKE '%' || unaccent(LOWER(:q)) || '%'
           ))
     """,
     countQuery = """
@@ -167,8 +166,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
                  INNER JOIN users u ON n.id_user = u.id
                  WHERE n.privacy = 'PUBLIC'
                    AND (:q IS NULL OR :q = '' OR (
-                        n.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
-                        OR (n.title || ' ' || COALESCE(n.description, '')) % unaccent(:q)
+                        unaccent(LOWER(n.title || ' ' || COALESCE(n.description, ''))) LIKE '%' || unaccent(LOWER(:q)) || '%'
                    ))
     """,
     nativeQuery = true)
