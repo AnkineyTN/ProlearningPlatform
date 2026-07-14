@@ -21,7 +21,7 @@ public interface UserFavoriteResourceRepository extends JpaRepository<UserFavori
     Page<UserFavoriteResource> findByUserId(Long userId, Pageable pageable);
 
     @org.springframework.data.jpa.repository.Query("SELECT ufr.resourceId FROM UserFavoriteResource ufr " +
-            "WHERE ufr.userId = :userId " +
+            "WHERE ufr.user.id = :userId " +
             "AND ufr.resourceType = :resourceType " +
             "AND ufr.resourceId IN :resourceIds")
     java.util.Set<Long> findFavoritedResourceIds(

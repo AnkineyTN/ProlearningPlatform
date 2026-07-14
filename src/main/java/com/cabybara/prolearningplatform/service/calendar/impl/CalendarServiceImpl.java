@@ -23,7 +23,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -42,6 +44,7 @@ public class CalendarServiceImpl implements CalendarService {
     private final UserCalendarSettingRepository calendarSettingRepository;
     private final AuthenticationContext authenticationContext;
     private final RedisService redisService;
+    private final PlatformTransactionManager transactionManager;
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String clientId;
@@ -66,7 +69,9 @@ public class CalendarServiceImpl implements CalendarService {
 
     private static final String APP_NAME = "Prolearning Platform";
     private static final String STATE_KEY_PREFIX = "calendar_state:";
+    private static final String CALENDAR_VALID_KEY_PREFIX = "calendar_valid:";
     private static final int STATE_TTL_SECONDS = 600;
+    private static final int CALENDAR_VALID_TTL_SECONDS = 3000; // 50 min, just under access token lifetime
     private static final String PRIMARY_CALENDAR = "primary";
     private static final String PLATFORM_MOBILE = "mobile";
 
@@ -100,15 +105,37 @@ public class CalendarServiceImpl implements CalendarService {
     @Override
     public CalendarStatusResponse getStatus() {
         Long userId = authenticationContext.getCurrentUserId();
-        return calendarSettingRepository.findByUserId(userId)
-                .map(s -> CalendarStatusResponse.builder()
-                        .connected(s.getRefreshToken() != null)
-                        .syncEnabled(Boolean.TRUE.equals(s.getCalendarSyncEnabled()))
-                        .build())
-                .orElseGet(() -> CalendarStatusResponse.builder()
-                        .connected(false)
-                        .syncEnabled(false)
-                        .build());
+        var settingOpt = calendarSettingRepository.findByUserId(userId);
+
+        if (settingOpt.isEmpty() || settingOpt.get().getRefreshToken() == null) {
+            return CalendarStatusResponse.builder().connected(false).syncEnabled(false).build();
+        }
+
+        UserCalendarSetting setting = settingOpt.get();
+        String cacheKey = CALENDAR_VALID_KEY_PREFIX + userId;
+
+        if (redisService.get(cacheKey) == null) {
+            try {
+                UserCredentials.newBuilder()
+                        .setClientId(clientId)
+                        .setClientSecret(clientSecret)
+                        .setRefreshToken(setting.getRefreshToken())
+                        .build()
+                        .refreshAccessToken();
+                redisService.set(cacheKey, "valid", CALENDAR_VALID_TTL_SECONDS);
+            } catch (Exception e) {
+                if (isInvalidGrant(e)) {
+                    markCalendarDisconnected(userId);
+                    return CalendarStatusResponse.builder().connected(false).syncEnabled(false).build();
+                }
+                log.warn("Could not validate Google Calendar token for userId {}: {}", userId, e.getMessage());
+            }
+        }
+
+        return CalendarStatusResponse.builder()
+                .connected(true)
+                .syncEnabled(Boolean.TRUE.equals(setting.getCalendarSyncEnabled()))
+                .build();
     }
 
     @Override
@@ -176,6 +203,7 @@ public class CalendarServiceImpl implements CalendarService {
         }
 
         calendarSettingRepository.save(setting);
+        redisService.set(CALENDAR_VALID_KEY_PREFIX + userId, "valid", CALENDAR_VALID_TTL_SECONDS);
         response.sendRedirect(successUrl);
     }
 
@@ -220,7 +248,11 @@ public class CalendarServiceImpl implements CalendarService {
                 Event created = service.events().insert(PRIMARY_CALENDAR, buildEvent(todo)).execute();
                 todo.setCalendarEventId(created.getId());
             } catch (Exception e) {
-                log.error("Failed to create Google Calendar event for todo {}", todo.getId(), e);
+                if (isInvalidGrant(e)) {
+                    markCalendarDisconnected(userId);
+                } else {
+                    log.error("Failed to create Google Calendar event for todo {}", todo.getId(), e);
+                }
             }
         });
     }
@@ -250,7 +282,11 @@ public class CalendarServiceImpl implements CalendarService {
                     todo.setCalendarEventId(created.getId());
                 }
             } catch (Exception e) {
-                log.error("Failed to update Google Calendar event for todo {}", todo.getId(), e);
+                if (isInvalidGrant(e)) {
+                    markCalendarDisconnected(userId);
+                } else {
+                    log.error("Failed to update Google Calendar event for todo {}", todo.getId(), e);
+                }
             }
         });
     }
@@ -265,13 +301,44 @@ public class CalendarServiceImpl implements CalendarService {
                 Calendar service = buildCalendarService(setting);
                 service.events().delete(PRIMARY_CALENDAR, calendarEventId).execute();
             } catch (Exception e) {
-                log.error("Failed to delete Google Calendar event {}", calendarEventId, e);
+                if (isInvalidGrant(e)) {
+                    markCalendarDisconnected(userId);
+                } else {
+                    log.error("Failed to delete Google Calendar event {}", calendarEventId, e);
+                }
             }
         });
     }
 
     private boolean isSyncActive(UserCalendarSetting setting) {
         return Boolean.TRUE.equals(setting.getCalendarSyncEnabled()) && setting.getRefreshToken() != null;
+    }
+
+    private boolean isInvalidGrant(Exception e) {
+        Throwable cause = e;
+        while (cause != null) {
+            if (cause.getMessage() != null && cause.getMessage().contains("invalid_grant")) {
+                return true;
+            }
+            cause = cause.getCause();
+        }
+        return false;
+    }
+
+    private void markCalendarDisconnected(Long userId) {
+        TransactionTemplate tx = new TransactionTemplate(transactionManager);
+        tx.setPropagationBehavior(TransactionTemplate.PROPAGATION_REQUIRES_NEW);
+        tx.executeWithoutResult(status ->
+            calendarSettingRepository.findByUserId(userId).ifPresent(s -> {
+                s.setRefreshToken(null);
+                s.setAccessToken(null);
+                s.setTokenExpiresAt(null);
+                s.setCalendarSyncEnabled(false);
+                calendarSettingRepository.save(s);
+            })
+        );
+        redisService.delete(CALENDAR_VALID_KEY_PREFIX + userId);
+        log.warn("Google Calendar token expired or revoked for userId {}, disconnected. User must re-authorize.", userId);
     }
 
     private Event buildEvent(Todo todo) {
