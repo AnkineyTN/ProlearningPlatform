@@ -137,7 +137,8 @@ class NoteServiceImplTest {
         request.setContent("updated content");
 
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
-        when(noteRepository.findByIdAndUserIdAndSetId(1L, 1L, 1L)).thenReturn(Optional.of(note));
+        when(noteRepository.findByIdAndSetId(1L, 1L)).thenReturn(Optional.of(note));
+        when(notePermissionService.canEdit(1L, 1L)).thenReturn(true);
         when(noteRepository.save(any(Note.class))).thenReturn(note);
 
         service.saveNote(1L, 1L, request);
@@ -175,6 +176,7 @@ class NoteServiceImplTest {
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
         when(noteRepository.findByIdAndUserIdAndSetId(1L, 1L, 1L)).thenReturn(Optional.of(note));
         when(noteRepository.findById(1L)).thenReturn(Optional.of(note));
+        when(notePermissionService.canEdit(1L, 1L)).thenReturn(true);
         when(assetRepository.findById(100L)).thenReturn(Optional.of(docAsset));
         when(assetRepository.findById(200L)).thenReturn(Optional.of(imgAsset));
 
