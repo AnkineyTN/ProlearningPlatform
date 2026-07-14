@@ -53,7 +53,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
                 WHERE created_by = :userId AND set_id = :setId
                   AND ((:createMethod IS NULL AND create_method != 'REVIEW')
                       OR (:createMethod IS NOT NULL AND create_method = :createMethod))
-                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                  AND (search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             countQuery = """
@@ -62,7 +62,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
                 WHERE created_by = :userId AND set_id = :setId
                   AND ((:createMethod IS NULL AND create_method != 'REVIEW')
                       OR (:createMethod IS NOT NULL AND create_method = :createMethod))
-                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                  AND (search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
                 """,
             nativeQuery = true)
@@ -77,7 +77,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
                   AND privacy = :privacy
                   AND ((:createMethod IS NULL AND create_method != 'REVIEW')
                       OR (:createMethod IS NOT NULL AND create_method = :createMethod))
-                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                  AND (search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             countQuery = """
@@ -88,7 +88,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
                   AND privacy = :privacy
                   AND ((:createMethod IS NULL AND create_method != 'REVIEW')
                       OR (:createMethod IS NOT NULL AND create_method = :createMethod))
-                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                  AND (search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             nativeQuery = true)
@@ -117,7 +117,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
         AND ((:createMethod IS NULL AND e.create_method != 'REVIEW')
             OR (:createMethod IS NOT NULL AND e.create_method = :createMethod))
         AND (:q IS NULL OR :q = '' OR (
-            e.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+            e.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
             OR (e.title || ' ' || e.description) % unaccent(:q)
         ))
     """, 
@@ -130,7 +130,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
         AND ((:createMethod IS NULL AND e.create_method != 'REVIEW')
             OR (:createMethod IS NOT NULL AND e.create_method = :createMethod))
         AND (:q IS NULL OR :q = '' OR (
-            e.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+            e.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
             OR (e.title || ' ' || e.description) % unaccent(:q)
         ))
     """,
@@ -162,7 +162,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
         WHERE e.privacy = 'PUBLIC'
           AND e.create_method IN ('MANUAL', 'AI')
           AND (:q IS NULL OR :q = '' OR (
-               e.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+               e.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                OR (e.title || ' ' || COALESCE(e.description, '')) % unaccent(:q)
           ))
         GROUP BY e.id, u.id, u.first_name, u.last_name
@@ -173,7 +173,7 @@ public interface ExamRepository extends JpaRepository<Exam,Long> {
         WHERE e.privacy = 'PUBLIC'
           AND e.create_method IN ('MANUAL', 'AI')
           AND (:q IS NULL OR :q = '' OR (
-               e.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+               e.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                OR (e.title || ' ' || COALESCE(e.description, '')) % unaccent(:q)
           ))
     """,

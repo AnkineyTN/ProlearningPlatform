@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.utils;
 
 import com.cabybara.prolearningplatform.dto.response.PaginationResponseDto;
 import com.cabybara.prolearningplatform.dto.response.search.SearchResponseDto;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +43,18 @@ public class ResponseUtil {
                         .currentPage(currentPage)
                         .totalItems(totalItems)
                         .totalPages(totalPages)
+                        .build()
+                ));
+    }
+
+    public static <T> ResponseEntity<ApiResponse<?>> toPaginationedResponse(String message, Pageable pageable, Page<T> page) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success(message, page.getContent(), PaginationResponseDto.builder()
+                        .pageSize(page.getSize())
+                        .currentPage(page.getNumber())
+                        .totalItems((int) page.getTotalElements())
+                        .totalPages(page.getTotalPages())
                         .build()
                 ));
     }

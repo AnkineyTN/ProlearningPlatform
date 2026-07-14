@@ -61,7 +61,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
                 WHERE id_user = :userId AND id_set = :setId
                   AND ((:createMethod IS NULL AND create_method != 'REVIEW')
                       OR (:createMethod IS NOT NULL AND create_method = :createMethod))
-                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                  AND (search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             countQuery = """
@@ -70,7 +70,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
                 WHERE id_user = :userId AND id_set = :setId
                   AND ((:createMethod IS NULL AND create_method != 'REVIEW')
                       OR (:createMethod IS NOT NULL AND create_method = :createMethod))
-                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                  AND (search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
                 """,
             nativeQuery = true)
@@ -85,7 +85,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
                   AND privacy = :privacy
                   AND ((:createMethod IS NULL AND create_method != 'REVIEW')
                       OR (:createMethod IS NOT NULL AND create_method = :createMethod))
-                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                  AND (search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             countQuery = """
@@ -96,7 +96,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
                   AND privacy = :privacy
                   AND ((:createMethod IS NULL AND create_method != 'REVIEW')
                       OR (:createMethod IS NOT NULL AND create_method = :createMethod))
-                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                  AND (search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             nativeQuery = true)
@@ -143,7 +143,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
         AND ((:createMethod IS NULL AND f.create_method != 'REVIEW')
             OR (:createMethod IS NOT NULL AND f.create_method = :createMethod))
         AND (:q IS NULL OR :q = '' OR (
-            f.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+            f.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
             OR (f.title || ' ' || f.description) % unaccent(:q)
         ))
     """, 
@@ -156,7 +156,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
         AND ((:createMethod IS NULL AND f.create_method != 'REVIEW')
             OR (:createMethod IS NOT NULL AND f.create_method = :createMethod))
         AND (:q IS NULL OR :q = '' OR (
-            f.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+            f.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
             OR (f.title || ' ' || f.description) % unaccent(:q)
         ))
     """,
@@ -191,7 +191,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
         WHERE f.privacy = 'PUBLIC'
           AND f.create_method IN ('MANUAL', 'AI')
           AND (:q IS NULL OR :q = '' OR (
-               f.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+               f.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                OR (f.title || ' ' || COALESCE(f.description, '')) % unaccent(:q)
           ))
         GROUP BY f.id, u.id, u.first_name, u.last_name
@@ -202,7 +202,7 @@ public interface FlashcardRepository extends JpaRepository<Flashcard, Long> {
         WHERE f.privacy = 'PUBLIC'
           AND f.create_method IN ('MANUAL', 'AI')
           AND (:q IS NULL OR :q = '' OR (
-               f.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+               f.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                OR (f.title || ' ' || COALESCE(f.description, '')) % unaccent(:q)
           ))
     """,

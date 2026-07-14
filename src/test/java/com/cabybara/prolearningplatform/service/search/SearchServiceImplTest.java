@@ -13,7 +13,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -43,14 +47,16 @@ class SearchServiceImplTest {
         SearchResultDto mockDto = mock(SearchResultDto.class);
         SearchResponseDto responseDto = new SearchResponseDto(1L, 1L, "Java Notes", "desc", "NOTE", 1L, false);
 
-        when(searchIndexRepository.search(eq("java"), isNull(), eq("NOTE"), eq(10)))
-                .thenReturn(List.of(mockDto));
+        Page<SearchResultDto> mockPage = new PageImpl<>(List.of(mockDto));
+        when(searchIndexRepository.search(eq("java"), isNull(), eq("NOTE"), any()))
+                .thenReturn(mockPage);
         when(searchMapper.toSearchResponseDto(any(SearchResultDto.class))).thenReturn(responseDto);
+        when(authenticationContext.getCurrentUserId()).thenReturn(null);
 
-        var result = service.search("java", SearchType.NOTE, 10);
+        var result = service.search("java", SearchType.NOTE, PageRequest.of(0, 10));
 
-        assertEquals(1, result.size());
-        assertEquals("Java Notes", result.get(0).title());
+        assertEquals(1, result.getTotalElements());
+        assertEquals("Java Notes", result.getContent().get(0).title());
     }
 
     @Test
@@ -58,10 +64,12 @@ class SearchServiceImplTest {
         SearchServiceImpl service = new SearchServiceImpl(
                 authenticationContext, searchIndexRepository, searchMapper, userFavoriteResourceRepository);
 
-        when(searchIndexRepository.search(eq(""), isNull(), eq("NOTE"), eq(10)))
-                .thenReturn(List.of());
+        Page<SearchResultDto> emptyPage = new PageImpl<>(List.of());
+        when(searchIndexRepository.search(eq(""), isNull(), eq("NOTE"), any()))
+                .thenReturn(emptyPage);
+        when(authenticationContext.getCurrentUserId()).thenReturn(null);
 
-        var result = service.search("", SearchType.NOTE, 10);
+        var result = service.search("", SearchType.NOTE, PageRequest.of(0, 10));
 
         assertTrue(result.isEmpty());
     }
@@ -74,18 +82,22 @@ class SearchServiceImplTest {
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
 
         SearchResultDto mockDto = mock(SearchResultDto.class);
+        when(mockDto.getId()).thenReturn(1L);
+        when(mockDto.getType()).thenReturn("NOTE");
 
-        when(searchIndexRepository.search(eq("java"), eq(1L), eq("NOTE"), eq(5)))
-                .thenReturn(List.of(mockDto));
+        Page<SearchResultDto> mockPage = new PageImpl<>(List.of(mockDto));
+        when(searchIndexRepository.search(eq("java"), eq(1L), eq("NOTE"), any()))
+                .thenReturn(mockPage);
 
         SearchResponseDto responseDto = new SearchResponseDto(1L, 1L, "My Note", "desc", "NOTE", 1L, false);
         when(searchMapper.toSearchResponseDto(any(SearchResultDto.class))).thenReturn(responseDto);
-        when(userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(
-                eq(1L), eq(1L), eq(ContentType.NOTE))).thenReturn(false);
+        when(userFavoriteResourceRepository.findFavoritedResourceIds(
+                eq(1L), argThat(list -> list.contains(1L)), eq(ContentType.NOTE)))
+                .thenReturn(Collections.emptySet());
 
-        var result = service.searchForCurrentUser("java", SearchType.NOTE, 5);
+        var result = service.searchForCurrentUser("java", SearchType.NOTE, PageRequest.of(0, 5));
 
         assertNotNull(result);
-        assertEquals(1, result.size());
+        assertEquals(1, result.getTotalElements());
     }
 }

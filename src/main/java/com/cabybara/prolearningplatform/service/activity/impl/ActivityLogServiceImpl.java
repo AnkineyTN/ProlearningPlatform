@@ -15,7 +15,7 @@ import com.cabybara.prolearningplatform.repository.ActivityLogRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.activity.ActivityLogService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

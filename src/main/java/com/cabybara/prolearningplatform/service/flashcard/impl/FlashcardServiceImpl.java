@@ -30,7 +30,7 @@ import com.cabybara.prolearningplatform.service.flashcard.FlashcardService;
 import com.cabybara.prolearningplatform.service.set.SetService;
 import com.cabybara.prolearningplatform.service.asset.AssetService;
 import com.cabybara.prolearningplatform.service.user.UserService;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
@@ -43,6 +43,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -90,9 +91,13 @@ public class FlashcardServiceImpl implements FlashcardService {
             }
         }
 
+        List<Long> flashcardIds = pagedFlashcard.map(Flashcard::getId).getContent();
+        java.util.Set<Long> favoritedIds = flashcardIds.isEmpty() ? Collections.emptySet() :
+                userFavoriteResourceRepository.findFavoritedResourceIds(userId, flashcardIds, com.cabybara.prolearningplatform.enums.ContentType.FLASHCARD);
+
         return pagedFlashcard.map(flashcard -> {
             FlashcardResponseDto dto = flashcardMapper.toFlashcardResponseDto(flashcard);
-            dto.setIsFavorited(userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, flashcard.getId(), com.cabybara.prolearningplatform.enums.ContentType.FLASHCARD));
+            dto.setIsFavorited(favoritedIds.contains(flashcard.getId()));
             dto.setOwnerId(flashcard.getUser().getId());
             dto.setOwnerName(flashcard.getUser().getFirstName() != null ? flashcard.getUser().getFirstName() + " " + flashcard.getUser().getLastName() : flashcard.getUser().getLastName());
             dto.setOwnerAvatar(flashcard.getUser().getAvatarUrl());
@@ -385,7 +390,13 @@ public class FlashcardServiceImpl implements FlashcardService {
         String privacyFilter = privacy != null ? privacy.name() : null;
         String methodFilter = createMethod != null ? createMethod.name() : null;
 
-        return flashcardRepository.findSharedFlashcards(userId, q, privacyFilter, methodFilter, pageable)
+        Page<Flashcard> pagedFlashcards = flashcardRepository.findSharedFlashcards(userId, q, privacyFilter, methodFilter, pageable);
+
+        List<Long> flashcardIds = pagedFlashcards.map(Flashcard::getId).getContent();
+        java.util.Set<Long> favoritedIds = flashcardIds.isEmpty() ? Collections.emptySet() :
+                userFavoriteResourceRepository.findFavoritedResourceIds(userId, flashcardIds, com.cabybara.prolearningplatform.enums.ContentType.FLASHCARD);
+
+        return pagedFlashcards
                 .map(flashcard -> {
                     NoteRole role = flashcardPermissionService.getUserRoleInFlashcard(flashcard.getId(), userId);
                     FlashcardResponseDto dto = flashcardMapper.toFlashcardResponseDto(flashcard);
@@ -406,7 +417,7 @@ public class FlashcardServiceImpl implements FlashcardService {
                             .updatedAt(dto.getUpdatedAt())
                             .userRole(role)
                             .setId(flashcard.getSet() != null ? flashcard.getSet().getId() : null)
-                            .isFavorited(userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, flashcard.getId(), com.cabybara.prolearningplatform.enums.ContentType.FLASHCARD))
+                            .isFavorited(favoritedIds.contains(flashcard.getId()))
                             .ownerId(flashcard.getUser().getId())
                             .ownerName(flashcard.getUser().getFirstName() != null ? flashcard.getUser().getFirstName() + " " + flashcard.getUser().getLastName() : flashcard.getUser().getLastName())
                             .ownerAvatar(flashcard.getUser().getAvatarUrl())

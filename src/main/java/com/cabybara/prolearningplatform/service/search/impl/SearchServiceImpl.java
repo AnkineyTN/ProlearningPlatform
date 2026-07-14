@@ -2,6 +2,7 @@ package com.cabybara.prolearningplatform.service.search.impl;
 
 import com.cabybara.prolearningplatform.dto.helper.SearchResultDto;
 import com.cabybara.prolearningplatform.dto.response.search.SearchResponseDto;
+import com.cabybara.prolearningplatform.enums.ContentType;
 import com.cabybara.prolearningplatform.enums.SearchType;
 import com.cabybara.prolearningplatform.mapper.SearchMapper;
 import com.cabybara.prolearningplatform.repository.SearchIndexRepository;
@@ -9,9 +10,12 @@ import com.cabybara.prolearningplatform.service.search.SearchService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,35 +37,26 @@ public class SearchServiceImpl implements SearchService {
 
 
     @Override
-    public List<SearchResponseDto> search(String keyword, SearchType searchType, int limit) {
+    public Page<SearchResponseDto> search(String keyword, SearchType searchType, Pageable pageable) {
         String type = null;
         if (searchType != null) {
             type = searchType.name();
         }
 
-        List<SearchResultDto> searchResultDtos = searchIndexRepository.search(keyword, null, type, limit);
+        Page<SearchResultDto> searchResultPage = searchIndexRepository.search(keyword, null, type, pageable);
 
         Long userId = getCurrentUserIdSafe();
+        Set<Long> favoritedIds = preloadFavoritedIds(userId, searchResultPage.getContent());
 
-        return searchResultDtos.stream()
-                .map(dto -> {
-                    SearchResponseDto result = searchMapper.toSearchResponseDto(dto);
-                    boolean isFavorited = false;
-                    if (userId != null && result.type() != null) {
-                        try {
-                            com.cabybara.prolearningplatform.enums.ContentType contentType = com.cabybara.prolearningplatform.enums.ContentType.valueOf(result.type());
-                            isFavorited = userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, result.id(), contentType);
-                        } catch (IllegalArgumentException e) {
-                            // Ignore if not a valid content type (e.g. SET)
-                        }
-                    }
-                    return new SearchResponseDto(result.id(), result.setId(), result.title(), result.description(), result.type(), result.userId(), isFavorited);
-                })
-                .toList();
+        return searchResultPage.map(dto -> {
+            SearchResponseDto result = searchMapper.toSearchResponseDto(dto);
+            boolean isFavorited = favoritedIds.contains(result.id());
+            return new SearchResponseDto(result.id(), result.setId(), result.title(), result.description(), result.type(), result.userId(), isFavorited);
+        });
     }
 
     @Override
-    public List<SearchResponseDto> searchForCurrentUser(String keyword, SearchType searchType, int limit) {
+    public Page<SearchResponseDto> searchForCurrentUser(String keyword, SearchType searchType, Pageable pageable) {
         Long userId = authenticationContext.getCurrentUserId();
 
         String type = null;
@@ -69,22 +64,31 @@ public class SearchServiceImpl implements SearchService {
             type = searchType.name();
         }
 
-        List<SearchResultDto> searchResultDtos = searchIndexRepository.search(keyword, userId, type, limit);
+        Page<SearchResultDto> searchResultPage = searchIndexRepository.search(keyword, userId, type, pageable);
 
-        return searchResultDtos.stream()
-                .map(dto -> {
-                    SearchResponseDto result = searchMapper.toSearchResponseDto(dto);
-                    boolean isFavorited = false;
-                    if (userId != null && result.type() != null) {
-                        try {
-                            com.cabybara.prolearningplatform.enums.ContentType contentType = com.cabybara.prolearningplatform.enums.ContentType.valueOf(result.type());
-                            isFavorited = userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, result.id(), contentType);
-                        } catch (IllegalArgumentException e) {
-                            // Ignore if not a valid content type (e.g. SET)
-                        }
-                    }
-                    return new SearchResponseDto(result.id(), result.setId(), result.title(), result.description(), result.type(), result.userId(), isFavorited);
-                })
-                .toList();
+        Set<Long> favoritedIds = preloadFavoritedIds(userId, searchResultPage.getContent());
+
+        return searchResultPage.map(dto -> {
+            SearchResponseDto result = searchMapper.toSearchResponseDto(dto);
+            boolean isFavorited = favoritedIds.contains(result.id());
+            return new SearchResponseDto(result.id(), result.setId(), result.title(), result.description(), result.type(), result.userId(), isFavorited);
+        });
+    }
+
+    private Set<Long> preloadFavoritedIds(Long userId, List<SearchResultDto> results) {
+        if (userId == null) {
+            return Collections.emptySet();
+        }
+        Map<ContentType, List<Long>> idsByType = results.stream()
+                .filter(dto -> dto.getType() != null)
+                .collect(Collectors.groupingBy(
+                        dto -> ContentType.valueOf(dto.getType()),
+                        Collectors.mapping(SearchResultDto::getId, Collectors.toList())
+                ));
+        Set<Long> allFavorited = new HashSet<>();
+        for (var entry : idsByType.entrySet()) {
+            allFavorited.addAll(userFavoriteResourceRepository.findFavoritedResourceIds(userId, entry.getValue(), entry.getKey()));
+        }
+        return allFavorited;
     }
 }

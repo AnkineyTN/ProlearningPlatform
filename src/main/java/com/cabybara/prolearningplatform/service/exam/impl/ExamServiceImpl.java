@@ -51,6 +51,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -175,9 +176,13 @@ public class ExamServiceImpl implements ExamService {
             }
         }
 
+        List<Long> examIds = pagedExam.map(Exam::getId).getContent();
+        java.util.Set<Long> favoritedIds = examIds.isEmpty() ? Collections.emptySet() :
+                userFavoriteResourceRepository.findFavoritedResourceIds(userId, examIds, com.cabybara.prolearningplatform.enums.ContentType.EXAM);
+
         return pagedExam.map(exam -> {
             ExamResponseDto dto = examMapper.toExamResponseDto(exam);
-            boolean isFavorited = userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, exam.getId(), com.cabybara.prolearningplatform.enums.ContentType.EXAM);
+            boolean isFavorited = favoritedIds.contains(exam.getId());
             
             com.cabybara.prolearningplatform.model.User owner = exam.getCreatedBy() != null ? userRepository.findById(exam.getCreatedBy()).orElse(null) : null;
             String ownerName = owner != null ? (owner.getFirstName() != null ? owner.getFirstName() + " " + owner.getLastName() : owner.getLastName()) : null;
@@ -409,7 +414,13 @@ public class ExamServiceImpl implements ExamService {
         String privacyFilter = privacy != null ? privacy.name() : null;
         String methodFilter = createMethod != null ? createMethod.name() : null;
 
-        return examRepository.findSharedExams(userId, q, privacyFilter, methodFilter, pageable)
+        Page<Exam> pagedExams = examRepository.findSharedExams(userId, q, privacyFilter, methodFilter, pageable);
+
+        List<Long> examIds = pagedExams.map(Exam::getId).getContent();
+        java.util.Set<Long> favoritedIds = examIds.isEmpty() ? Collections.emptySet() :
+                userFavoriteResourceRepository.findFavoritedResourceIds(userId, examIds, com.cabybara.prolearningplatform.enums.ContentType.EXAM);
+
+        return pagedExams
                 .map(exam -> {
                     NoteRole role = examPermissionService.getUserRoleInExam(exam.getId(), userId);
                     ExamResponseDto dto = examMapper.toExamResponseDto(exam);
@@ -429,7 +440,7 @@ public class ExamServiceImpl implements ExamService {
                             dto.updatedAt(),
                             role,
                             exam.getSet() != null ? exam.getSet().getId() : null,
-                            userFavoriteResourceRepository.existsByUserIdAndResourceIdAndResourceType(userId, exam.getId(), com.cabybara.prolearningplatform.enums.ContentType.EXAM),
+                            favoritedIds.contains(exam.getId()),
                             exam.getCreatedBy(),
                             ownerName,
                             ownerAvatar
