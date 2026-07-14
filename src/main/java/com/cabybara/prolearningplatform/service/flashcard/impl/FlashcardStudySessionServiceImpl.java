@@ -213,15 +213,11 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
         Map<Long, CardItem> cardMap = cards.stream()
                 .collect(Collectors.toMap(CardItem::getId, Function.identity()));
 
-        boolean shouldUpdateSR = session.getStudyMode() == StudyMode.SPACED_REPETITION;
-
         for (CardItemReviewRequestDto reviewItem : request.getCardItemReviews()) {
             CardItem card = cardMap.get(reviewItem.getCardId());
 
             if (card != null) {
-                if (shouldUpdateSR) {
-                    flashcardReviewService.calculateSpacedRepetition(card, reviewItem.isKnown());
-                }
+                flashcardReviewService.calculateSpacedRepetition(card, reviewItem.isKnown());
 
                 StudySessionReviewLog reviewLog = StudySessionReviewLog.builder()
                         .card(card)
@@ -240,9 +236,7 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
             }
         }
 
-        if (shouldUpdateSR) {
-            cardItemRepository.saveAll(cards);
-        }
+        cardItemRepository.saveAll(cards);
 
         session.setLastInteractionAt(Instant.now());
         if (remainingIds.isEmpty()) {
