@@ -64,7 +64,7 @@ public interface SetRepository extends JpaRepository<Set, Long> {
                 FROM set
                 WHERE id_user = :userId
                   AND (CAST(:roadmap AS BOOLEAN) IS NULL OR (roadmap_id IS NOT NULL) = CAST(:roadmap AS BOOLEAN))
-                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                  AND (search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             countQuery = """
@@ -73,7 +73,7 @@ public interface SetRepository extends JpaRepository<Set, Long> {
                 WHERE id_user = :userId
                   AND (CAST(:roadmap AS BOOLEAN) IS NULL OR (roadmap_id IS NOT NULL) = CAST(:roadmap AS BOOLEAN))
                   AND (
-                        search_vector @@ plainto_tsquery('simple', :q)
+                        search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                         OR (title || ' ' || description) % unaccent(:q))
                 """,
             nativeQuery = true)
@@ -86,16 +86,16 @@ public interface SetRepository extends JpaRepository<Set, Long> {
                 WHERE id_user = :userId
                   AND privacy = :privacy
                   AND (CAST(:roadmap AS BOOLEAN) IS NULL OR (roadmap_id IS NOT NULL) = CAST(:roadmap AS BOOLEAN))
-                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                  AND (search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             countQuery = """
-                SELECT *
+                SELECT count(*)
                 FROM set
                 WHERE id_user = :userId
                   AND privacy = :privacy
                   AND (CAST(:roadmap AS BOOLEAN) IS NULL OR (roadmap_id IS NOT NULL) = CAST(:roadmap AS BOOLEAN))
-                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                  AND (search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             nativeQuery = true)

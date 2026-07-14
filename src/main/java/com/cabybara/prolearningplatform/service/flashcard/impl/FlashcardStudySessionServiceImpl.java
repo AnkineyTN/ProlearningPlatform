@@ -22,7 +22,7 @@ import com.cabybara.prolearningplatform.service.flashcard.CardItemService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardReviewService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardStudySessionService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.security.access.AccessDeniedException;

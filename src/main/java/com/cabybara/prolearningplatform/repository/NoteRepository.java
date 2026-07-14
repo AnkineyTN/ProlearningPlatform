@@ -61,7 +61,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
                 SELECT *
                 FROM note
                 WHERE id_user = :userId AND id_set = :setId
-                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                  AND (search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             countQuery = """
@@ -69,7 +69,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
                 FROM note
                 WHERE id_user = :userId AND id_set = :setId
                   AND (
-                        search_vector @@ plainto_tsquery('simple', :q)
+                        search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                         OR (title || ' ' || description) % unaccent(:q))
                 """,
             nativeQuery = true)
@@ -82,16 +82,16 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
                 WHERE id_user = :userId
                   AND id_set = :setId
                   AND privacy = :privacy
-                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                  AND (search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             countQuery = """
-                SELECT *
+                SELECT count(*)
                 FROM note
                 WHERE id_user = :userId
                   AND id_set = :setId
                   AND privacy = :privacy
-                  AND (search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                  AND (search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                       OR (title || ' ' || description) % unaccent(:q))
             """,
             nativeQuery = true)
@@ -120,7 +120,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
         AND n.id_user != :userId
         AND (:privacy IS NULL OR n.privacy = :privacy)
         AND (:q IS NULL OR :q = '' OR (
-            n.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+            n.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
             OR (n.title || ' ' || n.description) % unaccent(:q)
         ))
     """,
@@ -131,7 +131,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
         AND n.id_user != :userId
         AND (:privacy IS NULL OR n.privacy = :privacy)
         AND (:q IS NULL OR :q = '' OR (
-            n.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+            n.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
             OR (n.title || ' ' || n.description) % unaccent(:q)
         ))
     """,
@@ -158,7 +158,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
         INNER JOIN users u ON n.id_user = u.id
         WHERE n.privacy = 'PUBLIC'
           AND (:q IS NULL OR :q = '' OR (
-               n.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+               n.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                OR (n.title || ' ' || COALESCE(n.description, '')) % unaccent(:q)
           ))
     """,
@@ -167,7 +167,7 @@ public interface NoteRepository extends JpaRepository<Note, Long> {
                  INNER JOIN users u ON n.id_user = u.id
                  WHERE n.privacy = 'PUBLIC'
                    AND (:q IS NULL OR :q = '' OR (
-                        n.search_vector @@ plainto_tsquery('simple', unaccent(:q))
+                        n.search_vector @@ websearch_to_tsquery('simple', unaccent(:q))
                         OR (n.title || ' ' || COALESCE(n.description, '')) % unaccent(:q)
                    ))
     """,

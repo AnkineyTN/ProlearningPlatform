@@ -1,5 +1,5 @@
 package com.cabybara.prolearningplatform.enums;
 
 public enum ContentType {
-    NOTE, FLASHCARD, EXAM, EDIT
+    SET, NOTE, FLASHCARD, EXAM, EDIT
 }

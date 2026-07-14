@@ -1,13 +1,12 @@
 package com.cabybara.prolearningplatform.repository;
 
 import com.cabybara.prolearningplatform.dto.helper.SearchResultDto;
-import com.cabybara.prolearningplatform.enums.SearchType;
 import com.cabybara.prolearningplatform.model.SearchIndex;
-import io.lettuce.core.dynamic.annotation.Param;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-
-import java.util.List;
+import org.springframework.data.repository.query.Param;
 
 public interface SearchIndexRepository extends JpaRepository<SearchIndex, Long> {
     @Query(value = """
@@ -28,14 +27,26 @@ public interface SearchIndexRepository extends JpaRepository<SearchIndex, Long> 
             OR (title || ' ' || description) % unaccent(:keyword)
         )
         AND (:userId IS NULL OR user_id = :userId)
-        AND (:type IS NULL OR entity_type ILIKE :type)
+        AND (:type IS NULL OR entity_type = :type)
     ORDER BY score DESC
-    LIMIT :limit
-    """, nativeQuery = true)
-    List<SearchResultDto> search(
+    """,
+    countQuery = """
+    SELECT count(*)
+    FROM search_index,
+         websearch_to_tsquery('simple', unaccent(:keyword)) query
+    WHERE
+        (
+            search_vector @@ query
+            OR (title || ' ' || description) % unaccent(:keyword)
+        )
+        AND (:userId IS NULL OR user_id = :userId)
+        AND (:type IS NULL OR entity_type = :type)
+    """,
+    nativeQuery = true)
+    Page<SearchResultDto> search(
             @Param("keyword") String keyword,
             @Param("userId") Long userId,
             @Param("type") String type,
-            @Param("limit") int limit
+            Pageable pageable
     );
 }

@@ -17,7 +17,7 @@ import com.cabybara.prolearningplatform.repository.ExamRepository;
 import com.cabybara.prolearningplatform.service.exam.QuestionService;
 import com.cabybara.prolearningplatform.service.permission.impl.ExamPermissionService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;

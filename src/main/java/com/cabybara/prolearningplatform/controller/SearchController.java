@@ -1,6 +1,5 @@
 package com.cabybara.prolearningplatform.controller;
 
-import com.cabybara.prolearningplatform.dto.response.search.SearchResponseDto;
 import com.cabybara.prolearningplatform.enums.SearchType;
 import com.cabybara.prolearningplatform.service.search.SearchService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
@@ -19,8 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/search")
 @RequiredArgsConstructor
@@ -37,12 +34,9 @@ public class SearchController {
     public ResponseEntity<ApiResponse<?>> searchResourceByType(
             @RequestParam String keyword,
             @RequestParam(required = false, defaultValue = "") SearchType searchType,
-            @RequestParam(defaultValue = "10") int limit,
-            @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
+            @ParameterObject @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        List<SearchResponseDto> searchResponseDtos = searchService.search(keyword, searchType, limit);
-
-        return ResponseUtil.toPaginationedResponse("Successfully", pageable, searchResponseDtos);
+        return ResponseUtil.toPaginationedResponse("Successfully", pageable, searchService.search(keyword, searchType, pageable));
     }
 
     @GetMapping("/me")
@@ -52,11 +46,8 @@ public class SearchController {
     public ResponseEntity<ApiResponse<?>> searchAllResourceForCurrentUser(
             @RequestParam String keyword,
             @RequestParam(required = false, defaultValue = "") SearchType searchType,
-            @RequestParam(defaultValue = "10") int limit,
-            @ParameterObject @PageableDefault(page = 0, size = 6, sort = "id") Pageable pageable
+            @ParameterObject @PageableDefault(page = 0, size = 10) Pageable pageable
     ) {
-        List<SearchResponseDto> searchResponseDtos = searchService.searchForCurrentUser(keyword, searchType, limit);
-
-        return ResponseUtil.toPaginationedResponse("Successfully", pageable, searchResponseDtos);
+        return ResponseUtil.toPaginationedResponse("Successfully", pageable, searchService.searchForCurrentUser(keyword, searchType, pageable));
     }
 }

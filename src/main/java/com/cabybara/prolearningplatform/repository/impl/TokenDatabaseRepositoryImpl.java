@@ -8,7 +8,7 @@ import com.cabybara.prolearningplatform.repository.TokenDatabaseRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.auth.oauth2.StoredCredential;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
