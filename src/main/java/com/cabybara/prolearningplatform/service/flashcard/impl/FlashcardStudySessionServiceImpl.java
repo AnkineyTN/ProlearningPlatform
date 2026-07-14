@@ -86,6 +86,47 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
             return flashcardStudySessionMapper.toFlashcardStudySessionStartResponse(session, cardsToLearn, message);
         }
 
+        // Check for recently completed session with incorrect cards (Continue Learning)
+        Optional<FlashcardStudySession> lastCompleted = flashcardStudySessionRepository
+                .findLatestSessionByStatus(userId, flashcardId, FlashcardStudySessionStatus.COMPLETED);
+
+        if (lastCompleted.isPresent() && lastCompleted.get().getIncorrectCount() != null
+                && lastCompleted.get().getIncorrectCount() > 0) {
+            FlashcardStudySession prevSession = lastCompleted.get();
+
+            List<Long> incorrectCardIds = flashcardStudySessionRepository
+                    .findIncorrectCardIdsBySessionId(prevSession.getId());
+
+            if (!incorrectCardIds.isEmpty()) {
+                List<CardItem> cardsToLearn = cardItemRepository.findAllByIdIn(incorrectCardIds);
+
+                if (!cardsToLearn.isEmpty()) {
+                    Set set = setRepository.getReferenceById(setId);
+                    Flashcard flashcardSet = flashcardRepository.getReferenceById(flashcardId);
+
+                    FlashcardStudySession newSession = FlashcardStudySession.builder()
+                            .user(user)
+                            .set(set)
+                            .flashcard(flashcardSet)
+                            .status(FlashcardStudySessionStatus.IN_PROGRESS)
+                            .studyMode(StudyMode.REVIEW)
+                            .initialCardIds(incorrectCardIds)
+                            .remainingCardIds(new ArrayList<>(incorrectCardIds))
+                            .reviewLogs(new ArrayList<>())
+                            .correctCount(0)
+                            .incorrectCount(0)
+                            .lastInteractionAt(Instant.now())
+                            .build();
+
+                    newSession = flashcardStudySessionRepository.save(newSession);
+
+                    return flashcardStudySessionMapper.toFlashcardStudySessionStartResponse(
+                            newSession, cardsToLearn,
+                            "Continuing from previous session with " + incorrectCardIds.size() + " incorrect cards");
+                }
+            }
+        }
+
         // Try to get cards based on spaced repetition first
         List<CardItem> cardsToLearn = cardItemService.getCardsForReview(setId, flashcardId, 20);
         StudyMode studyMode = StudyMode.SPACED_REPETITION;
@@ -172,15 +213,11 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
         Map<Long, CardItem> cardMap = cards.stream()
                 .collect(Collectors.toMap(CardItem::getId, Function.identity()));
 
-        boolean shouldUpdateSR = session.getStudyMode() == StudyMode.SPACED_REPETITION;
-
         for (CardItemReviewRequestDto reviewItem : request.getCardItemReviews()) {
             CardItem card = cardMap.get(reviewItem.getCardId());
 
             if (card != null) {
-                if (shouldUpdateSR) {
-                    flashcardReviewService.calculateSpacedRepetition(card, reviewItem.isKnown());
-                }
+                flashcardReviewService.calculateSpacedRepetition(card, reviewItem.isKnown());
 
                 StudySessionReviewLog reviewLog = StudySessionReviewLog.builder()
                         .card(card)
@@ -199,9 +236,7 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
             }
         }
 
-        if (shouldUpdateSR) {
-            cardItemRepository.saveAll(cards);
-        }
+        cardItemRepository.saveAll(cards);
 
         session.setLastInteractionAt(Instant.now());
         if (remainingIds.isEmpty()) {

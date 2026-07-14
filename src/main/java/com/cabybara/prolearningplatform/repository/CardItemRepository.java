@@ -4,6 +4,8 @@ import com.cabybara.prolearningplatform.dto.helper.TopicCountProjection;
 import com.cabybara.prolearningplatform.dto.helper.UserDueCardProjection;
 import com.cabybara.prolearningplatform.dto.helper.UserDueFlashcardProjection;
 import com.cabybara.prolearningplatform.dto.helper.UserDueStatDto;
+import com.cabybara.prolearningplatform.dto.internal.CardContent;
+import com.cabybara.prolearningplatform.dto.response.review.ReviewBundleCardDto;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -19,6 +21,12 @@ import java.util.List;
 public interface CardItemRepository extends JpaRepository<CardItem, Long> {
     @EntityGraph(attributePaths = {"flashcard", "flashcard.set", "flashcard.user"})
     List<CardItem> findAllByIdIn(List<Long> ids);
+
+    @Query("SELECT c.id AS id, c.frontCard AS frontCard, c.backCard AS backCard FROM CardItem c WHERE c.id IN :ids")
+    List<ReviewBundleCardDto.Projection> findCardDtosByIds(@Param("ids") List<Long> ids);
+
+    @Query("SELECT c.frontCard AS front, c.backCard AS back FROM CardItem c WHERE c.id IN :ids")
+    List<CardContent.Projection> findCardContentsByIds(@Param("ids") List<Long> ids);
 
     @Query("SELECT ci FROM CardItem ci " +
            "LEFT JOIN FETCH ci.flashcard f " +

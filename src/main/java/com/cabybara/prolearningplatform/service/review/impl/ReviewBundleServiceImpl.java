@@ -81,10 +81,9 @@ public class ReviewBundleServiceImpl implements ReviewBundleService {
     public ReviewBundleResponseDto getBundle(Long bundleId) {
         ReviewBundle bundle = findBundleForCurrentUser(bundleId);
 
-        List<CardItem> cards = cardItemRepository.findAllById(bundle.getCardIds());
-
-        List<ReviewBundleCardDto> cardDtos = cards.stream()
-                .map(c -> new ReviewBundleCardDto(c.getId(), c.getFrontCard(), c.getBackCard()))
+        List<ReviewBundleCardDto> cardDtos = cardItemRepository.findCardDtosByIds(bundle.getCardIds())
+                .stream()
+                .map(p -> new ReviewBundleCardDto(p.getId(), p.getFrontCard(), p.getBackCard()))
                 .toList();
 
         return new ReviewBundleResponseDto(
@@ -127,9 +126,9 @@ public class ReviewBundleServiceImpl implements ReviewBundleService {
     }
 
     private List<CardContent> loadCardContents(ReviewBundle bundle) {
-        return cardItemRepository.findAllById(bundle.getCardIds())
+        return cardItemRepository.findCardContentsByIds(bundle.getCardIds())
                 .stream()
-                .map(c -> new CardContent(c.getFrontCard(), c.getBackCard()))
+                .map(p -> new CardContent(p.getFront(), p.getBack()))
                 .toList();
     }
 }
