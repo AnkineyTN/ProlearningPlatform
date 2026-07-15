@@ -176,7 +176,8 @@ public class RoadmapServiceImpl implements RoadmapService {
         Set roadmapSet = setRepository.findByRoadmapId(roadmapId)
                 .orElseThrow(() -> new ResourceNotFoundException("Set not found for roadmap: " + roadmapId));
 
-        if (topic.getContentStatus() != TopicContentStatus.IDLE) {
+        if (topic.getContentStatus() == TopicContentStatus.GENERATING
+                || topic.getContentStatus() == TopicContentStatus.READY) {
             return TopicStartResponseDto.builder()
                     .topicId(topicId)
                     .setId(roadmapSet.getId())
