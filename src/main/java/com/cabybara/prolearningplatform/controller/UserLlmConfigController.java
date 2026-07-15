@@ -1,7 +1,9 @@
 package com.cabybara.prolearningplatform.controller;
 
 import com.cabybara.prolearningplatform.dto.request.llm.SaveLlmConfigRequestDto;
+import com.cabybara.prolearningplatform.dto.request.llm.TestLlmConnectionRequestDto;
 import com.cabybara.prolearningplatform.dto.response.llm.LlmConfigResponseDto;
+import com.cabybara.prolearningplatform.dto.response.llm.TestLlmConnectionResponseDto;
 import com.cabybara.prolearningplatform.service.llm.UserLlmConfigService;
 import com.cabybara.prolearningplatform.utils.ApiResponse;
 import com.cabybara.prolearningplatform.utils.ResponseUtil;
@@ -71,6 +73,18 @@ public class UserLlmConfigController {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(ResponseUtil.success("Delete LLM config successfully", null, null));
+    }
+
+    @PostMapping("/test-connection")
+    @Operation(summary = "Test an LLM connection", description = "Checks whether the given provider/model/API key can reach the provider. "
+            +
+            "The key is not saved. Always returns 200 — read data.valid to see whether the key actually works.")
+    public ResponseEntity<ApiResponse<TestLlmConnectionResponseDto>> testConnection(
+            @Valid @RequestBody TestLlmConnectionRequestDto request) {
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(ResponseUtil.success("Test LLM connection completed", userLlmConfigService.testConnection(request),
+                        null));
     }
 
     @PutMapping("/{id}/active")

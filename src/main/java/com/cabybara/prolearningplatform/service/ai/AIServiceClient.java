@@ -1,5 +1,8 @@
 package com.cabybara.prolearningplatform.service.ai;
 
+import com.cabybara.prolearningplatform.dto.internal.AiTestConnectionRequest;
+import com.cabybara.prolearningplatform.dto.internal.AiTestConnectionResponse;
+import com.cabybara.prolearningplatform.dto.internal.AiTestConnectionResult;
 import com.cabybara.prolearningplatform.dto.internal.DecryptedLlmConfig;
 import com.cabybara.prolearningplatform.exception.AIServiceException;
 import com.cabybara.prolearningplatform.exception.LlmNotConfiguredException;
@@ -31,6 +34,7 @@ public class AIServiceClient {
     private static final String HEADER_LLM_PROVIDER = "X-LLM-Provider";
     private static final String HEADER_LLM_MODEL = "X-LLM-Model";
     private static final String HEADER_LLM_API_KEY = "X-LLM-Api-Key";
+    private static final String LLM_TEST_CONNECTION_PATH = "/llm/test-connection";
 
     private final RestHttpClientUtil restHttpClientUtil;
     private final String baseApi;
@@ -89,6 +93,27 @@ public class AIServiceClient {
         }
     }
 
+    // ---- BYOK: verify a user-supplied key without saving it ----
+
+    /**
+     * Calls the AI Service to check whether a provider/model/API key combination actually works.
+     * The AI Service always answers 200 (see {@link AiTestConnectionResult#valid()}) even when the
+     * key is wrong/expired/out of quota; a thrown exception here means the call itself failed
+     * (bad internal key, malformed request, or the AI Service being unreachable).
+     */
+    public AiTestConnectionResult testConnection(String provider, String model, String apiKey) {
+        try {
+            AiTestConnectionRequest body = new AiTestConnectionRequest(provider, model, apiKey);
+            AiTestConnectionResponse response = restHttpClientUtil.post(
+                    baseApi + LLM_TEST_CONNECTION_PATH, body, internalHeaders(), AiTestConnectionResponse.class);
+            return response.data();
+        } catch (HttpStatusCodeException e) {
+            throw mapError(e);
+        } catch (ResourceAccessException e) {
+            throw connectionError(e);
+        }
+    }
+
     // ---- Header assembly ----
 
     private HttpHeaders internalHeaders() {
@@ -132,6 +157,13 @@ public class AIServiceClient {
             }
             return new AIServiceException(HttpStatus.BAD_REQUEST,
                     "The AI request was rejected. Please review your AI provider/model settings.");
+        }
+
+        // Request body failed the AI Service's own validation (e.g. test-connection with an
+        // unsupported provider) — this is a caller-side bug, not a provider/billing issue.
+        if (status == 422) {
+            return new AIServiceException(HttpStatus.BAD_REQUEST,
+                    "The request to the AI service was invalid. Please check the provider/model/API key format.");
         }
 
         // Provider key invalid / billing problem surfaced by the AI Service.

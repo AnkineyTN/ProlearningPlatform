@@ -1,8 +1,11 @@
 package com.cabybara.prolearningplatform.service.llm.impl;
 
+import com.cabybara.prolearningplatform.dto.internal.AiTestConnectionResult;
 import com.cabybara.prolearningplatform.dto.internal.DecryptedLlmConfig;
 import com.cabybara.prolearningplatform.dto.request.llm.SaveLlmConfigRequestDto;
+import com.cabybara.prolearningplatform.dto.request.llm.TestLlmConnectionRequestDto;
 import com.cabybara.prolearningplatform.dto.response.llm.LlmConfigResponseDto;
+import com.cabybara.prolearningplatform.dto.response.llm.TestLlmConnectionResponseDto;
 import com.cabybara.prolearningplatform.enums.LlmProvider;
 import com.cabybara.prolearningplatform.exception.BadRequestException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
@@ -10,6 +13,7 @@ import com.cabybara.prolearningplatform.mapper.LlmConfigMapper;
 import com.cabybara.prolearningplatform.model.llm.UserLlmConfig;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.repository.llm.UserLlmConfigRepository;
+import com.cabybara.prolearningplatform.service.ai.AIServiceClient;
 import com.cabybara.prolearningplatform.service.llm.UserLlmConfigService;
 import com.cabybara.prolearningplatform.utils.AesGcmEncryptor;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
@@ -28,6 +32,7 @@ public class UserLlmConfigServiceImpl implements UserLlmConfigService {
     private final AesGcmEncryptor encryptor;
     private final LlmConfigMapper mapper;
     private final AuthenticationContext authenticationContext;
+    private final AIServiceClient aiServiceClient;
 
     @Override
     @Transactional(readOnly = true)
@@ -127,6 +132,22 @@ public class UserLlmConfigServiceImpl implements UserLlmConfigService {
     @Transactional(readOnly = true)
     public DecryptedLlmConfig getDecryptedConfigForCurrentUser() {
         return getDecryptedConfig(authenticationContext.getCurrentUserId());
+    }
+
+    @Override
+    public TestLlmConnectionResponseDto testConnection(TestLlmConnectionRequestDto request) {
+        LlmProvider provider = parseProvider(request.getProvider());
+        String model = request.getModel().trim();
+        String apiKey = request.getApiKey().trim();
+
+        AiTestConnectionResult result = aiServiceClient.testConnection(provider.getWireValue(), model, apiKey);
+
+        return TestLlmConnectionResponseDto.builder()
+                .valid(result.valid())
+                .provider(result.provider())
+                .model(result.model())
+                .message(result.message())
+                .build();
     }
 
     // ---- helpers ----

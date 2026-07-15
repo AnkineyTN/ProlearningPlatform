@@ -2,7 +2,9 @@ package com.cabybara.prolearningplatform.service.llm;
 
 import com.cabybara.prolearningplatform.dto.internal.DecryptedLlmConfig;
 import com.cabybara.prolearningplatform.dto.request.llm.SaveLlmConfigRequestDto;
+import com.cabybara.prolearningplatform.dto.request.llm.TestLlmConnectionRequestDto;
 import com.cabybara.prolearningplatform.dto.response.llm.LlmConfigResponseDto;
+import com.cabybara.prolearningplatform.dto.response.llm.TestLlmConnectionResponseDto;
 
 import java.util.List;
 
@@ -20,6 +22,13 @@ public interface UserLlmConfigService {
     void deleteConfig(Long id);
 
     LlmConfigResponseDto setActive(Long id);
+
+    /**
+     * Verifies a provider/model/API key against the AI Service without persisting it.
+     * Always returns a result (check {@code valid}); a thrown exception means the check itself
+     * could not be performed (e.g. unsupported provider, AI Service unreachable).
+     */
+    TestLlmConnectionResponseDto testConnection(TestLlmConnectionRequestDto request);
 
     // ---- Internal: used by the AI layer to forward the user's key ----
     /**
