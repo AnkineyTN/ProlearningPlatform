@@ -1,8 +1,11 @@
 package com.cabybara.prolearningplatform.service.llm;
 
+import com.cabybara.prolearningplatform.dto.internal.AiTestConnectionResult;
 import com.cabybara.prolearningplatform.dto.internal.DecryptedLlmConfig;
 import com.cabybara.prolearningplatform.dto.request.llm.SaveLlmConfigRequestDto;
+import com.cabybara.prolearningplatform.dto.request.llm.TestLlmConnectionRequestDto;
 import com.cabybara.prolearningplatform.dto.response.llm.LlmConfigResponseDto;
+import com.cabybara.prolearningplatform.dto.response.llm.TestLlmConnectionResponseDto;
 import com.cabybara.prolearningplatform.enums.LlmProvider;
 import com.cabybara.prolearningplatform.exception.BadRequestException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
@@ -11,6 +14,7 @@ import com.cabybara.prolearningplatform.model.User;
 import com.cabybara.prolearningplatform.model.llm.UserLlmConfig;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.repository.llm.UserLlmConfigRepository;
+import com.cabybara.prolearningplatform.service.ai.AIServiceClient;
 import com.cabybara.prolearningplatform.service.llm.impl.UserLlmConfigServiceImpl;
 import com.cabybara.prolearningplatform.utils.AesGcmEncryptor;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
@@ -40,12 +44,22 @@ class UserLlmConfigServiceImplTest {
     private LlmConfigMapper mapper;
     @Mock
     private AuthenticationContext authenticationContext;
+    @Mock
+    private AIServiceClient aiServiceClient;
 
     @InjectMocks
     private UserLlmConfigServiceImpl service;
 
     private SaveLlmConfigRequestDto request(String provider, String model, String apiKey) {
         SaveLlmConfigRequestDto dto = new SaveLlmConfigRequestDto();
+        dto.setProvider(provider);
+        dto.setModel(model);
+        dto.setApiKey(apiKey);
+        return dto;
+    }
+
+    private TestLlmConnectionRequestDto testConnectionRequest(String provider, String model, String apiKey) {
+        TestLlmConnectionRequestDto dto = new TestLlmConnectionRequestDto();
         dto.setProvider(provider);
         dto.setModel(model);
         dto.setApiKey(apiKey);
@@ -155,5 +169,38 @@ class UserLlmConfigServiceImplTest {
     void getDecryptedConfigWithNoActiveConfigReturnsNull() {
         when(repository.findByUserIdAndActiveTrue(1L)).thenReturn(Optional.empty());
         assertNull(service.getDecryptedConfig(1L));
+    }
+
+    @Test
+    void testConnectionDelegatesToAiServiceClientAndMapsResult() {
+        when(aiServiceClient.testConnection("openai", "gpt-4o-mini", "sk-test"))
+                .thenReturn(new AiTestConnectionResult(true, "openai", "gpt-4o-mini", "Connection successful"));
+
+        TestLlmConnectionResponseDto result = service.testConnection(
+                testConnectionRequest("openai", "gpt-4o-mini", "sk-test"));
+
+        assertTrue(result.isValid());
+        assertEquals("openai", result.getProvider());
+        assertEquals("gpt-4o-mini", result.getModel());
+        assertEquals("Connection successful", result.getMessage());
+    }
+
+    @Test
+    void testConnectionWithInvalidKeyStillReturnsResultInsteadOfThrowing() {
+        when(aiServiceClient.testConnection("openai", "gpt-4o-mini", "sk-bad"))
+                .thenReturn(new AiTestConnectionResult(false, "openai", "gpt-4o-mini", "Incorrect API key provided"));
+
+        TestLlmConnectionResponseDto result = service.testConnection(
+                testConnectionRequest("openai", "gpt-4o-mini", "sk-bad"));
+
+        assertFalse(result.isValid());
+        assertEquals("Incorrect API key provided", result.getMessage());
+    }
+
+    @Test
+    void testConnectionWithUnsupportedProviderThrowsWithoutCallingAiService() {
+        assertThrows(BadRequestException.class,
+                () -> service.testConnection(testConnectionRequest("not-a-provider", "gpt", "sk-1")));
+        verifyNoInteractions(aiServiceClient);
     }
 }

@@ -70,7 +70,7 @@ public class AIFlashcardServiceImpl implements AIFlashcardService {
             for (MultipartFile file : request.getFiles()) {
                 body.add("files", convertToResource(file));
             }
-            body.add("freeText", request.getFreeText());
+            body.add("free_text", request.getFreeText());
             body.add("language", request.getLanguage());
 
             String raw = aiServiceClient.postMultipartForGeneration(

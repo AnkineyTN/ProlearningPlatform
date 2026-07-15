@@ -1,6 +1,5 @@
 package com.cabybara.prolearningplatform.dto.request.flashcard;
 
-import com.cabybara.prolearningplatform.enums.Language;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
@@ -19,5 +18,5 @@ public class GenerateFlashcardByFileRequestDto {
     @JsonAlias("freeText")
     private String freeText;
 
-    private Language language;
+    private String language;
 }
