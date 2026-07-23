@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -123,6 +124,7 @@ public class FCMServiceImpl implements FCMService {
 
     @Override
     @Async
+    @Transactional
     public void sendPushForNotificationAsync(Notification notification, Long userId) {
         try {
             List<String> tokens = deviceTokenRepository.findAllTokensByUserId(userId);
@@ -148,6 +150,7 @@ public class FCMServiceImpl implements FCMService {
 
     @Override
     @Async
+    @Transactional
     public void sendPushForNotificationsAsync(Map<Long, List<Notification>> notificationsByUser) {
         List<Long> successNotificationIds = new ArrayList<>();
 

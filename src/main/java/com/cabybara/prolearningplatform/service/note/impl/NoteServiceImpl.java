@@ -337,6 +337,7 @@ public class NoteServiceImpl implements NoteService {
 
     // [DELETE]: /api/note/delete/{noteId}
     @Override
+    @Transactional
     @CacheEvict(value = "note_detail", allEntries = true)
     public void deleteNote(Long setId, Long noteId) {
         Long userId = authenticationContext.getCurrentUserId();
