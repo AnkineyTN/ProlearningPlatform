@@ -7,6 +7,7 @@ import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardResponse
 import com.cabybara.prolearningplatform.dto.response.review.ReviewBundleCardDto;
 import com.cabybara.prolearningplatform.dto.response.review.ReviewBundleListItemDto;
 import com.cabybara.prolearningplatform.dto.response.review.ReviewBundleResponseDto;
+import com.cabybara.prolearningplatform.exception.BadRequestException;
 import com.cabybara.prolearningplatform.exception.ResourceNotFoundException;
 import com.cabybara.prolearningplatform.model.flashcard.CardItem;
 import com.cabybara.prolearningplatform.model.review.ReviewBundle;
@@ -101,6 +102,10 @@ public class ReviewBundleServiceImpl implements ReviewBundleService {
         ReviewBundle bundle = findBundleForCurrentUser(bundleId);
         List<CardItem> cards = cardItemRepository.findAllById(bundle.getCardIds());
 
+        if (cards.isEmpty()) {
+            throw new BadRequestException("Review bundle has no cards to generate flashcard from");
+        }
+
         String title = String.format("Ôn tập sai: %s – %s",
                 bundle.getPeriodFrom().format(PERIOD_FORMATTER),
                 bundle.getPeriodTo().format(PERIOD_FORMATTER_YEAR));
@@ -114,6 +119,10 @@ public class ReviewBundleServiceImpl implements ReviewBundleService {
     public ExamResponseDto generateExam(Long bundleId) {
         ReviewBundle bundle = findBundleForCurrentUser(bundleId);
         List<CardContent> cards = loadCardContents(bundle);
+
+        if (cards.isEmpty()) {
+            throw new BadRequestException("Review bundle has no cards to generate exam from");
+        }
 
         CreateExamFromReviewRequestDto dto = aiExamService.generateExamFromCards(cards);
         return examService.createExamFromReview(dto, bundle.getSetId());
