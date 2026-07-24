@@ -111,7 +111,7 @@ public class SetServiceImpl implements SetService {
             throw new AccessDeniedException("You are not allowed to update this set.");
         }
 
-        if (setUpdatingRequestDto.getTitle() != null && setRepository.existsByTitleAndIdNot(setUpdatingRequestDto.getTitle(), setId)) {
+        if (setUpdatingRequestDto.getTitle() != null && setRepository.existsByTitleAndUserIdAndIdNot(setUpdatingRequestDto.getTitle(), userId, setId)) {
             throw new ResourceAlreadyExistsException("Another Set with title '" + setUpdatingRequestDto.getTitle() + "' already exists.");
         }
 

@@ -32,7 +32,7 @@ public interface SetRepository extends JpaRepository<Set, Long> {
     @Query("SELECT s.roadmap.id AS roadmapId, s.id AS setId FROM Set s WHERE s.roadmap.id IN :roadmapIds")
     List<RoadmapSetRef> findSetRefsByRoadmapIdIn(@Param("roadmapIds") Collection<Long> roadmapIds);
 
-    boolean existsByTitleAndIdNot(String title, Long id);
+    boolean existsByTitleAndUserIdAndIdNot(String title, Long userId, Long id);
 
     @Modifying
     @Query("UPDATE Set s SET s.updatedAt = :now WHERE s.id = :id")
