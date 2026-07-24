@@ -130,7 +130,7 @@ public class NoteServiceImpl implements NoteService {
     // [PATCH]: /sets/{setId}/notes/save
     @Override
     @Transactional
-    @CacheEvict(value = "note_detail", allEntries = true)
+    @CacheEvict(value = "note_detail", key = "@authenticationContext.getCurrentUserId() + ':' + #setId + ':' + #noteId")
     public void saveNote(Long setId, Long noteId, SaveNoteRequestDTO request) {
         Long userId = authenticationContext.getCurrentUserId();
         Note note = getEditableNoteByIdAndSetId(noteId, setId, userId);
@@ -324,7 +324,7 @@ public class NoteServiceImpl implements NoteService {
     // [PATCH]: /sets/{setId}/notes/update/{noteId}
     @Override
     @Transactional
-    @CacheEvict(value = "note_detail", allEntries = true)
+    @CacheEvict(value = "note_detail", key = "@authenticationContext.getCurrentUserId() + ':' + #setId + ':' + #noteId")
     public void updateNote(Long setId, Long noteId, UpdateNoteRequestDTO request) {
         Long userId = authenticationContext.getCurrentUserId();
         Note note = getEditableNoteByIdAndSetId(noteId, setId, userId);
@@ -338,7 +338,7 @@ public class NoteServiceImpl implements NoteService {
     // [DELETE]: /api/note/delete/{noteId}
     @Override
     @Transactional
-    @CacheEvict(value = "note_detail", allEntries = true)
+    @CacheEvict(value = "note_detail", key = "@authenticationContext.getCurrentUserId() + ':' + #setId + ':' + #noteId")
     public void deleteNote(Long setId, Long noteId) {
         Long userId = authenticationContext.getCurrentUserId();
         Note note = getNoteByIdAndUserIdAndSetId(noteId, userId, setId);

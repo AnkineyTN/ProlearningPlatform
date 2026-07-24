@@ -233,7 +233,7 @@ public class FlashcardServiceImpl implements FlashcardService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "flashcard_detail", allEntries = true)
+    @CacheEvict(value = "flashcard_detail", key = "@authenticationContext.getCurrentUserId() + ':' + #setId + ':' + #flashcardId")
     public void deleteFlashcard(Long setId, Long flashcardId) throws BadRequestException {
         Long userId = authenticationContext.getCurrentUserId();
         Flashcard deletedFlashcard = flashcardRepository.findById(flashcardId)
@@ -253,7 +253,7 @@ public class FlashcardServiceImpl implements FlashcardService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "flashcard_detail", allEntries = true)
+    @CacheEvict(value = "flashcard_detail", key = "@authenticationContext.getCurrentUserId() + ':' + #setId + ':' + #flashcardId")
     public FlashcardResponseDto updateFlashcard(Long setId, Long flashcardId, FlashcardUpdatingRequestDto flashcardUpdatingRequestDto) throws BadRequestException {
         Long userId = authenticationContext.getCurrentUserId();
         Flashcard flashcard = flashcardRepository.findById(flashcardId)

@@ -274,7 +274,7 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "exam_detail", allEntries = true)
+    @CacheEvict(value = "exam_detail", key = "@authenticationContext.getCurrentUserId() + ':' + #setId + ':' + #examId")
     public ExamResponseDto updateExam(Long setId, Long examId, UpdateExamRequestDto updateExamRequestDto) {
         Long userId = authenticationContext.getCurrentUserId();
         if (!examRepository.existsBySetIdAndId(setId, examId)) {
@@ -297,7 +297,7 @@ public class ExamServiceImpl implements ExamService {
 
     @Override
     @Transactional
-    @CacheEvict(value = "exam_detail", allEntries = true)
+    @CacheEvict(value = "exam_detail", key = "@authenticationContext.getCurrentUserId() + ':' + #setId + ':' + #examId")
     public void deleteExam(Long setId, Long examId) {
         Long userId = authenticationContext.getCurrentUserId();
         Exam exam = examRepository.findBySetIdAndId(setId, examId)
