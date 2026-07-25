@@ -89,7 +89,7 @@ public class CardItemServiceImpl implements CardItemService {
 
         if (!cardItem.getFlashcard().getId().equals(flashcardId)
                 || !cardItem.getFlashcard().getSet().getId().equals(setId)
-                || !cardItem.getFlashcard().getSet().getUser().getId().equals(userId)) {
+                || !flashcardPermissionService.canEdit(userId, flashcardId)) {
             throw new AccessDeniedException("Access denied: card does not belong to current user");
         }
 
@@ -144,7 +144,7 @@ public class CardItemServiceImpl implements CardItemService {
 
         if (!cardItem.getFlashcard().getId().equals(flashcardId) ||
                 !cardItem.getFlashcard().getSet().getId().equals(setId) ||
-                !cardItem.getFlashcard().getSet().getUser().getId().equals(userId)) {
+                !flashcardPermissionService.canEdit(userId, flashcardId)) {
 
             throw new AccessDeniedException("The card does not match the provided ownership criteria.");
         }
@@ -163,7 +163,7 @@ public class CardItemServiceImpl implements CardItemService {
         Flashcard flashcard = flashcardRepository.findById(flashcardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id " + flashcardId + " not found"));
 
-        if (!Objects.equals(flashcard.getUser().getId(), userId)) {
+        if (!flashcardPermissionService.hasAccess(userId, flashcardId)) {
             throw new AccessDeniedException("You are not allowed to review this flashcard.");
         }
 
@@ -191,7 +191,7 @@ public class CardItemServiceImpl implements CardItemService {
         Flashcard flashcard = flashcardRepository.findById(flashcardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Flashcard with id " + flashcardId + " not found"));
 
-        if (!Objects.equals(flashcard.getUser().getId(), userId)) {
+        if (!flashcardPermissionService.hasAccess(userId, flashcardId)) {
             throw new AccessDeniedException("You are not allowed to review this flashcard.");
         }
 
@@ -221,7 +221,7 @@ public class CardItemServiceImpl implements CardItemService {
         for (CardItem card : cards) {
             if (!card.getFlashcard().getId().equals(flashcardId) ||
                     !card.getFlashcard().getSet().getId().equals(setId) ||
-                    !card.getFlashcard().getSet().getUser().getId().equals(userId)) {
+                    !flashcardPermissionService.canEdit(userId, flashcardId)) {
                 throw new AccessDeniedException("The card does not match the provided ownership criteria.");
             }
         }
@@ -282,9 +282,9 @@ public class CardItemServiceImpl implements CardItemService {
                 throw new AccessDeniedException("Card Item with ID " + cardItem.getId() + " is linked to the wrong Flashcard.");
             }
 
-            if (!cardItem.getFlashcard().getUser().getId().equals(userId)) {
+            if (!flashcardPermissionService.canEdit(userId, flashcardId)) {
                 throw new AccessDeniedException("Access Denied: Card Item with ID " + cardItem.getId() +
-                        " does not belong to the current User ID " + userId);
+                        " cannot be edited by the current User ID " + userId);
             }
 
             CardItemUpdatingRequestDto dto = updateDtoMap.get(cardItem.getId());
@@ -304,7 +304,7 @@ public class CardItemServiceImpl implements CardItemService {
 
         if (!cardItem.getFlashcard().getId().equals(flashcardId) ||
                 !cardItem.getFlashcard().getSet().getId().equals(setId) ||
-                !cardItem.getFlashcard().getSet().getUser().getId().equals(userId)) {
+                !flashcardPermissionService.canEdit(userId, flashcardId)) {
             throw new AccessDeniedException("The card does not match the provided ownership criteria.");
         }
 
