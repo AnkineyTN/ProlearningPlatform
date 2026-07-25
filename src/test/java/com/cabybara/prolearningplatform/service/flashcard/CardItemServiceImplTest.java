@@ -137,6 +137,7 @@ class CardItemServiceImplTest {
                 .build();
 
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
+        when(flashcardPermissionService.canEdit(1L, 1L)).thenReturn(true);
         when(cardItemRepository.findById(1L)).thenReturn(Optional.of(cardItem));
         doAnswer(invocation -> {
             CardItem ci = invocation.getArgument(1);
@@ -182,6 +183,7 @@ class CardItemServiceImplTest {
         List<CardItem> cardsToDelete = List.of(card1, card2);
 
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
+        when(flashcardPermissionService.canEdit(1L, 1L)).thenReturn(true);
         when(cardItemRepository.findAllWithImageByIdIn(cardIds)).thenReturn(cardsToDelete);
 
         service.deleteCards(1L, 1L, cardIds);
@@ -211,6 +213,7 @@ class CardItemServiceImplTest {
         List<Long> cardIds = List.of(1L);
 
         when(authenticationContext.getCurrentUserId()).thenReturn(1L);
+        when(flashcardPermissionService.canEdit(1L, 1L)).thenReturn(true);
         when(cardItemRepository.findAllWithImageByIdIn(cardIds)).thenReturn(List.of(cardItem));
 
         service.deleteCards(1L, 1L, cardIds);
