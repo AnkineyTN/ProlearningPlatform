@@ -196,6 +196,7 @@ public class FlashcardServiceImpl implements FlashcardService {
         flashcard.setCards(copiedCards);
 
         Flashcard saved = flashcardRepository.save(flashcard);
+        flashcardPermissionService.addOwner(saved.getId(), userId);
         if (setId != null) {
             setRepository.updateLastModifiedDate(setId, OffsetDateTime.now());
         }

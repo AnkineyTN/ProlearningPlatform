@@ -26,6 +26,7 @@ public class FlashcardReviewServiceImpl implements FlashcardReviewService {
     private final FlashcardRepository flashcardRepository;
     private final AuthenticationContext authenticationContext;
     private final CardItemService cardItemService;
+    private final com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermissionService flashcardPermissionService;
     private CardItemRepository cardItemRepository;
     private CardItemMapper cardItemMapper;
 
@@ -39,8 +40,12 @@ public class FlashcardReviewServiceImpl implements FlashcardReviewService {
     @Override
     public void processBatchReview(Long setId, Long flashcardId, FlashcardStudySessionSyncRequestDto requestDto) {
         Long userId = authenticationContext.getCurrentUserId();
-        if (!flashcardRepository.existsBySetIdAndIdAndUserId(setId, flashcardId, userId)) {
-            throw new ResourceNotFoundException("Flashcard not found or invalid");
+        if (!flashcardPermissionService.hasAccess(userId, flashcardId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied to flashcard");
+        }
+
+        if (!flashcardPermissionService.isOwner(userId, flashcardId)) {
+            return;
         }
 
         List<Long> cardIds = requestDto.getCardItemReviews().stream()
