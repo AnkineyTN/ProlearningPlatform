@@ -5,6 +5,7 @@ import com.cabybara.prolearningplatform.dto.request.flashcard.FlashcardStudySess
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionResultResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStartResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStatusResponseDto;
+import com.cabybara.prolearningplatform.enums.CardStatus;
 import com.cabybara.prolearningplatform.enums.FlashcardStudySessionStatus;
 import com.cabybara.prolearningplatform.enums.StudyMode;
 import com.cabybara.prolearningplatform.exception.FlashcardStudySessionException;
@@ -22,6 +23,7 @@ import com.cabybara.prolearningplatform.service.flashcard.CardItemService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardReviewService;
 import com.cabybara.prolearningplatform.service.flashcard.FlashcardStudySessionService;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
+import org.springframework.cache.CacheManager;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
@@ -50,6 +52,7 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
     private final CardItemService cardItemService;
     private final FlashcardReviewService flashcardReviewService;
     private final SetRepository setRepository;
+    private final CacheManager cacheManager;
 
     @Override
     public List<FlashcardStudySessionStatusResponseDto> checkStudySessionStatus(Long setId, Long flashcardId) {
@@ -182,7 +185,16 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
             throw new FlashcardStudySessionException("Session has not completed");
         }
 
-        return flashcardStudySessionMapper.toFlashcardStudySessionResultResponse(session);
+        FlashcardStudySessionResultResponseDto result = flashcardStudySessionMapper.toFlashcardStudySessionResultResponse(session);
+
+        Long flashcardId = session.getFlashcard().getId();
+        List<CardItem> allCards = cardItemRepository.findAllByFlashcardId(flashcardId);
+        result.setTotalCards((long) allCards.size());
+        result.setKnownCount(allCards.stream().filter(c -> c.getCardStatus() == CardStatus.KNOWN).count());
+        result.setUnknownCount(allCards.stream().filter(c -> c.getCardStatus() == CardStatus.UNKNOWN).count());
+        result.setNewCount(allCards.stream().filter(c -> c.getCardStatus() == CardStatus.NEW).count());
+
+        return result;
     }
 
     @Override
@@ -241,6 +253,26 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
         session.setLastInteractionAt(Instant.now());
         if (remainingIds.isEmpty()) {
             session.setStatus(FlashcardStudySessionStatus.COMPLETED);
+
+            Long flashcardId = session.getFlashcard().getId();
+            List<CardItem> allFlashcardCards = cardItemRepository.findAllByFlashcardId(flashcardId);
+            long knownCount = allFlashcardCards.stream().filter(c -> c.getCardStatus() == CardStatus.KNOWN).count();
+            long unknownCount = allFlashcardCards.stream().filter(c -> c.getCardStatus() == CardStatus.UNKNOWN).count();
+            long newCount = allFlashcardCards.stream().filter(c -> c.getCardStatus() == CardStatus.NEW).count();
+
+            Flashcard flashcard = flashcardRepository.findById(flashcardId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Flashcard not found"));
+            flashcard.setKnown((int) knownCount);
+            flashcard.setLearning((int) unknownCount);
+            flashcard.setRemain((int) newCount);
+            flashcard.setLastStudy(OffsetDateTime.now());
+            flashcardRepository.save(flashcard);
+
+            Long setId = session.getSet().getId();
+            org.springframework.cache.Cache cache = cacheManager.getCache("flashcard_detail");
+            if (cache != null) {
+                cache.evict(userId + ":" + setId + ":" + flashcardId);
+            }
         }
 
         session.setRemainingCardIds(remainingIds);

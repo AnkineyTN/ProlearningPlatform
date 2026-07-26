@@ -6,6 +6,7 @@ import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySes
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStartResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionStatusResponseDto;
 import com.cabybara.prolearningplatform.dto.response.flashcard.FlashcardStudySessionLogItemResponseDto;
+import com.cabybara.prolearningplatform.enums.CardStatus;
 import com.cabybara.prolearningplatform.enums.FlashcardStudySessionStatus;
 import com.cabybara.prolearningplatform.enums.StudyMode;
 import com.cabybara.prolearningplatform.exception.FlashcardStudySessionException;
@@ -27,6 +28,8 @@ import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.Cache;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -74,6 +77,9 @@ class FlashcardStudySessionServiceImplTest {
     @Mock
     private SetRepository setRepository;
 
+    @Mock
+    private CacheManager cacheManager;
+
     private FlashcardStudySessionServiceImpl service;
 
     private User user;
@@ -91,7 +97,8 @@ class FlashcardStudySessionServiceImplTest {
                 userRepository,
                 cardItemService,
                 flashcardReviewService,
-                setRepository
+                setRepository,
+                cacheManager
         );
 
         user = TestFixtures.user(1L);
@@ -193,6 +200,8 @@ class FlashcardStudySessionServiceImplTest {
 
         when(flashcardStudySessionRepository.findById(1L)).thenReturn(Optional.of(session));
 
+        when(cardItemRepository.findAllByFlashcardId(1L)).thenReturn(List.of(card1, card2, card3));
+
         FlashcardStudySessionResultResponseDto expectedResult = FlashcardStudySessionResultResponseDto.builder()
                 .sessionId(1L)
                 .correctCount(2)
@@ -233,6 +242,9 @@ class FlashcardStudySessionServiceImplTest {
         syncRequest.setCardItemReviews(List.of(reviewRequest));
 
         when(cardItemRepository.findAllById(List.of(1L))).thenReturn(List.of(card1));
+        when(cardItemRepository.findAllByFlashcardId(1L)).thenReturn(List.of(card1));
+        when(flashcardRepository.findById(1L)).thenReturn(Optional.of(flashcard));
+        when(cacheManager.getCache("flashcard_detail")).thenReturn(null);
 
         FlashcardStudySessionStatusResponseDto expectedStatus = FlashcardStudySessionStatusResponseDto.builder()
                 .id(1L)
