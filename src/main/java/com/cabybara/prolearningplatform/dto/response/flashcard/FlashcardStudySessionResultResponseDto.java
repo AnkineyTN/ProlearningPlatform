@@ -14,4 +14,8 @@ public class FlashcardStudySessionResultResponseDto {
     private Integer incorrectCount;
     private Instant finishedAt;
     private List<FlashcardStudySessionLogItemResponseDto> logs;
+    private Long totalCards;
+    private Long knownCount;
+    private Long unknownCount;
+    private Long newCount;
 }
