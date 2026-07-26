@@ -37,11 +37,14 @@ class FlashcardReviewServiceImplTest {
     @Mock
     private CardItemMapper cardItemMapper;
 
+    @Mock
+    private com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermissionService flashcardPermissionService;
+
     private FlashcardReviewServiceImpl service;
 
     @BeforeEach
     void setUp() throws Exception {
-        service = new FlashcardReviewServiceImpl(flashcardRepository, authenticationContext, cardItemService);
+        service = new FlashcardReviewServiceImpl(flashcardRepository, authenticationContext, cardItemService, flashcardPermissionService);
 
         Field repoField = FlashcardReviewServiceImpl.class.getDeclaredField("cardItemRepository");
         repoField.setAccessible(true);
@@ -50,6 +53,9 @@ class FlashcardReviewServiceImplTest {
         Field mapperField = FlashcardReviewServiceImpl.class.getDeclaredField("cardItemMapper");
         mapperField.setAccessible(true);
         mapperField.set(service, cardItemMapper);
+
+        org.mockito.Mockito.lenient().when(flashcardPermissionService.hasAccess(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyLong())).thenReturn(true);
+        org.mockito.Mockito.lenient().when(flashcardPermissionService.isOwner(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyLong())).thenReturn(true);
     }
 
     @Test

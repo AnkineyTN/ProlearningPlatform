@@ -52,11 +52,19 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
     private final CardItemService cardItemService;
     private final FlashcardReviewService flashcardReviewService;
     private final SetRepository setRepository;
+<<<<<<< HEAD
     private final CacheManager cacheManager;
+=======
+    private final com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermissionService flashcardPermissionService;
+>>>>>>> dev
 
     @Override
     public List<FlashcardStudySessionStatusResponseDto> checkStudySessionStatus(Long setId, Long flashcardId) {
         Long userId = authenticationContext.getCurrentUserId();
+
+        if (!flashcardPermissionService.hasAccess(userId, flashcardId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied to flashcard");
+        }
 
         List<FlashcardStudySession> inProgressStudySessions =
                 flashcardStudySessionRepository.findByUserIdAndSetIdAndFlashcardIdAndStatus(userId, setId, flashcardId, FlashcardStudySessionStatus.IN_PROGRESS);
@@ -71,6 +79,11 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
     @Override
     public FlashcardStudySessionStartResponseDto startOrResumeSession(Long setId, Long flashcardId) throws BadRequestException {
         Long userId = authenticationContext.getCurrentUserId();
+
+        if (!flashcardPermissionService.hasAccess(userId, flashcardId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Access denied to flashcard");
+        }
+
         User user = userRepository.getReferenceById(userId);
 
         Optional<FlashcardStudySession> existingInProgressSession = flashcardStudySessionRepository
@@ -225,11 +238,15 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
         Map<Long, CardItem> cardMap = cards.stream()
                 .collect(Collectors.toMap(CardItem::getId, Function.identity()));
 
+        boolean isOwner = flashcardPermissionService.isOwner(userId, session.getFlashcard().getId());
+
         for (CardItemReviewRequestDto reviewItem : request.getCardItemReviews()) {
             CardItem card = cardMap.get(reviewItem.getCardId());
 
             if (card != null) {
-                flashcardReviewService.calculateSpacedRepetition(card, reviewItem.isKnown());
+                if (isOwner) {
+                    flashcardReviewService.calculateSpacedRepetition(card, reviewItem.isKnown());
+                }
 
                 StudySessionReviewLog reviewLog = StudySessionReviewLog.builder()
                         .card(card)
@@ -248,7 +265,9 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
             }
         }
 
-        cardItemRepository.saveAll(cards);
+        if (isOwner) {
+            cardItemRepository.saveAll(cards);
+        }
 
         session.setLastInteractionAt(Instant.now());
         if (remainingIds.isEmpty()) {

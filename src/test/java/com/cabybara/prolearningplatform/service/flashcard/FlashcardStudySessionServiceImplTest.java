@@ -79,6 +79,7 @@ class FlashcardStudySessionServiceImplTest {
 
     @Mock
     private CacheManager cacheManager;
+    private com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermissionService flashcardPermissionService;
 
     private FlashcardStudySessionServiceImpl service;
 
@@ -98,7 +99,8 @@ class FlashcardStudySessionServiceImplTest {
                 cardItemService,
                 flashcardReviewService,
                 setRepository,
-                cacheManager
+                cacheManager,
+                flashcardPermissionService
         );
 
         user = TestFixtures.user(1L);
@@ -111,6 +113,9 @@ class FlashcardStudySessionServiceImplTest {
         flashcard.setId(1L);
         flashcard.setSet(set);
         flashcard.setUser(user);
+
+        org.mockito.Mockito.lenient().when(flashcardPermissionService.hasAccess(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyLong())).thenReturn(true);
+        org.mockito.Mockito.lenient().when(flashcardPermissionService.isOwner(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.anyLong())).thenReturn(true);
     }
 
     @Test
