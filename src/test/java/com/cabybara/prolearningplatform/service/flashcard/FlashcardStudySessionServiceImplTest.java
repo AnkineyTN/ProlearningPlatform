@@ -23,6 +23,7 @@ import com.cabybara.prolearningplatform.repository.FlashcardStudySessionReposito
 import com.cabybara.prolearningplatform.repository.SetRepository;
 import com.cabybara.prolearningplatform.repository.UserRepository;
 import com.cabybara.prolearningplatform.service.flashcard.impl.FlashcardStudySessionServiceImpl;
+import com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermissionService;
 import com.cabybara.prolearningplatform.support.TestFixtures;
 import com.cabybara.prolearningplatform.utils.AuthenticationContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,7 +80,9 @@ class FlashcardStudySessionServiceImplTest {
 
     @Mock
     private CacheManager cacheManager;
-    private com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermissionService flashcardPermissionService;
+
+    @Mock
+    private FlashcardPermissionService flashcardPermissionService;
 
     private FlashcardStudySessionServiceImpl service;
 

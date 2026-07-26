@@ -52,11 +52,8 @@ public class FlashcardStudySessionServiceImpl implements FlashcardStudySessionSe
     private final CardItemService cardItemService;
     private final FlashcardReviewService flashcardReviewService;
     private final SetRepository setRepository;
-<<<<<<< HEAD
     private final CacheManager cacheManager;
-=======
     private final com.cabybara.prolearningplatform.service.permission.impl.FlashcardPermissionService flashcardPermissionService;
->>>>>>> dev
 
     @Override
     public List<FlashcardStudySessionStatusResponseDto> checkStudySessionStatus(Long setId, Long flashcardId) {
